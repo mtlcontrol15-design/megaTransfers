@@ -1,0 +1,95 @@
+{
+  "colors": {
+    "primary1": "#07384d",
+    "grey": "rgba(21, 21, 21, 0.5)",
+    "lightGrey": "rgba(241, 241, 241, 0.9)",
+    "lightAqua": "rgba(197, 221, 248, 1)",
+    "blue": "#2563EB",
+    "red": "#EF4444",
+    "primary": "#000000",
+    "secondary": "#333333",
+    "bg": "#FFFFFF",
+    "text": "#000000",
+    "gray50": "#f3f4f6",
+    "gray70": "#f9fafb",
+    "gray100": "#F5F5F5",
+    "gray200": "#E0E0E0",
+    "gray300": "#6B7280",
+    "gray600": "#666666",
+    "white": "#FFFFFF",
+    "black": "#000000",
+    "buttonBackground": "#374151",
+    "buttonsRowBackground": "#22333b",
+    "darkGrey": "#4b5563",
+    "parrot": "#dcfce7",
+    "slateBlue": "#0F172A",
+    "lightSlate": "#1F2937",
+    "lightText": "#9CA3AF",
+    "lightBlue": "#06B6D4",
+    "lightGreen": "#10B981",
+    "purple": "#9333ea",
+    "purpleIsh": "#f5f3ff",
+    "blueBorder": "#bfdbfe",
+    "redBorder": "#F87171",
+    "blueish": "#eff6ff",
+    "greenish": "#ecfdf5",
+    "greenishBorder": "#bbf7d0",
+    "redish": "#fff1f2",
+    "blackishText": "#111827",
+    "secondory": "#5F8899"
+  },
+  "typography": {
+    "heading": {
+      "fontFamily": "Poppins-Bold",
+      "fontWeight": "bold"
+    },
+    "body": {
+      "fontFamily": "Poppins-Regular",
+      "fontWeight": "normal"
+    },
+    "caption": {
+      "fontFamily": "Poppins-Medium"
+    }
+  },
+  "borders": {
+    "miniRadius": 4,
+    "normalRadius": 8,
+    "regularRadius": 10,
+    "fullRadius": 12,
+    "width": 1
+  },
+  "shadows": {
+    "small": {
+      "shadowColor": "#000",
+      "shadowOffset": {
+        "width": 0,
+        "height": 2
+      },
+      "shadowOpacity": 0.2,
+      "shadowRadius": 2
+    },
+    "medium": {
+      "shadowColor": "#000",
+      "shadowOffset": {
+        "width": 0,
+        "height": 4
+      },
+      "shadowOpacity": 0.3,
+      "shadowRadius": 4
+    },
+    "large": {
+      "shadowColor": "#000",
+      "shadowOffset": {
+        "width": 0,
+        "height": 6
+      },
+      "shadowOpacity": 0.4,
+      "shadowRadius": 6
+    }
+  },
+  "elevation": {
+    "small": 2,
+    "medium": 4,
+    "large": 6
+  }
+}

@@ -1,0 +1,52 @@
+export const STATUS_TABS = [
+  "All",
+  "Scheduled",
+  "New",
+  "Accepted",
+  "On Route",
+  "At Location",
+  "At Waiting",
+  "Extra Stop",
+  "Ride Started",
+  "Completed",
+  "Cancelled",
+];
+
+export const mockVehicles = [
+  {
+    _id: "1",
+    vehicleName: "Saloon",
+    passenger: 4,
+    checkinLuggage: 2,
+    childSeat: 4,
+    handLuggage: 2,
+    image: "https://dummyimage.com/200x120/07384d/ffffff&text=Vehicle",
+  },
+  {
+    _id: "2",
+    vehicleName: "Estate",
+    passenger: 4,
+    checkinLuggage: 4,
+    childSeat: 4,
+    handLuggage: 8,
+    image: "https://dummyimage.com/200x120/07384d/ffffff&text=Vehicle",
+  },
+  {
+    _id: "3",
+    vehicleName: "MPV",
+    passenger: 6,
+    checkinLuggage: 5,
+    childSeat: 6,
+    handLuggage: 7,
+    image: "https://dummyimage.com/200x120/07384d/ffffff&text=Vehicle",
+  },
+  {
+    _id: "4",
+    vehicleName: "MPV",
+    passenger: 6,
+    checkinLuggage: 5,
+    childSeat: 6,
+    handLuggage: 7,
+    image: "https://dummyimage.com/200x120/07384d/ffffff&text=Vehicle",
+  },
+];

@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "89805297317",
+    "project_id": "mtl-dispatch-7b728",
+    "storage_bucket": "mtl-dispatch-7b728.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:89805297317:android:05f6fcf761c51e0b275f4c",
+        "android_client_info": {
+          "package_name": "com.mtldispatch"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD9kmt6AYfJ0umGZWde9KCwHInUMKUqbEQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:89805297317:android:ae4c629a215fa7c3275f4c",
+        "android_client_info": {
+          "package_name": "com.myapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD9kmt6AYfJ0umGZWde9KCwHInUMKUqbEQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

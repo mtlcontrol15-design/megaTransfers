@@ -1,0 +1,47 @@
+import { DefaultTheme } from '@react-navigation/native';
+
+export const getTheme = (colors, isDarkMode) => {
+    return {
+        dark: isDarkMode,
+        ...DefaultTheme,
+        colors: {
+            primary: isDarkMode ? colors.primary : colors.primary,
+            secondary: isDarkMode ? colors.secondory : colors.secondory,
+            white: isDarkMode ? colors.white : colors.white,
+            whiteText: isDarkMode ? colors.white : colors.white,
+            lightAqua: isDarkMode ? colors.lightAqua : colors.lightAqua,
+            primary1: isDarkMode ? colors.primary1 : colors.primary1,
+            text: isDarkMode ? colors.text : colors.text,
+            blackishText: isDarkMode ? colors.blackishText : colors.blackishText,
+            bg: isDarkMode ? colors.bg : colors.bg,
+            gray50: isDarkMode ? colors.gray50 : colors.gray50,
+            gray70: isDarkMode ? colors.gray70 : colors.gray70,
+            gray100: isDarkMode ? colors.gray100 : colors.gray100,
+            gray200: isDarkMode ? colors.gray200 : colors.gray200,
+            gray300: isDarkMode ? colors.gray300 : colors.gray300,
+            border: isDarkMode ? colors.gray200 : colors.gray200,
+            gray600: isDarkMode ? colors.gray600 : colors.gray600,
+            black: isDarkMode ? colors.black : colors.black,
+            buttonBackground: isDarkMode ? colors.buttonBackground : colors.buttonBackground,
+            buttonsRowBackground: isDarkMode ? colors.buttonsRowBackground : colors.buttonsRowBackground,
+            darkGrey: isDarkMode ? colors.darkGrey : colors.darkGrey,
+            parrot: isDarkMode ? colors.parrot : colors.parrot,
+            slateBlue: isDarkMode ? colors.slateBlue : colors.slateBlue,
+            lightSlate: isDarkMode ? colors.lightSlate : colors.lightSlate,
+            lightText: isDarkMode ? colors.lightText : colors.lightText,
+            lightBlue: isDarkMode ? colors.lightBlue : colors.lightBlue,
+            lightGreen: isDarkMode ? colors.lightGreen : colors.lightGreen,
+            error: isDarkMode ? colors.red : colors.red,
+            blue: isDarkMode ? colors.blue : colors.blue,
+            blueBorder: isDarkMode ? colors.blueBorder : colors.blueBorder,
+            redBorder: isDarkMode ? colors.redBorder : colors.redBorder,
+            blueishBackGround: isDarkMode ? colors.blueish : colors.blueish,
+            greenishBackGround: isDarkMode ? colors.greenish : colors.greenish,
+            redishBackGround: isDarkMode ? colors.redish : colors.redish,
+            purple: isDarkMode ? colors.purple : colors.purple,
+            purpleIshBckGround: isDarkMode ? colors.purpleIsh : colors.purpleIsh,
+            greenishBorder: isDarkMode ? colors.greenishBorder : colors.greenishBorder,
+
+        },
+    };
+};
