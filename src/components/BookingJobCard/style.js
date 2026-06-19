@@ -63,6 +63,7 @@ const getStyles = (colors) =>
         dateText: {
             fontSize: moderateScale(13),
             color: colors.black,
+            fontWeight: "600",
         },
 
         locationBlock: {

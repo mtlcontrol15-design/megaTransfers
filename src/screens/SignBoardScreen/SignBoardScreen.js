@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
     View,
     Text,
@@ -7,11 +7,12 @@ import {
     StyleSheet,
     StatusBar,
     useWindowDimensions,
+    ScrollView,
 } from "react-native";
-import { moderateScale } from "react-native-size-matters";
+import { moderateScale, verticalScale } from "react-native-size-matters";
 
 import COLORS_THEME from "../../libs/Theme.json";
-import { Theme } from "../../libs";
+import Icons from "../../assets/icons";
 
 const COLORS = [
     COLORS_THEME.colors.white,
@@ -53,7 +54,7 @@ const SignBoardScreen = ({ navigation, route }) => {
                 ]}
                 onPress={() => setIsShowing(false)}
             >
-                <StatusBar hidden />
+                {/* <StatusBar barStyle="light-content" /> */}
 
                 <Text
                     adjustsFontSizeToFit
@@ -76,8 +77,9 @@ const SignBoardScreen = ({ navigation, route }) => {
                     style={[
                         styles.editHint,
                         {
-                            color:
-                                Theme.colors.black,
+                            color: textColor === COLORS_THEME.colors.white
+                                ? COLORS_THEME.colors.black
+                                : COLORS_THEME.colors.white,
                         },
                     ]}
                 >
@@ -89,91 +91,122 @@ const SignBoardScreen = ({ navigation, route }) => {
 
     return (
         <View style={styles.settingsContainer}>
-            <StatusBar hidden />
+            <StatusBar barStyle="light-content" backgroundColor={COLORS_THEME.colors.primary} />
 
-            <View style={styles.header}>
-                <TouchableOpacity onPress={() => navigation.goBack()}>
-                    <Text style={styles.headerButton}>Back</Text>
-                </TouchableOpacity>
-
-                <Text style={styles.headerTitle}>Airport Sign Board</Text>
-
-                <TouchableOpacity onPress={() => setIsShowing(true)}>
-                    <Text style={styles.headerButton}>Show</Text>
-                </TouchableOpacity>
-            </View>
-
-            <View style={styles.form}>
-                <Text style={styles.label}>Passenger name</Text>
-
-                <TextInput
-                    value={signText}
-                    onChangeText={setSignText}
-                    placeholder="Enter passenger name"
-                    maxLength={60}
-                    autoCapitalize="characters"
-                    style={styles.input}
-                />
-
-                <Text style={styles.label}>Text colour</Text>
-
-                <View style={styles.colorRow}>
-                    {COLORS.map(color => (
-                        <TouchableOpacity
-                            key={color}
-                            onPress={() => setTextColor(color)}
-                            style={[
-                                styles.colorButton,
-                                { backgroundColor: color },
-                                textColor === color && styles.selectedColor,
-                            ]}
-                        />
-                    ))}
-                </View>
-
-                <Text style={styles.label}>Background colour</Text>
-
-                <View style={styles.colorRow}>
-                    {COLORS.map(color => (
-                        <TouchableOpacity
-                            key={color}
-                            onPress={() => setBackgroundColor(color)}
-                            style={[
-                                styles.colorButton,
-                                { backgroundColor: color },
-                                backgroundColor === color &&
-                                styles.selectedColor,
-                            ]}
-                        />
-                    ))}
-                </View>
-
-                <View
-                    style={[
-                        styles.preview,
-                        { backgroundColor },
-                    ]}
+            <View style={[styles.headerContainer, { backgroundColor: COLORS_THEME.colors.primary }]}>
+                <TouchableOpacity
+                    onPress={() => navigation.goBack()}
+                    activeOpacity={0.7}
+                    hitSlop={{ top: 30, bottom: 30, left: 30, right: 30 }}
                 >
-                    <Text
-                        numberOfLines={1}
-                        adjustsFontSizeToFit
-                        style={[
-                            styles.previewText,
-                            { color: textColor },
-                        ]}
-                    >
-                        {signText || "Passenger Name"}
+                    <Icons.ArrowLeft size={24} color={COLORS_THEME.colors.white} />
+                </TouchableOpacity>
+
+                <View style={styles.headerTitleContainer}>
+                    <Text style={[styles.headerTitle, { color: COLORS_THEME.colors.white }]}>
+                        Name Board
                     </Text>
                 </View>
 
                 <TouchableOpacity
-                    style={styles.showButton}
                     onPress={() => setIsShowing(true)}
+                    activeOpacity={0.7}
+                    hitSlop={{ top: 30, bottom: 30, left: 30, right: 30 }}
+                    style={{ paddingHorizontal: moderateScale(10), paddingVertical: verticalScale(5),backgroundColor: COLORS_THEME.colors.primary1, borderRadius: moderateScale(6) }}
                 >
-                    <Text style={styles.showButtonText}>
-                        SHOW SIGN BOARD
+                    <Text style={[styles.showButtonText,{fontSize: moderateScale(12),textAlign: "center",fontWeight: "400",}]}>
+                        ShowName Board
                     </Text>
                 </TouchableOpacity>
+            </View>
+
+            <View style={styles.contentContainer}>
+                <ScrollView
+                    style={styles.scrollView}
+                    contentContainerStyle={styles.scrollContent}
+                    showsVerticalScrollIndicator={false}
+                >
+                    <View style={styles.form}>
+                        <Text style={styles.label}>PASSENGER NAME</Text>
+
+                        <TextInput
+                            value={signText}
+                            onChangeText={setSignText}
+                            placeholder="Enter passenger name"
+                            placeholderTextColor={COLORS_THEME.colors.gray300}
+                            maxLength={60}
+                            autoCapitalize="characters"
+                            style={styles.input}
+                        />
+
+                        <Text style={styles.label}>TEXT COLOUR</Text>
+
+                        <View style={styles.colorRow}>
+                            {COLORS.map(color => (
+                                <TouchableOpacity
+                                    key={color}
+                                    onPress={() => setTextColor(color)}
+                                    style={[
+                                        styles.colorButton,
+                                        { backgroundColor: color },
+                                        textColor === color && styles.selectedColor,
+                                    ]}
+                                    activeOpacity={0.7}
+                                />
+                            ))}
+                        </View>
+
+                        <Text style={styles.label}>BACKGROUND COLOUR</Text>
+
+                        <View style={styles.colorRow}>
+                            {COLORS.map(color => (
+                                <TouchableOpacity
+                                    key={color}
+                                    onPress={() => setBackgroundColor(color)}
+                                    style={[
+                                        styles.colorButton,
+                                        { backgroundColor: color },
+                                        backgroundColor === color &&
+                                        styles.selectedColor,
+                                    ]}
+                                    activeOpacity={0.7}
+                                />
+                            ))}
+                        </View>
+
+                        <Text style={styles.tipText}>
+                            Tip: High contrast colors work best for airport visibility.
+                        </Text>
+
+                        <View
+                            style={[
+                                styles.preview,
+                                { backgroundColor },
+                            ]}
+                        >
+                            <Text
+                                numberOfLines={2}
+                                adjustsFontSizeToFit
+                                style={[
+                                    styles.previewText,
+                                    { color: textColor },
+                                ]}
+                            >
+                                {signText || "Passenger Name"}
+                            </Text>
+                        </View>
+
+                        <TouchableOpacity
+                            style={styles.showButton}
+                            onPress={() => setIsShowing(true)}
+                            activeOpacity={0.8}
+                        >
+                            <Text style={styles.showButtonText}>
+                                SHOW FULLSCREEN
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+                </ScrollView>
             </View>
         </View>
     );
@@ -182,92 +215,119 @@ const SignBoardScreen = ({ navigation, route }) => {
 const styles = StyleSheet.create({
     settingsContainer: {
         flex: 1,
-        backgroundColor: COLORS_THEME.colors.gray70,
+        backgroundColor: COLORS_THEME.colors.primary,
+        paddingTop: verticalScale(0),
     },
-    header: {
-        height: moderateScale(60),
-        backgroundColor: COLORS_THEME.colors.primary1,
-        paddingHorizontal: moderateScale(70),
+    headerContainer: {
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "space-between",
-        ...COLORS_THEME.shadows.medium,
+        paddingHorizontal: moderateScale(15),
+        paddingTop: verticalScale(50),
+        paddingBottom: verticalScale(20),
     },
     headerTitle: {
-        color: COLORS_THEME.colors.white,
-        fontSize: moderateScale(20),
+        fontSize: moderateScale(18),
         fontWeight: "700",
         fontFamily: COLORS_THEME.typography.heading.fontFamily,
     },
-    headerButton: {
-        color: COLORS_THEME.colors.white,
-        fontSize: moderateScale(16),
-        fontWeight: "600",
-        fontFamily: COLORS_THEME.typography.body.fontFamily,
+    headerTitleContainer: {
+        flexDirection: "column",
+        gap: verticalScale(4),
+        flex: 1,
+        alignItems: "center",
+    },
+    contentContainer: {
+        flex: 1,
+        backgroundColor: COLORS_THEME.colors.white,
+    },
+    scrollView: {
+        flex: 1,
+    },
+    scrollContent: {
+        flexGrow: 1,
+        paddingBottom: moderateScale(20),
     },
     form: {
-        flex: 1,
-        paddingVertical: moderateScale(24),
-        paddingHorizontal: moderateScale(60),
+        paddingVertical: moderateScale(20),
+        paddingHorizontal: moderateScale(16),
     },
     label: {
         color: COLORS_THEME.colors.blackishText,
-        fontSize: moderateScale(15),
+        fontSize: moderateScale(14),
         fontWeight: "600",
-        fontFamily: COLORS_THEME.typography.caption.fontFamily,
-        marginBottom: moderateScale(8),
-        marginTop: moderateScale(14),
+        marginBottom: moderateScale(10),
+        marginTop: moderateScale(18),
+        letterSpacing: 0.5,
     },
     input: {
-        height: moderateScale(55),
-        paddingHorizontal: moderateScale(16),
+        height: moderateScale(56),
+        paddingHorizontal: moderateScale(14),
         backgroundColor: COLORS_THEME.colors.white,
-        borderRadius: COLORS_THEME.borders.regularRadius,
-        borderWidth: COLORS_THEME.borders.width,
+        borderRadius: moderateScale(8),
+        borderWidth: 1,
         borderColor: COLORS_THEME.colors.gray200,
-        color: COLORS_THEME.colors.text,
-        fontSize: moderateScale(18),
+        color: COLORS_THEME.colors.blackishText,
+        fontSize: moderateScale(16),
         fontFamily: COLORS_THEME.typography.body.fontFamily,
         ...COLORS_THEME.shadows.small,
     },
     colorRow: {
         flexDirection: "row",
-        gap: moderateScale(14),
-        marginTop: moderateScale(8),
+        gap: moderateScale(16),
+        marginTop: moderateScale(12),
+        flexWrap: "wrap",
+        justifyContent:'center',
     },
     colorButton: {
-        width: moderateScale(42),
-        height: moderateScale(42),
-        borderRadius: moderateScale(21),
-        borderWidth: COLORS_THEME.borders.width,
+        width: moderateScale(44),
+        height: moderateScale(44),
+        borderRadius: moderateScale(24),
+        borderWidth: 2,
         borderColor: COLORS_THEME.colors.gray300,
     },
     selectedColor: {
-        borderWidth: moderateScale(4),
+        borderWidth: 3,
         borderColor: COLORS_THEME.colors.primary1,
+        shadowColor: COLORS_THEME.colors.primary1,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.4,
+        shadowRadius: 4,
+        elevation: 5,
+    },
+    tipText: {
+        color: COLORS_THEME.colors.gray600,
+        fontSize: moderateScale(12),
+        fontFamily: COLORS_THEME.typography.body.fontFamily,
+        fontStyle: "italic",
+        marginTop: moderateScale(12),
+        marginBottom: moderateScale(16),
     },
     preview: {
-        height: moderateScale(100),
-        marginTop: moderateScale(25),
-        borderRadius: COLORS_THEME.borders.regularRadius,
-        borderWidth: COLORS_THEME.borders.width,
+        height: moderateScale(120),
+        marginTop: moderateScale(24),
+        marginBottom: moderateScale(20),
+        borderRadius: moderateScale(10),
+        borderWidth: 1,
         borderColor: COLORS_THEME.colors.gray200,
         alignItems: "center",
         justifyContent: "center",
-        paddingHorizontal: moderateScale(20),
+        paddingHorizontal: moderateScale(16),
+        paddingVertical: moderateScale(16),
         ...COLORS_THEME.shadows.small,
     },
     previewText: {
         width: "100%",
         textAlign: "center",
-        fontSize: moderateScale(40),
+        fontSize: moderateScale(36),
         fontWeight: "900",
         fontFamily: COLORS_THEME.typography.heading.fontFamily,
+        textTransform: "uppercase",
     },
     showButton: {
-        height: moderateScale(55),
-        marginTop: moderateScale(24),
-        borderRadius: COLORS_THEME.borders.regularRadius,
+        height: moderateScale(54),
+        marginTop: moderateScale(46),
+        borderRadius: moderateScale(8),
         backgroundColor: COLORS_THEME.colors.primary1,
         alignItems: "center",
         justifyContent: "center",
@@ -275,9 +335,10 @@ const styles = StyleSheet.create({
     },
     showButtonText: {
         color: COLORS_THEME.colors.white,
-        fontSize: moderateScale(17),
+        fontSize: moderateScale(16),
         fontWeight: "700",
         fontFamily: COLORS_THEME.typography.heading.fontFamily,
+        letterSpacing: 1,
     },
     signContainer: {
         flex: 1,
@@ -293,10 +354,10 @@ const styles = StyleSheet.create({
     },
     editHint: {
         position: "absolute",
-        bottom: moderateScale(12),
-        right: moderateScale(48),
-        fontSize: moderateScale(14),
+        bottom: moderateScale(40),
+        fontSize: moderateScale(13),
         fontFamily: COLORS_THEME.typography.body.fontFamily,
+        fontStyle: "italic",
     },
 });
 

@@ -81,7 +81,7 @@ const JobCard = ({ job, colors, onPress, onPressStatus, isUpdatingJob }) => {
                 <View style={[styles.footer, { backgroundColor:colors?.gray100 }]}>
                     {/* Date */}
                     <View style={styles.footerItem}>
-                        <Icons.Calendar size={14} color={colors.gray600} />
+                        <Icons.Calendar size={18} color={colors.gray600} />
                         <Text style={[styles.footerText, { color: colors.text }]}>
                             {date}
                         </Text>
@@ -90,7 +90,7 @@ const JobCard = ({ job, colors, onPress, onPressStatus, isUpdatingJob }) => {
                     <View style={styles.divider} />
 
                     <View style={styles.footerItem}>
-                        <Icons.Clock size={14} color={colors.gray600} />
+                        <Icons.Clock size={18} color={colors.gray600} />
                         <Text style={[styles.footerText, { color: colors.text }]}>
                             {time}
                         </Text>
@@ -333,8 +333,8 @@ const styles = StyleSheet.create({
 
     footerText: {
         marginLeft: 6,
-        fontSize: moderateScale(13),
-        fontWeight: "500",
+        fontSize: moderateScale(16),
+        fontWeight: "700",
     },
 
     divider: {
@@ -347,7 +347,7 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: Theme?.colors?.gray300,
         borderRadius: moderateScale(8),
-        paddingHorizontal: moderateScale(10),
+        paddingHorizontal: moderateScale(6),
         paddingVertical: verticalScale(6),
         alignItems: "center",
         justifyContent: "center",

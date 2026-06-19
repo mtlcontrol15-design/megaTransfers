@@ -41,13 +41,7 @@ const AuthStack = () => {
       <Stack.Screen name="MapScreen" component={MapScreen} />
       <Stack.Screen name="PdfView" component={PdfViewScreen} />
       <Stack.Screen name="TermAndConditions" component={TermAndConditionsScreen} />
-      <Stack.Screen
-        name="SignBoard"
-        component={SignBoardScreen}
-        options={{
-          orientation: "landscape",
-          animation: "none",
-        }}
+      <Stack.Screen name="SignBoard" component={SignBoardScreen}
       />
     </Stack.Navigator>
   );

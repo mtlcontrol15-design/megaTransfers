@@ -79,11 +79,11 @@ android {
 
     namespace "com.mtldispatch"
     defaultConfig {
-        applicationId "com.mtldispatch"
+        applicationId "com.megatransfers"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 6
-        versionName "1.0.6"
+        versionCode 1
+        versionName "1.0.0"
     }
     signingConfigs {
         debug {

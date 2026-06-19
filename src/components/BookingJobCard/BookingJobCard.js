@@ -352,7 +352,7 @@ const BookingJobCard = ({ job, onPress, onPressStatus }) => {
                     <Icons.Calendar size={16} color={colors.black} />
                     <View>
                         <Text style={styles.dateText}>BOOKING DATE</Text>
-                        <Text style={[styles.dateText, { color: colors.lightText }]}>{date}</Text>
+                        <Text style={styles.dateText}>{date}</Text>
                     </View>
                 </View>
 
@@ -360,7 +360,7 @@ const BookingJobCard = ({ job, onPress, onPressStatus }) => {
                     <Icons.Clock size={16} color={colors.black} />
                     <View>
                         <Text style={styles.dateText}>BOOKING TIME</Text>
-                        <Text style={[styles.dateText, { color: colors.lightText }]}>{time}</Text>
+                        <Text style={styles.dateText}>{time}</Text>
                     </View>
                 </View>
             </View>
