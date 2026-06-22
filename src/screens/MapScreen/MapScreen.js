@@ -76,6 +76,7 @@ const MapScreen = ({ navigation }) => {
       ?.toLowerCase() || "";
 
   const trackingEnded = [
+    "accepted",
     "no show",
     "late cancel",
     "completed",

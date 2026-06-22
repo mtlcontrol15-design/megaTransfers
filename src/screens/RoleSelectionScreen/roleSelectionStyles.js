@@ -60,7 +60,7 @@ const getStyles = (colors) =>
             minHeight: verticalScale(70),
             borderRadius: scale(12),
             borderWidth: 1,
-            borderColor: colors.gray200 || '#E5E7EB',
+            borderColor: colors.gray200 || colors?.error,
             backgroundColor: colors.white,
             flexDirection: 'row',
             alignItems: 'center',
@@ -70,7 +70,7 @@ const getStyles = (colors) =>
         },
         roleCardSelected: {
             borderWidth: 2,
-            borderColor: colors.primary,
+            borderColor: colors.error,
             shadowColor: '#000',
             shadowOffset: { width: 0, height: 6 },
             shadowOpacity: 0.08,
@@ -127,7 +127,7 @@ const getStyles = (colors) =>
         continueButton: {
             height: scale(48),
             borderRadius: scale(8),
-            backgroundColor: colors.primary,
+            backgroundColor: colors.error,
             flexDirection: 'row',
             alignItems: 'center',
             justifyContent: 'center',
@@ -155,7 +155,7 @@ const getStyles = (colors) =>
         },
         signInLink: {
             fontSize: moderateScale(14),
-            color: colors.primary,
+            color: colors.error,
             fontWeight: '600',
             marginLeft: scale(4),
         },

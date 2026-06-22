@@ -5,7 +5,7 @@ import { Theme } from '../../libs';
 
 export default function SafeFlexView({
   children,
-  statusBarColor = '#07384d',
+  statusBarColor = Theme.colors.primary1,
   barStyle = 'dark-content',
   backgroundColor,
 }) {

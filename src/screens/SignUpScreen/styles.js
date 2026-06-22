@@ -150,7 +150,7 @@ const getStyles = (colors) => StyleSheet.create({
     signUpButton: {
         height: scale(48),
         borderRadius: scale(8),
-        backgroundColor: colors.primary,
+        backgroundColor: colors.bttonColor,
         justifyContent: 'center',
         alignItems: 'center',
         marginTop: scale(22),
@@ -178,7 +178,7 @@ const getStyles = (colors) => StyleSheet.create({
     },
     bottomLink: {
         fontSize: moderateScale(14),
-        color: colors.primary,
+        color: colors.bttonColor,
         fontWeight: '600',
         marginLeft: scale(4),
     },

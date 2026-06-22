@@ -85,7 +85,7 @@ const getStyles = (colors) => StyleSheet.create({
     },
 
     button: {
-        backgroundColor: Theme.colors?.primary,
+        backgroundColor: Theme.colors?.red,
         paddingVertical: moderateScale(15),
         borderRadius: moderateScale(10),
         alignItems: 'center',
@@ -93,7 +93,7 @@ const getStyles = (colors) => StyleSheet.create({
     },
 
     buttonDisabled: {
-        backgroundColor: colors?.secondary
+        backgroundColor: colors?.red
     },
 
     buttonText: {

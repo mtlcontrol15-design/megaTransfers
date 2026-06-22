@@ -32,6 +32,7 @@ export const getTheme = (colors, isDarkMode) => {
             lightBlue: isDarkMode ? colors.lightBlue : colors.lightBlue,
             lightGreen: isDarkMode ? colors.lightGreen : colors.lightGreen,
             error: isDarkMode ? colors.red : colors.red,
+            bttonColor: isDarkMode ? colors.red : colors.red,
             blue: isDarkMode ? colors.blue : colors.blue,
             blueBorder: isDarkMode ? colors.blueBorder : colors.blueBorder,
             redBorder: isDarkMode ? colors.redBorder : colors.redBorder,

@@ -278,9 +278,9 @@ const Login = ({ navigation }) => {
                                     activeOpacity={0.7}
                                 >
                                     {remember ? (
-                                        <Icons.CheckSquare size={24} color={Theme.colors.primary} />
+                                        <Icons.CheckSquare size={24} color={Theme.colors.red} />
                                     ) : (
-                                        <Icons.Square size={24} color={Theme.colors.primary} />
+                                        <Icons.Square size={24} color={Theme.colors.red} />
                                     )}
                                     <Text style={styles.rememberText}>Remember Me</Text>
                                 </TouchableOpacity>

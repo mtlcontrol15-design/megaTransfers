@@ -1568,7 +1568,7 @@ PODS:
     - React-RCTFBReactNativeSpec
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
-  - react-native-blob-util (0.24.9):
+  - react-native-blob-util (0.24.10):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -1910,7 +1910,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - react-native-webview (13.16.1):
+  - react-native-webview (13.17.0):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -2462,7 +2462,7 @@ PODS:
     - RNNotifee/NotifeeCore (= 9.1.8)
   - RNNotifee/NotifeeCore (9.1.8):
     - React-Core
-  - RNPermissions (5.5.3):
+  - RNPermissions (5.6.0):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -3228,7 +3228,7 @@ SPEC CHECKSUMS:
   React-logger: b5521614afb8690420146dfc61a1447bb5d65419
   React-Mapbuffer: f4ee8c62e0ef8359d139124f35a471518a172cd3
   React-microtasksnativemodule: d1956f0eec54c619b63a379520fb4c618a55ccb9
-  react-native-blob-util: 90bc3d2a2c0db868de9f8579092ca63ac1faf0ec
+  react-native-blob-util: 6f9e41c89dc83098f98db5ad608b89f247f9c6da
   react-native-config: 530d1344e93c66f9819d0e5b54bd19d0d88e398c
   react-native-document-picker: 29b2ee2573287f2b34c7716c98ffc3d9322fbe72
   react-native-encrypted-storage: 569d114e329b1c2c2d9f8c84bcdbe4478dda2258
@@ -3240,7 +3240,7 @@ SPEC CHECKSUMS:
   react-native-pager-view: 915bebe4c77d5303a259c9589b5fd9ce015b2858
   react-native-pdf: dac049a15aec41db452e372f85184d3f15741b12
   react-native-safe-area-context: 5727bd761ca52fa393b40989a6483bf859622136
-  react-native-webview: 0ed52ddb2eafc64a502871218440b8b4d37961c3
+  react-native-webview: c1d5662acf0cb081169cb337847bba193adfd838
   React-NativeModulesApple: 5ba0903927f6b8d335a091700e9fda143980f819
   React-networking: 3a4b7f9ed2b2d1c0441beacb79674323a24bcca6
   React-oscompat: ff26abf0ae3e3fdbe47b44224571e3fc7226a573
@@ -3284,7 +3284,7 @@ SPEC CHECKSUMS:
   RNGestureHandler: da4fb36c32e8ac2b9e85cacd828aab4014fe4b16
   RNLocation: a30ee2ad3b081343b92df071337d1e21539997aa
   RNNotifee: 5e3b271e8ea7456a36eec994085543c9adca9168
-  RNPermissions: 694d9e54ae3a6cb677f6e0230d8f8b58d23bc599
+  RNPermissions: 8e318ec304bf93528a10a2bb6454b0743e53a7df
   RNReanimated: 7e08958bc219c0cb2ac5e749871bb0bcd4523f49
   RNScreens: d73d7ef79ae7b465a3f816288a7b6d895a873d56
   RNSVG: 77d8775159dbdc228febb75b67bc1d5733c0d2d8

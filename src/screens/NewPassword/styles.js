@@ -142,7 +142,7 @@ const getStyles = (colors) => StyleSheet.create({
     },
 
     button: {
-        backgroundColor: colors?.primary,
+        backgroundColor: colors?.bttonColor,
         paddingVertical: moderateScale(15),
         borderRadius: moderateScale(10),
         alignItems: 'center',

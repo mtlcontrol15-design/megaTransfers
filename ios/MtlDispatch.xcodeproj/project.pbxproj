@@ -8,7 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
-		185764062F9F4D600048BAB0 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 185764052F9F4D600048BAB0 /* GoogleService-Info.plist */; };
+		186709342FE939120058DEA0 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 186709332FE939120058DEA0 /* GoogleService-Info.plist */; };
 		761780ED2CA45674006654EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EC2CA45674006654EE /* AppDelegate.swift */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
 		B54DFB7D6E790B3854A3BE1C /* libPods-MtlDispatch.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 3D8AE046D20F6B02E18C4537 /* libPods-MtlDispatch.a */; };
@@ -21,7 +21,7 @@
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = MtlDispatch/Info.plist; sourceTree = "<group>"; };
 		13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = PrivacyInfo.xcprivacy; path = MtlDispatch/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		185764002F9F3BCA0048BAB0 /* MtlDispatch.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = MtlDispatch.entitlements; path = MtlDispatch/MtlDispatch.entitlements; sourceTree = "<group>"; };
-		185764052F9F4D600048BAB0 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
+		186709332FE939120058DEA0 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		3D8AE046D20F6B02E18C4537 /* libPods-MtlDispatch.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-MtlDispatch.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		3E291E1B5E8B66BD76961DF4 /* Pods-MtlDispatch.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MtlDispatch.release.xcconfig"; path = "Target Support Files/Pods-MtlDispatch/Pods-MtlDispatch.release.xcconfig"; sourceTree = "<group>"; };
 		761780EC2CA45674006654EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = MtlDispatch/AppDelegate.swift; sourceTree = "<group>"; };
@@ -51,7 +51,7 @@
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */,
 				13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */,
-				185764052F9F4D600048BAB0 /* GoogleService-Info.plist */,
+				186709332FE939120058DEA0 /* GoogleService-Info.plist */,
 			);
 			name = MtlDispatch;
 			sourceTree = "<group>";
@@ -165,7 +165,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */,
-				185764062F9F4D600048BAB0 /* GoogleService-Info.plist in Resources */,
+				186709342FE939120058DEA0 /* GoogleService-Info.plist in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				D4E6CB40998434DC1A1346C7 /* PrivacyInfo.xcprivacy in Resources */,
 			);

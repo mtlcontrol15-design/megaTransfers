@@ -88,19 +88,19 @@ const getStyles = (colors) => StyleSheet.create({
     marginLeft: scale(8),
     fontSize: moderateScale(14),
     fontWeight: '500',
-    color: Theme.colors?.grey,
+    color: Theme.colors?.black,
   },
 
   forgotText: {
     fontSize: moderateScale(14),
     fontWeight: '600',
-    color: Theme.colors?.primary,
+    color: Theme.colors?.red,
   },
 
   loginButton: {
     height: scale(56),
     borderRadius: scale(12),
-    backgroundColor: Theme.colors?.primary,
+    backgroundColor: Theme.colors?.red,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -160,7 +160,7 @@ const getStyles = (colors) => StyleSheet.create({
   signupLink: {
     fontSize: moderateScale(14),
     fontWeight: '600',
-    color: Theme.colors?.primary,
+    color: Theme.colors?.red,
     textDecorationLine: 'underline',
   },
 });

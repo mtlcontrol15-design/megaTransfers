@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { FlatList, Text, TouchableOpacity, View, ActivityIndicator, TextInput } from 'react-native';
 import { useTheme } from '@react-navigation/native';
 
@@ -7,6 +7,8 @@ import getStyles from './roleSelectionStyles';
 
 import { API_CONFIG } from '../../config/config';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { EndPoints } from '../../services/EndPoints';
+import queryHandler from '../../services/queries/queryHandler';
 
 const roleOptions = [
     {
@@ -29,6 +31,8 @@ const roleOptions = [
     },
 ];
 
+const CURRENT_COMPANY_NAME = 'Mega Transfers Limited';
+
 const RoleSelectionScreen = ({ navigation }) => {
     const { colors } = useTheme();
     const styles = getStyles(colors);
@@ -41,41 +45,27 @@ const RoleSelectionScreen = ({ navigation }) => {
     const [companyError, setCompanyError] = useState('');
     const [companyNotFound, setCompanyNotFound] = useState(false);
 
-    const fetchCompanies = async (text) => {
-        setCompanySearch(text);
-        setSelectedCompany(null);
-        setCompanyError('');
-        setCompanyNotFound(false);
+    const { data, error, status, isFetching, refetch } = queryHandler(EndPoints.getCompaniesForRoleSelection);
 
-        if (text.trim().length < 3) {
-            setCompanySuggestions([]);
-            setShowCompanyDropdown(false);
+    // console.log('Suggested companies data:', data);
+
+    useEffect(() => {
+        const companies = data?.allCompanies || [];
+
+        const megaTransfersCompany = companies.find(
+            item =>
+                item.companyName?.toLowerCase() === CURRENT_COMPANY_NAME.toLowerCase() ||
+                item.tradingName?.toLowerCase() === CURRENT_COMPANY_NAME.toLowerCase()
+        );
+
+        if (megaTransfersCompany) {
+            setSelectedCompany(megaTransfersCompany);
+            setCompanySearch(megaTransfersCompany.companyName);
+            setCompanyError('');
             setCompanyNotFound(false);
-            return;
-        }
-
-        try {
-            setLoadingCompanies(true);
-
-            const response = await fetch(
-                `${API_CONFIG.BASE_URL}/api/companies/register-suggestions?search=${encodeURIComponent(text)}`
-            );
-
-            const data = await response.json();
-            const suggestions = data?.data || [];
-
-            setCompanySuggestions(suggestions);
-            setShowCompanyDropdown(suggestions.length > 0);
-            setCompanyNotFound(suggestions.length === 0);
-        } catch (error) {
-            console.log('Company search error:', error);
-            setCompanySuggestions([]);
             setShowCompanyDropdown(false);
-            setCompanyNotFound(true);
-        } finally {
-            setLoadingCompanies(false);
         }
-    };
+    }, [data]);
 
     const handleContinue = () => {
         if (selectedRole === 'corporate' && !selectedCompany) {
@@ -112,7 +102,7 @@ const RoleSelectionScreen = ({ navigation }) => {
 
             <View style={styles.container}>
                 <View style={styles.header}>
-                    <Text style={styles.title}>Join MtlDispatch</Text>
+                    <Text style={styles.title}>Join Mega Transfers</Text>
                     <Text style={styles.subtitle}>
                         Choose how you'll use the app to get started.
                     </Text>
@@ -202,29 +192,17 @@ const RoleSelectionScreen = ({ navigation }) => {
                                 color: colors.black,
                                 fontSize: 15,
                             }}
-                            placeholder="Search and select your company"
+                            placeholder="Company name"
                             placeholderTextColor={colors.lightText}
                             value={companySearch}
-                            onChangeText={fetchCompanies}
+                            editable={false}
+                            selectTextOnFocus={false}
                         />
 
-                        {loadingCompanies ? (
+                        {isFetching ? (
                             <ActivityIndicator size="small" color={colors.primary} />
-                        ) : companySearch ? (
-                            <TouchableOpacity
-                                onPress={() => {
-                                    setCompanySearch('');
-                                    setSelectedCompany(null);
-                                    setCompanySuggestions([]);
-                                    setShowCompanyDropdown(false);
-                                    setCompanyError('');
-                                    setCompanyNotFound(false);
-                                }}
-                            >
-                                <Icons.X size={18} color={colors.lightText} />
-                            </TouchableOpacity>
                         ) : (
-                            <Icons.Search size={18} color={colors.primary} />
+                            <Icons.Check size={18} color={colors.primary} />
                         )}
                     </View>
 

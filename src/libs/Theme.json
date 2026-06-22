@@ -1,12 +1,12 @@
 {
   "colors": {
-    "primary1": "#07384d",
+    "primary1": "#0d1758",
     "grey": "rgba(21, 21, 21, 0.5)",
     "lightGrey": "rgba(241, 241, 241, 0.9)",
     "lightAqua": "rgba(197, 221, 248, 1)",
     "blue": "#2563EB",
-    "red": "#EF4444",
-    "primary": "#000000",
+    "red": "#ba090a",
+    "primary": "#0d1758",
     "secondary": "#333333",
     "bg": "#FFFFFF",
     "text": "#000000",

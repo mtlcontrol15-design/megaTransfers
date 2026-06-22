@@ -6,7 +6,7 @@ const {getHeight} = Responsive
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#07384d',
+    backgroundColor: Theme.colors.primary1,
   },
 
 });

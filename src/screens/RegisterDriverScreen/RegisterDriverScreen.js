@@ -23,15 +23,15 @@ import images from "../../assets/images";
 import toastUtils from "../../utils/Toast/toast";
 import LoaderModal from "../../utils/loaderModal";
 import { EndPoints } from "../../services/EndPoints";
+import { setFormValue } from "../../utils/profileForm.utils";
 import { formatPhoneWithPlus } from "../../utils/phoneUtils";
-import { pickAndUploadPDF, pickAndUploadDriverDocument } from "../../utils/pdfUpload.utils";
-import { uploadImageToBackend } from "../../utils/imageUpload.utils";
 import { openCameraOrGallery } from "../../utils/mediaPicker.utils";
+import { uploadImageToBackend } from "../../utils/imageUpload.utils";
 import { mutationHandler } from "../../services/mutations/mutationHandler";
 import { checkExpiry, viewDocumentInApp } from "../../utils/document.utils";
-import { setFormValue } from "../../utils/profileForm.utils";
-import LocationSearchModal from "../../components/JourneyCard/components/LocationSearchModal";
 import { registerDriverValidationSchema } from "../../utils/validationUtils";
+import { pickAndUploadPDF, pickAndUploadDriverDocument } from "../../utils/pdfUpload.utils";
+import LocationSearchModal from "../../components/JourneyCard/components/LocationSearchModal";
 
 const DRIVER_DOCUMENTS = [
   { title: "Driver Picture", field: "driverPicture" },
@@ -791,7 +791,7 @@ const RegisterDriverScreen = ({ navigation, route }) => {
                     </View>
                   ) : (
                     <View style={{ width: 80, height: 80, justifyContent: "center", alignItems: "center" }}>
-                      <Icons.User size={40} color={colors.lightBlue} />
+                      <Icons.User size={40} color={colors.bttonColor} />
                       {isImageUploading && (
                         <View style={styles?.indicator}>
                           <LoaderKit
@@ -815,7 +815,7 @@ const RegisterDriverScreen = ({ navigation, route }) => {
                   onPress={() => openCameraOrGallery(isImageUploading, setForm)}
                   disabled={isImageUploading}
                 >
-                  <Icons.Camera size={24} color={colors.lightBlue} />
+                  <Icons.Camera size={24} color={colors.bttonColor} />
                 </TouchableOpacity>
 
                 <Text style={styles.name}>

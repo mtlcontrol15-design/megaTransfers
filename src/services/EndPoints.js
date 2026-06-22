@@ -58,5 +58,6 @@ export const EndPoints = {
   postReview: '/api/settings/public/submit-review',
   getBookingReviews: '/api/settings/public/review-details',
   getSuggestions: '/api/booking/get-booking-suggestion',
-  getSuggestedCompanies: '/api/companies/register-suggestions?search='
+  getSuggestedCompanies: '/api/companies/register-suggestions?search=',
+  getCompaniesForRoleSelection: '/api/companies/getAllCompaniesForApp'
 };

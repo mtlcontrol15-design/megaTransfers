@@ -162,7 +162,7 @@ const getStyles = (colors) =>
             alignItems: 'center'
         },
         saveBtn: {
-            backgroundColor: colors?.lightGreen,
+            backgroundColor: colors?.bttonColor,
             padding: moderateScale(10),
             borderRadius: moderateScale(8),
             width: '48%',
@@ -194,7 +194,7 @@ const getStyles = (colors) =>
             alignItems: 'center',
             justifyContent: 'center',
             borderWidth: 1,
-            borderColor: colors?.lightBlue
+            borderColor: colors?.bttonColor
         },
         input: {
             flex: 1, // 🔥 THIS IS THE MAIN FIX
