@@ -626,9 +626,9 @@ const BookingJobCard = ({ job, onPress, onPressStatus }) => {
                 </Text>
 
                 {expanded ? (
-                    <Icons.ChevronUp size={16} color={colors?.gray600} />
+                    <Icons.ChevronUp size={16} color={colors?.white} />
                 ) : (
-                    <Icons.ChevronDown size={16} color={colors?.gray600} />
+                    <Icons.ChevronDown size={16} color={colors?.white} />
                 )}
             </TouchableOpacity>
         </TouchableOpacity>

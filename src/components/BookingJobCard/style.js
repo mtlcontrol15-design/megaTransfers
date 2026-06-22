@@ -117,7 +117,8 @@ const getStyles = (colors) =>
             alignSelf: "center",
             paddingHorizontal: moderateScale(12),
             paddingVertical: verticalScale(6),
-            backgroundColor: colors?.gray200,
+            backgroundColor: colors?.bttonColor,
+            opacity: 0.8,
             borderRadius: moderateScale(6),
             flexDirection: "row",
             alignItems: "center",
@@ -129,7 +130,7 @@ const getStyles = (colors) =>
         showMoreText: {
             fontSize: moderateScale(13),
             fontWeight: "600",
-            color: colors?.gray600,
+            color: colors?.white,
         },
         flightContainer: {
             marginTop: verticalScale(6),

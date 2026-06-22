@@ -1347,7 +1347,7 @@ const JobDetailsScreen = () => {
                                                 style={{
                                                     fontSize: moderateScale(16),
                                                     fontWeight: "bold",
-                                                    color: colors?.lightBlue,
+                                                    color: colors?.white,
                                                     textDecorationLine: "underline",
                                                 }}
                                             >
@@ -1356,7 +1356,7 @@ const JobDetailsScreen = () => {
 
                                             <Icons.Search
                                                 size={moderateScale(16)}
-                                                color={colors?.lightBlue}
+                                                color={colors?.white}
                                                 style={{ marginLeft: scale(6) }}
                                             />
                                         </TouchableOpacity>
@@ -1499,7 +1499,7 @@ const JobDetailsScreen = () => {
                                 {
                                     // marginTop: verticalScale(12),
                                     justifyContent: "space-around",
-                                    backgroundColor: colors?.primary,
+                                    backgroundColor: colors?.bttonColor,
                                     paddingVertical: verticalScale(12),
                                     borderRadius: scale(8),
                                     paddingHorizontal: moderateScale(6)

@@ -162,7 +162,8 @@ const getStyles = (colors) =>
             alignItems: 'center'
         },
         saveBtn: {
-            backgroundColor: colors?.lightGreen,
+            backgroundColor: colors?.bttonColor,
+            opacity: 0.8,
             padding: moderateScale(10),
             borderRadius: moderateScale(8),
             width: '48%',

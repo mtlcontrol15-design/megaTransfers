@@ -16,7 +16,6 @@ import { EndPoints } from "../../services/EndPoints";
 import { handleLogout } from "../../utils/logout.utils";
 import { dispatchUser } from "../../redux/slices/userSlice";
 import { formatPhoneWithPlus } from "../../utils/phoneUtils";
-import { pickAndUploadPDF, pickAndUploadDriverDocument } from '../../utils/pdfUpload.utils'
 import { uploadImageToBackend } from "../../utils/imageUpload.utils";
 import { openCameraOrGallery } from "../../utils/mediaPicker.utils";
 import useQueryHandler from "../../services/queries/useQueryHandler";
@@ -24,6 +23,7 @@ import { getDriverDocuments } from "../../utils/driverDocuments.utils";
 import { mutationHandler } from "../../services/mutations/mutationHandler";
 import { checkExpiry, viewDocumentInApp } from "../../utils/document.utils";
 import { setFormValue, mapUserToForm } from "../../utils/profileForm.utils";
+import { pickAndUploadPDF, pickAndUploadDriverDocument } from '../../utils/pdfUpload.utils'
 
 const ProfileScreen = ({ navigation }) => {
   const { colors } = useTheme();

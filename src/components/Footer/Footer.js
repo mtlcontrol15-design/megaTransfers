@@ -102,9 +102,9 @@ const Footer = ({ colors, navigation, chatCount, dashBoardCustomer }) => {
                 </Text>
 
                 {showDetails ? (
-                    <Icons.ChevronUp size={16} color={colors.black} />
+                    <Icons.ChevronUp size={16} color={colors.bttonColor} />
                 ) : (
-                    <Icons.ChevronDown size={16} color={colors.black} />
+                    <Icons.ChevronDown size={16} color={colors.bttonColor} />
                 )}
             </TouchableOpacity>
 
@@ -135,7 +135,7 @@ const Footer = ({ colors, navigation, chatCount, dashBoardCustomer }) => {
                                             style={{
                                                 fontSize: moderateScale(16),
                                                 fontWeight: "bold",
-                                                color: colors.black,
+                                                color: colors.bttonColor,
                                             }}
                                         >
                                             {initials}
@@ -219,13 +219,13 @@ const Footer = ({ colors, navigation, chatCount, dashBoardCustomer }) => {
                                     { backgroundColor: colors.white },
                                 ]}
                             >
-                                <IconComponent size={24} color={colors.gray600} />
+                                <IconComponent size={24} color={colors.bttonColor} />
                             </TouchableOpacity>
 
                             <Text
                                 style={{
                                     fontSize: moderateScale(11),
-                                    color: colors.gray600,
+                                    color: colors.bttonColor,
                                     width: scale(80),
                                     textAlign: "center",
                                 }}
@@ -325,7 +325,7 @@ const styles = StyleSheet.create({
         justifyContent: "center",
         marginBottom: verticalScale(6),
         borderWidth: 1,
-        borderColor: Theme?.colors.gray600
+        borderColor: Theme?.colors.red
     },
 
     badge: {
@@ -354,7 +354,7 @@ const styles = StyleSheet.create({
     },
 
     toggleText: {
-        color: Theme?.colors?.black,
+        color: Theme?.colors?.red,
         fontSize: moderateScale(12),
         fontWeight: "600",
     },

@@ -54,7 +54,8 @@ const getStyles = (colors) =>
         },
 
         activeTab: {
-            backgroundColor: colors.gray200,
+            backgroundColor: colors.bttonColor,
+            opacity: 0.8,
         },
 
         tabText: {
@@ -64,7 +65,7 @@ const getStyles = (colors) =>
         },
 
         activeTabText: {
-            color: colors?.black,
+            color: colors?.white,
         },
 
         card: {
@@ -103,17 +104,18 @@ const getStyles = (colors) =>
         },
 
         statusContainer: {
-            backgroundColor: "#F1F5F9",
+            backgroundColor: colors?.bttonColor,
             paddingHorizontal: scale(16),
             paddingVertical: verticalScale(4),
             borderRadius: moderateScale(20),
             alignSelf: "flex-start",
+            opacity: 0.8,
         },
 
         statusText: {
             fontSize: moderateScale(11),
             fontWeight: "600",
-            color: "#475569",
+            color: colors?.white,
         },
 
         cardBottom: {
@@ -145,7 +147,8 @@ const getStyles = (colors) =>
             flexDirection: "row",
             alignItems: "center",
             justifyContent: "center",
-            backgroundColor: colors.primary,
+            backgroundColor: colors.bttonColor,
+            opacity: 0.8,
             paddingHorizontal: 12,
             paddingVertical: 8,
             borderRadius: 8,

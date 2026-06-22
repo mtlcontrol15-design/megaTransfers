@@ -45,7 +45,7 @@ const NavigationTabs = ({ navItems, selectedNav, onNavigate, colors }) => {
             >
               <Icon
                 size={moderateScale(18)}
-                color={active ? colors.primary : colors.gray600}
+                color={active ? colors.bttonColor : colors.gray600}
                 strokeWidth={active ? 2.4 : 1.8}
               />
 
@@ -53,7 +53,7 @@ const NavigationTabs = ({ navItems, selectedNav, onNavigate, colors }) => {
                 style={[
                   styles.label,
                   {
-                    color: active ? colors.primary : colors.gray600,
+                    color: active ? colors.bttonColor : colors.gray600,
                     fontWeight: active ? "600" : "500",
                   },
                 ]}
@@ -66,7 +66,7 @@ const NavigationTabs = ({ navItems, selectedNav, onNavigate, colors }) => {
                 <View
                   style={[
                     styles.activeDot,
-                    { backgroundColor: colors.primary },
+                    { backgroundColor: colors.bttonColor },
                   ]}
                 />
               )}

@@ -112,7 +112,7 @@ const getStyles = (colors) => StyleSheet.create({
   },
   phoneBtn: {
     marginTop: verticalScale(10),
-    backgroundColor: colors?.primary,
+    backgroundColor: colors?.bttonColor,
     paddingHorizontal: scale(10),
     paddingVertical: verticalScale(6),
     borderRadius: scale(8),
@@ -131,10 +131,11 @@ const getStyles = (colors) => StyleSheet.create({
   },
   copyBtn: {
     marginTop: verticalScale(10),
-    backgroundColor: colors?.primary,
+    backgroundColor: colors?.bttonColor,
     paddingHorizontal: scale(10),
     paddingVertical: verticalScale(6),
     borderRadius: scale(8),
+    opacity: 0.7,
     // alignItems:'center',
     // justifyContent:'center',
   },
@@ -231,7 +232,8 @@ const getStyles = (colors) => StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     marginTop: verticalScale(4),
-    backgroundColor: colors?.primary,
+    backgroundColor: colors?.bttonColor,
+    opacity: 0.7,
     padding: scale(10),
     borderRadius: scale(8),
   }
