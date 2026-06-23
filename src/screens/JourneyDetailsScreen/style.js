@@ -221,7 +221,7 @@ const getStyles = (colors) =>
     },
 
     closeButton: {
-      backgroundColor: colors.primary,
+      backgroundColor: colors.bttonColor,
       paddingVertical: verticalScale(12),
       borderRadius: moderateScale(10),
       alignItems: "center",

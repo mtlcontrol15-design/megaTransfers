@@ -297,7 +297,7 @@ const RideCard = ({ ride, onViewDetails, onEditBooking, onCancelBooking, reviewL
                     activeOpacity={0.7}
                     onPress={() => setShowReviewModal(true)}
                     style={{
-                      backgroundColor: colors.primary,
+                      backgroundColor: colors.bttonColor,
                       paddingVertical: 12,
                       borderRadius: 10,
                       marginTop: 14,

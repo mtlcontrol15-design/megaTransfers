@@ -72,7 +72,7 @@ const getStyles = (colors) =>
       padding: moderateScale(16)
     },
     button: {
-      backgroundColor: colors?.primary,
+      backgroundColor: colors?.bttonColor,
       justifyContent: 'center',
       alignItems: 'center',
       borderRadius: moderateScale(8),

@@ -172,7 +172,7 @@ const AppContent = () => {
 
   return (
     <>
-      <StatusBar backgroundColor="#07384d" barStyle="light-content" />
+      <StatusBar backgroundColor="#000000" barStyle="light-content" />
       <AppNavigation />
       <Toast />
     </>

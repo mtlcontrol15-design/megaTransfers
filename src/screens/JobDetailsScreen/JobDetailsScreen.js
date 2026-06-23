@@ -816,7 +816,7 @@ const JobDetailsScreen = () => {
                                                 marginTop: 0,
                                                 gap: moderateScale(10),
                                                 borderBottomWidth: 1,
-                                                borderBottomColor: colors?.gray600,
+                                                borderBottomColor: colors?.white,
                                                 paddingVertical: verticalScale(10),
                                             },
                                         ]}
@@ -833,7 +833,7 @@ const JobDetailsScreen = () => {
                                             marginTop: moderateScale(12),
                                             gap: moderateScale(10),
                                             borderBottomWidth: 1,
-                                            borderBottomColor: colors?.gray600,
+                                            borderBottomColor: colors?.white,
                                             paddingBottom: verticalScale(10),
                                         },
                                     ]}>
@@ -846,7 +846,7 @@ const JobDetailsScreen = () => {
                                 <TouchableOpacity
                                     activeOpacity={0.7}
                                     style={[
-                                        styles.phoneBtn,
+                                        styles.row,
                                         {
                                             marginTop: moderateScale(12),
                                             justifyContent: "center",
@@ -861,7 +861,7 @@ const JobDetailsScreen = () => {
                                             marginTop: moderateScale(0),
                                             gap: moderateScale(10),
                                             borderBottomWidth: 1,
-                                            borderBottomColor: colors?.gray600,
+                                            borderBottomColor: colors?.white,
                                             paddingBottom: verticalScale(10),
 
                                         },
@@ -872,7 +872,7 @@ const JobDetailsScreen = () => {
                                 </TouchableOpacity>
                                 <TouchableOpacity
                                     style={[
-                                        styles.phoneBtn,
+                                        styles.row,
                                         {
                                             // marginTop: moderateScale(12),
                                             justifyContent: "center",

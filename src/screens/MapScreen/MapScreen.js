@@ -76,10 +76,12 @@ const MapScreen = ({ navigation }) => {
       ?.toLowerCase() || "";
 
   const trackingEnded = [
+    "new",
     "accepted",
     "no show",
-    "late cancel",
     "completed",
+    "cancelled",
+    "late cancel",
   ].includes(bookingStatus);
 
   const stopWatchingLocation = useCallback(() => {

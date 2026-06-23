@@ -626,7 +626,7 @@ const JourneyDetailsScreen = ({ route, navigation }) => {
                     paddingVertical: verticalScale(12),
                     borderRadius: scale(8),
                     paddingHorizontal: moderateScale(6),
-                    backgroundColor: colors?.primary,
+                    backgroundColor: colors?.bttonColor,
                   },
                 ]}
               >

@@ -86,7 +86,7 @@ const getStyles = (colors) => StyleSheet.create({
         height: scale(38),
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: colors?.primary,
+        backgroundColor: colors?.bttonColor,
         borderRadius: moderateScale(10)
     },
     header: {
