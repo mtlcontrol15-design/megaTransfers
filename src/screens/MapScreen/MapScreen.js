@@ -17,6 +17,7 @@ import { dispatchOnlineStatus } from '../../redux/slices/userSlice';
 import useQueryHandler from '../../services/queries/useQueryHandler';
 import { requestLocationPermission } from '../../utils/permissionsHelper';
 import { mutationHandler } from '../../services/mutations/mutationHandler';
+import toastUtils from '../../utils/Toast/toast';
 
 
 const MapScreen = ({ navigation }) => {
@@ -149,7 +150,7 @@ const MapScreen = ({ navigation }) => {
       return;
     }
 
-    const hasPermission = await requestLocationPermission();
+    const hasPermission = await requestLocationPermission(true);
     if (!hasPermission) return;
 
     stopWatchingLocation();
@@ -190,9 +191,15 @@ const MapScreen = ({ navigation }) => {
 
   const handleSwipe = useCallback(async (nextStatus) => {
     try {
-      const hasPermission = await requestLocationPermission();
+      const hasPermission = await requestLocationPermission(nextStatus);
 
-      if (!hasPermission) return;
+      if (!hasPermission && nextStatus) {
+        toastUtils.showError(
+          "Location Permission Required",
+          "Please allow location permission to go online"
+        );
+        return;
+      }
 
       Geolocation.getCurrentPosition(
         (position) => {

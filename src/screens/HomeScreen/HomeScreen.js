@@ -702,9 +702,9 @@ const HomeScreen = () => {
 
   const handleSwipe = async (isOnlineStatus) => {
     try {
-      const hasPermission = await requestLocationPermission();
+      const hasPermission = await requestLocationPermission(isOnlineStatus);
 
-      if (!hasPermission) {
+      if (!hasPermission && isOnlineStatus) {
         toastUtils.showError(
           "Location Permission Required",
           "Please allow location permission to go online"
