@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity, Linking, Alert, Image, RefreshControl } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, Linking, Alert, Image, RefreshControl, Platform } from "react-native";
 
 import { useSelector, useDispatch } from "react-redux";
 import Clipboard from "@react-native-clipboard/clipboard";
@@ -16,9 +16,10 @@ import { EndPoints } from "../../services/EndPoints";
 import queryHandler from "../../services/queries/queryHandler";
 import ExtrasModal from "../../components/ExtrasModal/ExtrasModal";
 import { dispatchOnlineStatus } from "../../redux/slices/userSlice";
-import { requestLocationPermission } from "../../utils/permissionsHelper";
 import { mutationHandler } from "../../services/mutations/mutationHandler";
 import JobsStatusModal from "../../components/JobsStatusModal/JobsStatusModal";
+import LocationDisclosureModal from "../../components/LocationDisclosureModal/LocationDisclosureModal";
+import { requestLocationPermission, checkLocationPermissionOnly } from "../../utils/permissionsHelper";
 
 
 const JobDetailsScreen = () => {
@@ -35,6 +36,9 @@ const JobDetailsScreen = () => {
     const [showReceipt, setShowReceipt] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
     const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+    const [showLocationModal, setShowLocationModal] = useState(false);
+    const [pendingOnlineStatus, setPendingOnlineStatus] = useState(null);
+    const [pendingStatusJob, setPendingStatusJob] = useState(null);
 
 
 
@@ -480,20 +484,58 @@ const JobDetailsScreen = () => {
         }
     };
 
-    const handleOpenStatusModal = async () => {
-        if (!isOnline) {
-            const hasPermission = await requestLocationPermission();
+    const makeDriverOnline = async () => {
+        try {
+            const hasPermission = await requestLocationPermission(true);
 
             if (!hasPermission) {
                 toastUtils.showError(
                     "Location Permission Required",
                     "Please allow location permission to go online"
                 );
-                return;
+                return false;
             }
 
             dispatch(dispatchOnlineStatus(true));
+
+            const socket = getSocket();
+
+            socket?.emit("map:location:updated", {
+                isOnline: true,
+                userId: user?._id,
+                companyId: user?.companyId,
+                employeeNumber: user?.employeeNumber,
+            });
+
             toastUtils.showSuccess("You are now ONLINE");
+
+            return true;
+        } catch (error) {
+            console.log("Make driver online error:", error);
+            return false;
+        }
+    };
+    const handleOpenStatusModal = async () => {
+        if (isOnline) {
+            setSelectedJob(jobData);
+            setShowStatusModal(true);
+            return;
+        }
+
+        const hasLocationPermission = await checkLocationPermissionOnly();
+
+        if (!hasLocationPermission) {
+            setPendingStatusJob(jobData);
+            setPendingOnlineStatus(true);
+            setShowLocationModal(true);
+            return;
+        }
+
+        const onlineUpdated = await makeDriverOnline();
+
+        if (!onlineUpdated) {
+            setShowStatusModal(false);
+            return;
         }
 
         setSelectedJob(jobData);
@@ -816,7 +858,7 @@ const JobDetailsScreen = () => {
                                                 marginTop: 0,
                                                 gap: moderateScale(10),
                                                 borderBottomWidth: 1,
-                                                borderBottomColor: colors?.white,
+                                                borderBottomColor: colors?.gray600,
                                                 paddingVertical: verticalScale(10),
                                             },
                                         ]}
@@ -833,7 +875,7 @@ const JobDetailsScreen = () => {
                                             marginTop: moderateScale(12),
                                             gap: moderateScale(10),
                                             borderBottomWidth: 1,
-                                            borderBottomColor: colors?.white,
+                                            borderBottomColor: colors?.gray600,
                                             paddingBottom: verticalScale(10),
                                         },
                                     ]}>
@@ -846,7 +888,7 @@ const JobDetailsScreen = () => {
                                 <TouchableOpacity
                                     activeOpacity={0.7}
                                     style={[
-                                        styles.row,
+                                        styles.phoneBtn,
                                         {
                                             marginTop: moderateScale(12),
                                             justifyContent: "center",
@@ -861,7 +903,7 @@ const JobDetailsScreen = () => {
                                             marginTop: moderateScale(0),
                                             gap: moderateScale(10),
                                             borderBottomWidth: 1,
-                                            borderBottomColor: colors?.white,
+                                            borderBottomColor: colors?.gray600,
                                             paddingBottom: verticalScale(10),
 
                                         },
@@ -872,7 +914,7 @@ const JobDetailsScreen = () => {
                                 </TouchableOpacity>
                                 <TouchableOpacity
                                     style={[
-                                        styles.row,
+                                        styles.phoneBtn,
                                         {
                                             // marginTop: moderateScale(12),
                                             justifyContent: "center",
@@ -1347,7 +1389,7 @@ const JobDetailsScreen = () => {
                                                 style={{
                                                     fontSize: moderateScale(16),
                                                     fontWeight: "bold",
-                                                    color: colors?.white,
+                                                    color: colors?.lightBlue,
                                                     textDecorationLine: "underline",
                                                 }}
                                             >
@@ -1356,7 +1398,7 @@ const JobDetailsScreen = () => {
 
                                             <Icons.Search
                                                 size={moderateScale(16)}
-                                                color={colors?.white}
+                                                color={colors?.lightBlue}
                                                 style={{ marginLeft: scale(6) }}
                                             />
                                         </TouchableOpacity>
@@ -1499,7 +1541,7 @@ const JobDetailsScreen = () => {
                                 {
                                     // marginTop: verticalScale(12),
                                     justifyContent: "space-around",
-                                    backgroundColor: colors?.bttonColor,
+                                    backgroundColor: colors?.primary,
                                     paddingVertical: verticalScale(12),
                                     borderRadius: scale(8),
                                     paddingHorizontal: moderateScale(6)
@@ -1577,6 +1619,38 @@ const JobDetailsScreen = () => {
                 }
                 onComplete={(extraData) => {
                     updateJobStatus("completed", extraData);
+                }}
+            />
+            <LocationDisclosureModal
+                visible={showLocationModal}
+                colors={colors}
+                onCancel={() => {
+                    setShowLocationModal(false);
+                    setPendingOnlineStatus(null);
+                    setPendingStatusJob(null);
+                    setShowStatusModal(false);
+                }}
+                onAgree={async () => {
+                    setShowLocationModal(false);
+
+                    if (pendingOnlineStatus === true) {
+                        const onlineUpdated = await makeDriverOnline();
+
+                        if (!onlineUpdated) {
+                            setPendingOnlineStatus(null);
+                            setPendingStatusJob(null);
+                            setShowStatusModal(false);
+                            return;
+                        }
+
+                        if (pendingStatusJob) {
+                            setSelectedJob(pendingStatusJob);
+                            setShowStatusModal(true);
+                        }
+                    }
+
+                    setPendingOnlineStatus(null);
+                    setPendingStatusJob(null);
                 }}
             />
         </View>

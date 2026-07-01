@@ -10,14 +10,17 @@ import { useFocusEffect, useTheme } from '@react-navigation/native';
 
 import getStyles from "./style";
 import Icons from '../../assets/icons';
+import toastUtils from '../../utils/Toast/toast';
 import { getSocket } from '../../services/socket';
 import { EndPoints } from '../../services/EndPoints';
+import queryHandler from '../../services/queries/queryHandler';
 import SwipeButton from '../../components/SwipeButton/SwipeButton';
 import { dispatchOnlineStatus } from '../../redux/slices/userSlice';
 import useQueryHandler from '../../services/queries/useQueryHandler';
-import { requestLocationPermission } from '../../utils/permissionsHelper';
 import { mutationHandler } from '../../services/mutations/mutationHandler';
-import toastUtils from '../../utils/Toast/toast';
+import LocationDisclosureModal from '../../components/LocationDisclosureModal/LocationDisclosureModal';
+import { requestLocationPermission, checkLocationPermissionOnly, requestSinglePermission } from '../../utils/permissionsHelper';
+
 
 
 const MapScreen = ({ navigation }) => {
@@ -27,6 +30,8 @@ const MapScreen = ({ navigation }) => {
 
   const [region, setRegion] = useState(null);
   const [heading, setHeading] = useState(0);
+  const [showDriverInfo, setShowDriverInfo] = useState(false);
+  const [showLocationModal, setShowLocationModal] = useState(false);
   const locationWatchRef = useRef(null);
   const locationIntervalRef = useRef(null);
   const latestPositionRef = useRef(null);
@@ -51,7 +56,17 @@ const MapScreen = ({ navigation }) => {
 
   // console.log('=======usman testing  data is here', liveLocationData);
 
+  const bookingId = liveLocationData?.data?.booking?.bookingId;
 
+  // console.log('=======bookingId is here', bookingId);
+
+  const {
+    data: trackingData,
+    refetch: refetchTracking,
+  } = queryHandler(
+    `${EndPoints.customerTrackingLocation}?bookingId=${bookingId}`,
+  );
+  // console.log('=======  trackingData is here', trackingData);
   const { mutate: mutateSaveLocation } = mutationHandler(
     EndPoints.saveLocation,
     null,
@@ -150,8 +165,11 @@ const MapScreen = ({ navigation }) => {
       return;
     }
 
-    const hasPermission = await requestLocationPermission(true);
-    if (!hasPermission) return;
+    const hasPermission = await checkLocationPermissionOnly();
+
+    if (!hasPermission) {
+      return;
+    }
 
     stopWatchingLocation();
 
@@ -257,6 +275,22 @@ const MapScreen = ({ navigation }) => {
     user,
   ]);
 
+  const handleSwipeRequest = useCallback(async (nextStatus) => {
+    if (!isDriver || !nextStatus) {
+      await handleSwipe(nextStatus);
+      return;
+    }
+
+    const hasLocationPermission = await checkLocationPermissionOnly();
+
+    if (!hasLocationPermission) {
+      setShowLocationModal(true);
+      return;
+    }
+
+    await handleSwipe(nextStatus);
+  }, [handleSwipe, isDriver]);
+
   const isDriverOnlineFromAPI = currentLocation?.isOnline === true;
   const lastUpdated = currentLocation?.lastUpdated;
   const offlineDuration = getTimeAgo(lastUpdated);
@@ -313,7 +347,7 @@ const MapScreen = ({ navigation }) => {
   useEffect(() => {
     const requestPermissionForCustomer = async () => {
       if (!isDriver) {
-        const hasPermission = await requestLocationPermission();
+        const hasPermission = await requestSinglePermission('locationForeground');
 
         if (hasPermission) {
           Geolocation.getCurrentPosition(
@@ -373,9 +407,33 @@ const MapScreen = ({ navigation }) => {
 
   const shouldShowMarker = isDriver
     ? !!region
-    : currentLocation?.isOnline && !trackingEnded;
+    : !trackingEnded && currentLocation?.isOnline === true;
 
   // console.log('======markerCoordinate are here', markerCoordinate);
+
+  const trackingInfo = trackingData?.data;
+
+  const trackingDriver = trackingInfo?.driver;
+  const trackingBooking = trackingInfo?.booking;
+  const tracking = trackingInfo?.tracking;
+  const trackingLocation = trackingInfo?.location;
+
+  const driverName =
+    trackingDriver?.name ||
+    `${trackingDriver?.firstName || ''} ${trackingDriver?.surName || ''}`.trim() ||
+    'Driver';
+
+  const driverOnline = trackingLocation?.isOnline === true;
+
+  const bookingNumber = trackingBooking?.bookingId;
+  const pickupAddress = trackingBooking?.pickup?.address;
+  const roadDistanceText = tracking?.roadDistanceText;
+  const drivingDurationText = tracking?.drivingDurationText;
+
+  // console.log('pickup data is here', trackingBooking?.pickup);
+  // console.log('roadDistance data is here', roadDistanceText);
+  // console.log('drivingDurationText data is here', drivingDurationText);
+  // console.log('trackingInfo data is here', trackingInfo);
 
 
   return (
@@ -405,8 +463,14 @@ const MapScreen = ({ navigation }) => {
         {markerCoordinate && shouldShowMarker && (
           <Marker
             coordinate={{
-              latitude: Number(markerCoordinate.latitude),
-              longitude: Number(markerCoordinate.longitude),
+              latitude: Number(markerCoordinate.latitude ?? markerCoordinate.lat),
+              longitude: Number(markerCoordinate.longitude ?? markerCoordinate.lng),
+            }}
+            onPress={() => {
+              if (!isDriver) {
+                setShowDriverInfo(true);
+                refetchTracking?.();
+              }
             }}
           >
             <View style={styles.markerOuter}>
@@ -417,9 +481,56 @@ const MapScreen = ({ navigation }) => {
           </Marker>
         )}
       </MapView>
+      {!isDriver && showDriverInfo && trackingInfo && (
+        <View style={styles.driverInfoCard}>
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => setShowDriverInfo(false)}
+            style={styles.driverInfoClose}
+          >
+            <Text style={styles.driverInfoCloseText}>×</Text>
+          </TouchableOpacity>
+
+          <Text style={styles.driverInfoName}>
+            {driverName}
+          </Text>
+
+          <Text style={styles.driverInfoOnline}>
+            {driverOnline ? '● Online' : '● Offline'}
+          </Text>
+
+          <Text style={styles.driverInfoSmall}>
+            Updated {getTimeAgo(trackingLocation?.lastUpdated)} ago
+          </Text>
+
+          {bookingNumber && (
+            <Text style={styles.driverInfoText}>
+              Booking #{bookingNumber}
+            </Text>
+          )}
+
+          {pickupAddress && (
+            <Text style={styles.driverInfoText}>
+              Pickup: {pickupAddress}
+            </Text>
+          )}
+
+          {roadDistanceText && (
+            <Text style={styles.driverInfoText}>
+              Road distance: {roadDistanceText}
+            </Text>
+          )}
+
+          {drivingDurationText && (
+            <Text style={styles.driverInfoPurple}>
+              Driving time: {drivingDurationText}
+            </Text>
+          )}
+        </View>
+      )}
       {!isDriver && trackingEnded && (
         <View style={styles.offlineMarker}>
-          <Text style={{ color: "black" }}>
+          <Text style={{ color: "black", width: '100%', textAlign: 'center' }}>
             Driver tracking is no longer available
           </Text>
         </View>
@@ -427,7 +538,7 @@ const MapScreen = ({ navigation }) => {
 
       {!isDriver && !trackingEnded && !isDriverOnlineFromAPI && (
         <View style={styles.offlineMarker}>
-          <Text style={{ color: "black" }}>
+          <Text style={{ color: "black", width: '100%', textAlign: 'center' }}>
             No driver online
           </Text>
         </View>
@@ -437,9 +548,19 @@ const MapScreen = ({ navigation }) => {
       </TouchableOpacity>
       {isDriver && (
         <View style={{ paddingTop: moderateScale(15), paddingBottom: moderateScale(25), backgroundColor: colors?.primary }}>
-          <SwipeButton colors={colors} onSwipeSuccess={handleSwipe} />
+          <SwipeButton colors={colors} onSwipeSuccess={handleSwipeRequest} />
         </View>
       )}
+
+      <LocationDisclosureModal
+        visible={showLocationModal}
+        colors={colors}
+        onCancel={() => setShowLocationModal(false)}
+        onAgree={async () => {
+          setShowLocationModal(false);
+          await handleSwipe(true);
+        }}
+      />
     </View>
   );
 };

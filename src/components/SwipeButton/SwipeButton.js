@@ -11,7 +11,6 @@ import { moderateScale, verticalScale } from "react-native-size-matters";
 import { ChevronsRight } from "lucide-react-native";
 
 import toastUtils from "../../utils/Toast/toast";
-import { checkPermissionStatus, requestSinglePermission } from '../../utils/permissionsHelper';
 import { useSelector } from "react-redux";
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
@@ -83,8 +82,15 @@ const SwipeButton = ({ colors, onSwipeSuccess }) => {
 
                     const newStatus = !isOnlineRef.current;
 
+                    const success = await onSwipeSuccess?.(newStatus);
 
-                    onSwipeSuccess && onSwipeSuccess(newStatus);
+                    if (!success) {
+                        Animated.spring(translateX, {
+                            toValue: 0,
+                            useNativeDriver: false,
+                        }).start();
+                        return;
+                    }
 
                     if (newStatus) {
                         toastUtils.showSuccess("You are now ONLINE");

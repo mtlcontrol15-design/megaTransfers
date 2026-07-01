@@ -107,7 +107,7 @@ const RegisterDriverScreen = ({ navigation, route }) => {
       reset();
       toastUtils.showSuccess("Driver Registered", "Driver profile has been created");
       route?.params?.onRegistered?.(res);
-      navigation.goBack();
+      navigation.navigate("Login");
     },
     (err) => {
       reset();
@@ -562,7 +562,7 @@ const RegisterDriverScreen = ({ navigation, route }) => {
                 Expiry: {new Date(formDoc.expiry).toLocaleDateString()} {isExpired ? "(Expired)" : ""}
               </Text>
             ) : (
-              <View style={[styles.row, { marginTop: moderateScale(3),width:'50%' }]}>
+              <View style={[styles.row, { marginTop: moderateScale(3), width: '50%' }]}>
                 <Icons.Clock size={12} color={isExpired ? colors.error : colors?.gray600} />
                 <Text
                   style={{

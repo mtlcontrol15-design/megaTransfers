@@ -9,16 +9,18 @@ import Geolocation from '@react-native-community/geolocation';
 import getStyles from "./style";
 import Icons from "../../assets/icons";
 import toastUtils from "../../utils/Toast/toast";
+import { getSocket } from "../../services/socket";
 import { EndPoints } from "../../services/EndPoints";
 import { moderateScale } from "react-native-size-matters";
 import ExtrasModal from "../../components/ExtrasModal/ExtrasModal";
 import { dispatchOnlineStatus } from "../../redux/slices/userSlice";
 import useQueryHandler from "../../services/queries/useQueryHandler";
-import { requestLocationPermission } from "../../utils/permissionsHelper";
 import { mutationHandler } from "../../services/mutations/mutationHandler";
 import BookingFilters from "../../components/BookingFilters/BookingFilters";
 import BookingJobCard from "../../components/BookingJobCard/BookingJobCard";
 import JobsStatusModal from "../../components/JobsStatusModal/JobsStatusModal";
+import LocationDisclosureModal from "../../components/LocationDisclosureModal/LocationDisclosureModal";
+import { requestLocationPermission, checkLocationPermissionOnly } from "../../utils/permissionsHelper";
 
 
 
@@ -34,6 +36,9 @@ const BookingScreen = ({ navigation }) => {
   const [selectedJob, setSelectedJob] = useState(null);
   const [showExtrasModal, setShowExtrasModal] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [showLocationModal, setShowLocationModal] = useState(false);
+  const [pendingOnlineStatus, setPendingOnlineStatus] = useState(null);
+  const [pendingStatusJob, setPendingStatusJob] = useState(null);
 
 
   // console.log('========selected job in booking screen is here', selectedJob?._id);
@@ -100,52 +105,64 @@ const BookingScreen = ({ navigation }) => {
   };
 
 
+  const makeDriverOnline = async () => {
+    try {
+      const hasPermission = await requestLocationPermission(true);
 
-  // const updateJobStatus = (statusId, extraData = {}) => {
-  //   const formattedStatus = formatStatus(statusId);
+      if (!hasPermission) {
+        toastUtils.showError(
+          "Location Permission Required",
+          "Please allow location permission to go online"
+        );
+        return false;
+      }
 
-  //   if (!selectedJob?._id) return;
+      dispatch(dispatchOnlineStatus(true));
 
-  //   const currentStatus = selectedJob?.booking?.status?.toLowerCase();
+      const socket = getSocket();
 
-  //   const payload = {
-  //     status: formattedStatus,
-  //     ...extraData, // ✅ include extras
-  //   };
+      socket?.emit("map:location:updated", {
+        isOnline: true,
+        userId: user?._id,
+        companyId: user?.companyId,
+        employeeNumber: user?.employeeNumber,
+      });
 
-  //   if (currentStatus === "new") {
-  //     updateJobMutate({
-  //       jobStatus: formattedStatus,
-  //       ...extraData, // optional if needed
-  //     });
-  //   } else {
-  //     updateBookingStatusMutate(payload); // ✅ main API
-  //   }
-  // };
+      toastUtils.showSuccess("You are now ONLINE");
 
-
-  const ensureDriverOnline = async () => {
-    if (isOnline) return true;
-
-    const hasPermission = await requestLocationPermission();
-
-    if (!hasPermission) {
-      toastUtils.showError(
-        "Location Permission Required",
-        "Please allow location permission to update status"
-      );
+      return true;
+    } catch (error) {
+      console.log("Make driver online error:", error);
       return false;
     }
-
-    dispatch(dispatchOnlineStatus(true));
-    toastUtils.showSuccess("You are now ONLINE");
-    return true;
   };
-
   const handleOpenStatusModal = async (job) => {
-    const canContinue = await ensureDriverOnline();
+    if (!job?._id) {
+      toastUtils.showError("Job Error", "Job data is not available");
+      return;
+    }
 
-    if (!canContinue) return;
+    if (isOnline) {
+      setSelectedJob(job);
+      setShowStatusModal(true);
+      return;
+    }
+
+    const hasLocationPermission = await checkLocationPermissionOnly();
+
+    if (!hasLocationPermission) {
+      setPendingStatusJob(job);
+      setPendingOnlineStatus(true);
+      setShowLocationModal(true);
+      return;
+    }
+
+    const onlineUpdated = await makeDriverOnline();
+
+    if (!onlineUpdated) {
+      setShowStatusModal(false);
+      return;
+    }
 
     setSelectedJob(job);
     setShowStatusModal(true);
@@ -156,7 +173,7 @@ const BookingScreen = ({ navigation }) => {
 
     setIsUpdatingStatus(true);
     try {
-      const canContinue = await ensureDriverOnline();
+      const canContinue = await makeDriverOnline();
 
       if (!canContinue) return;
       let formattedStatus = formatStatus(statusId);
@@ -414,6 +431,39 @@ const BookingScreen = ({ navigation }) => {
         }
         onComplete={(extraData) => {
           updateJobStatus("completed", extraData);
+        }}
+      />
+
+      <LocationDisclosureModal
+        visible={showLocationModal}
+        colors={colors}
+        onCancel={() => {
+          setShowLocationModal(false);
+          setPendingOnlineStatus(null);
+          setPendingStatusJob(null);
+          setShowStatusModal(false);
+        }}
+        onAgree={async () => {
+          setShowLocationModal(false);
+
+          if (pendingOnlineStatus === true) {
+            const onlineUpdated = await makeDriverOnline();
+
+            if (!onlineUpdated) {
+              setPendingOnlineStatus(null);
+              setPendingStatusJob(null);
+              setShowStatusModal(false);
+              return;
+            }
+
+            if (pendingStatusJob) {
+              setSelectedJob(pendingStatusJob);
+              setShowStatusModal(true);
+            }
+          }
+
+          setPendingOnlineStatus(null);
+          setPendingStatusJob(null);
         }}
       />
     </View>

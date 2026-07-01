@@ -23,12 +23,13 @@ import queryHandler from "../../services/queries/queryHandler";
 import ExtrasModal from "../../components/ExtrasModal/ExtrasModal";
 import BookingList from "../../components/BookingList/BookingList";
 import useQueryHandler from '../../services/queries/useQueryHandler';
-import { requestLocationPermission } from "../../utils/permissionsHelper";
 import { mutationHandler } from "../../services/mutations/mutationHandler";
 import NavigationTabs from "../../components/NavigationTabs/NavigationTabs";
 import JobsStatusModal from "../../components/JobsStatusModal/JobsStatusModal";
 import { requestUserPermission } from '../../utils/SaveFCM/NotificationServices';
 import { dispatchDeviceToken, dispatchOnlineStatus } from "../../redux/slices/userSlice";
+import LocationDisclosureModal from "../../components/LocationDisclosureModal/LocationDisclosureModal";
+import { requestLocationPermission, checkLocationPermissionOnly } from "../../utils/permissionsHelper";
 
 const HomeScreen = () => {
   const { colors } = useTheme();
@@ -43,6 +44,9 @@ const HomeScreen = () => {
   const [openedMenuId, setOpenedMenuId] = useState(null);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [shouldShowFetchLoader, setShouldShowFetchLoader] = useState(true);
+  const [showLocationModal, setShowLocationModal] = useState(false);
+  const [pendingOnlineStatus, setPendingOnlineStatus] = useState(null);
+  const [pendingStatusJob, setPendingStatusJob] = useState(null);
   const isFirstFocus = useRef(true);
 
   const route = useRoute();
@@ -648,58 +652,6 @@ const HomeScreen = () => {
     setRefreshing(false);
   };
 
-
-  // const handleSwipe = async (isOnlineStatus) => {
-  //   try {
-  //     dispatch(dispatchOnlineStatus(isOnlineStatus));
-
-  //     const hasPermission = await requestLocationPermission();
-
-  //     if (!hasPermission) return;
-
-  //     Geolocation.getCurrentPosition(
-  //       (position) => {
-  //         const { latitude, longitude } = position.coords;
-
-  //         const payload = {
-  //           latitude,
-  //           longitude,
-  //           isOnline: isOnlineStatus,
-  //         };
-
-  //         // console.log('======pay load is here', payload);
-
-
-  //         mutateSaveLocation(payload);
-
-  //         const socket = getSocket();
-
-  //         socket?.emit("map:location:updated", {
-  //           ...payload,
-  //           userId: user?._id,
-  //           companyId: user?.companyId,
-  //           employeeNumber: user?.employeeNumber,
-  //         });
-
-  //         if (isOnlineStatus) {
-  //           toastUtils.showSuccess("You are now ONLINE");
-  //         } else {
-  //           toastUtils.showInfo("You are now OFFLINE");
-  //         }
-  //       },
-  //       (error) => {
-  //         console.log("Location error:", error);
-  //       },
-  //       {
-  //         // enableHighAccuracy: true,
-  //         timeout: 15000,
-  //       }
-  //     );
-  //   } catch (err) {
-  //     console.log("Swipe error:", err);
-  //   }
-  // };
-
   const handleSwipe = async (isOnlineStatus) => {
     try {
       const hasPermission = await requestLocationPermission(isOnlineStatus);
@@ -762,14 +714,50 @@ const HomeScreen = () => {
     }
   };
 
-  const handleStatusPress = async (job) => {
-    if (!isOnline) {
-      const onlineUpdated = await handleSwipe(true);
+  const handleGoOnlineRequest = async (job = null) => {
+    const hasLocationPermission = await checkLocationPermissionOnly();
 
-      if (!onlineUpdated) {
-        setShowStatusModal(false);
-        return;
-      }
+    if (!hasLocationPermission) {
+      setPendingStatusJob(job);
+      setPendingOnlineStatus(true);
+      setShowLocationModal(true);
+      return;
+    }
+
+    const onlineUpdated = await handleSwipe(true);
+
+    if (!onlineUpdated) {
+      setShowStatusModal(false);
+      return;
+    }
+
+    if (job) {
+      setSelectedJob(job);
+      setShowStatusModal(true);
+    }
+  };
+
+  const handleStatusPress = async (job) => {
+    if (isOnline) {
+      setSelectedJob(job);
+      setShowStatusModal(true);
+      return;
+    }
+
+    const hasLocationPermission = await checkLocationPermissionOnly();
+
+    if (!hasLocationPermission) {
+      setPendingStatusJob(job);
+      setPendingOnlineStatus(true);
+      setShowLocationModal(true);
+      return;
+    }
+
+    const onlineUpdated = await handleSwipe(true);
+
+    if (!onlineUpdated) {
+      setShowStatusModal(false);
+      return;
     }
 
     setSelectedJob(job);
@@ -1042,7 +1030,13 @@ const HomeScreen = () => {
           isDriver={isDriver}
           unreadCount={unreadCount}
           onRefreshPress={handleRefreshAll}
-          onToggleOnline={handleSwipe}
+          onToggleOnline={(value) => {
+            if (value) {
+              handleGoOnlineRequest();
+            } else {
+              handleSwipe(false);
+            }
+          }}
         />
         <NavigationTabs
           navItems={navItems}
@@ -1156,6 +1150,38 @@ const HomeScreen = () => {
           }}
         />
       </View>
+      <LocationDisclosureModal
+        visible={showLocationModal}
+        colors={colors}
+        onCancel={() => {
+          setShowLocationModal(false);
+          setPendingOnlineStatus(null);
+          setPendingStatusJob(null);
+          setShowStatusModal(false);
+        }}
+        onAgree={async () => {
+          setShowLocationModal(false);
+
+          if (pendingOnlineStatus === true) {
+            const onlineUpdated = await handleSwipe(true);
+
+            if (!onlineUpdated) {
+              setPendingOnlineStatus(null);
+              setPendingStatusJob(null);
+              setShowStatusModal(false);
+              return;
+            }
+
+            if (pendingStatusJob) {
+              setSelectedJob(pendingStatusJob);
+              setShowStatusModal(true);
+            }
+          }
+
+          setPendingOnlineStatus(null);
+          setPendingStatusJob(null);
+        }}
+      />
     </View>
 
   );

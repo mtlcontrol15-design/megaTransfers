@@ -50,6 +50,10 @@ const permissionMap = {
       : PERMISSIONS.ANDROID.CAMERA,
 };
 
+const shouldCheckBackgroundLocation = () => {
+  return Platform.OS === "android" && Number(Platform.Version) >= 29;
+};
+
 const openSettingsAlert = (permissionName) => {
   Alert.alert(
     'Permission Required',
@@ -96,110 +100,93 @@ export const checkPermissionStatus = async (type) => {
 };
 
 export const requestLocationPermission = async (isOnlineStatus = true) => {
-  return new Promise((resolve) => {
-    // If driver is going offline, no need to check permissions
+  try {
     if (!isOnlineStatus) {
-      resolve(true);
-      return;
+      return true;
     }
 
-    // Show Location Access Disclosure first (only when going online)
-    Alert.alert(
-      'Location Access Disclosure',
-      'MTL Dispatch collects and uses your location data to show your live driver position to dispatchers and assigned customers during active bookings, even when the app is closed or running in the background. This helps track trips, manage dispatch jobs, and provide accurate driver updates.\n\nYour location is used only for dispatch and booking tracking features.',
-      [
-        {
-          text: 'Cancel',
-          onPress: () => resolve(false),
-          style: 'cancel',
-        },
-        {
-          text: 'I Agree',
-          onPress: async () => {
-            try {
-              let status = await check(permissionMap.locationForeground);
+    // 1. Foreground location
+    let fgStatus = await check(permissionMap.locationForeground);
 
-              if (status === RESULTS.BLOCKED) {
-                openSettingsAlert('location');
-                resolve(false);
-                return;
+    if (fgStatus === RESULTS.BLOCKED) {
+      openSettingsAlert("location");
+      return false;
+    }
+
+    if (fgStatus !== RESULTS.GRANTED) {
+      fgStatus = await request(permissionMap.locationForeground);
+    }
+
+    if (fgStatus !== RESULTS.GRANTED) {
+      openSettingsAlert("location");
+      return false;
+    }
+
+    // 2. Device location / GPS enabled
+    const isDeviceLocationEnabled = await checkDeviceLocationEnabled();
+
+    if (!isDeviceLocationEnabled) {
+      Alert.alert(
+        "Location Disabled",
+        "Please enable device location services.",
+        [
+          { text: "Cancel", style: "cancel" },
+          {
+            text: "Open Location Settings",
+            onPress: () => {
+              if (Platform.OS === "android") {
+                Linking.sendIntent("android.settings.LOCATION_SOURCE_SETTINGS");
+              } else {
+                Linking.openURL("App-Prefs:Privacy&path=LOCATION");
               }
-
-              if (status !== RESULTS.GRANTED) {
-                status = await request(permissionMap.locationForeground);
-              }
-
-              if (status !== RESULTS.GRANTED) {
-                openSettingsAlert('location');
-                resolve(false);
-                return;
-              }
-
-              const isDeviceLocationEnabled =
-                await checkDeviceLocationEnabled();
-
-              if (!isDeviceLocationEnabled) {
-                Alert.alert(
-                  'Location Disabled',
-                  'Please enable device location services (GPS).',
-                  [
-                    {
-                      text: 'Cancel',
-                      style: 'cancel',
-                      onPress: () => resolve(false),
-                    },
-                    {
-                      text: 'Open Location Settings',
-                      onPress: async () => {
-                        if (Platform.OS === 'android') {
-                          Linking.sendIntent(
-                            'android.settings.LOCATION_SOURCE_SETTINGS'
-                          );
-                        } else {
-                          Linking.openURL(
-                            'App-Prefs:Privacy&path=LOCATION'
-                          );
-                        }
-                        resolve(false);
-                      },
-                    },
-                  ]
-                );
-                return;
-              }
-
-              // ANDROID BACKGROUND
-              if (Platform.OS === 'android') {
-                let bgStatus =
-                  await check(permissionMap.locationBackground);
-
-                if (bgStatus === RESULTS.BLOCKED) {
-                  openSettingsAlert('background location');
-                  resolve(false);
-                  return;
-                }
-
-                if (bgStatus !== RESULTS.GRANTED) {
-                  bgStatus =
-                    await request(permissionMap.locationBackground);
-                }
-
-                if (bgStatus !== RESULTS.GRANTED) {
-                  openSettingsAlert('background location');
-                  resolve(false);
-                  return;
-                }
-              }
-
-              resolve(true);
-
-            } catch (error) {
-              console.log('Permission error:', error);
-              resolve(false);
-            }
+            },
           },
-        },
-      ]
-    );
-  });
+        ]
+      );
+
+      return false;
+    }
+
+    // 3. Background location only exists from Android 10 / API 29+
+    if (shouldCheckBackgroundLocation()) {
+      let bgStatus = await check(permissionMap.locationBackground);
+
+      if (bgStatus === RESULTS.GRANTED) {
+        return true;
+      }
+
+      openSettingsAlert("background location / Allow all the time");
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.log("Permission error:", error);
+    return false;
+  }
+};
+
+export const checkLocationPermissionOnly = async () => {
+  try {
+    const fgStatus = await check(permissionMap.locationForeground);
+
+    if (fgStatus !== RESULTS.GRANTED) {
+      return false;
+    }
+
+    if (Platform.OS === 'android') {
+      const bgStatus = await check(permissionMap.locationBackground);
+
+      if (bgStatus !== RESULTS.GRANTED) {
+        return false;
+      }
+    }
+
+    const isDeviceLocationEnabled = await checkDeviceLocationEnabled();
+
+    return isDeviceLocationEnabled;
+  } catch (error) {
+    console.log('Check location permission error:', error);
+    return false;
+  }
 };
