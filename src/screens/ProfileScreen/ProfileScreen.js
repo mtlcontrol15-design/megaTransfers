@@ -14,16 +14,18 @@ import toastUtils from "../../utils/Toast/toast";
 import LoaderModal from "../../utils/loaderModal";
 import { EndPoints } from "../../services/EndPoints";
 import { handleLogout } from "../../utils/logout.utils";
-import { dispatchUser } from "../../redux/slices/userSlice";
 import { formatPhoneWithPlus } from "../../utils/phoneUtils";
+import { handleDeleteAccount } from "../../utils/deleteUtils";
 import { uploadImageToBackend } from "../../utils/imageUpload.utils";
 import { openCameraOrGallery } from "../../utils/mediaPicker.utils";
 import useQueryHandler from "../../services/queries/useQueryHandler";
 import { getDriverDocuments } from "../../utils/driverDocuments.utils";
+import { pickAndUploadDriverDocument } from '../../utils/pdfUpload.utils'
 import { mutationHandler } from "../../services/mutations/mutationHandler";
 import { checkExpiry, viewDocumentInApp } from "../../utils/document.utils";
 import { setFormValue, mapUserToForm } from "../../utils/profileForm.utils";
-import { pickAndUploadPDF, pickAndUploadDriverDocument } from '../../utils/pdfUpload.utils'
+import { dispatchUser, dispatchIsSignedIn } from "../../redux/slices/userSlice";
+import DeleteAccountModal from "../../components/DeleteAccountModal/DeleteAccountModal";
 
 const ProfileScreen = ({ navigation }) => {
   const { colors } = useTheme();
@@ -74,6 +76,18 @@ const ProfileScreen = ({ navigation }) => {
       console.log('Logout error:', err);
     },
     "post"
+  );
+
+  const { mutate: mutateDeleteAccount } = mutationHandler(
+    EndPoints?.deleteAccount,
+    null,
+    (res) => {
+      console.log(' Account deleted successfully:', res);
+    },
+    (err) => {
+      console.log('Delete account error:', err);
+    },
+    "delete"
   );
 
   const { mutate: driverUpdateMutate, isPending: driverProfileIsPending, reset: driverProfileIsReset, } = mutationHandler(
@@ -154,6 +168,9 @@ const ProfileScreen = ({ navigation }) => {
   const [isDocUploading, setIsDocUploading] = useState(false);
   const [awaitingExpiryFor, setAwaitingExpiryFor] = useState(null);
   const [selectedDocumentDate, setSelectedDocumentDate] = useState(new Date());
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [deletePassword, setDeletePassword] = useState("");
+  const [showDeletePassword, setShowDeletePassword] = useState(false);
 
   const [form, setForm] = useState({
     fullName: "",
@@ -647,6 +664,44 @@ const ProfileScreen = ({ navigation }) => {
   const imageUri =
     form?.profileImage?.uri || user?.profileImage || null;
 
+  const handleCancelDeleteAccount = () => {
+    setDeleteModalVisible(false);
+    setDeletePassword("");
+    setShowDeletePassword(false);
+  };
+
+  const handleConfirmDeleteAccount = () => {
+    if (!deletePassword.trim()) {
+      toastUtils.showError(
+        "Password Required",
+        "Please enter your password to delete your account."
+      );
+      return;
+    }
+
+    mutateDeleteAccount(
+      {
+        password: deletePassword,
+      },
+      {
+        onSuccess: () => {
+          setDeleteModalVisible(false);
+          setDeletePassword("");
+          setShowDeletePassword(false);
+
+          dispatch(dispatchIsSignedIn(false));
+          dispatch(dispatchUser(null));
+        },
+        onError: (err) => {
+          toastUtils.showError(
+            "Delete Failed",
+            err?.message || "Password is incorrect."
+          );
+        },
+      }
+    );
+  };
+
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
@@ -831,14 +886,35 @@ const ProfileScreen = ({ navigation }) => {
             <View style={{ marginTop: 20, paddingHorizontal: 16 }}>
               <TouchableOpacity
                 onPress={() => handleLogout(dispatch, mutateLogout)}
-                style={styles.logoutBtn}
+                style={[styles.logoutBtn, { opacity: 0.8 }]}
               >
                 < Icons.LogOut size={22} color={colors.white} />
                 <Text style={styles.logoutText}>Logout</Text>
               </TouchableOpacity>
             </View>)}
+          {!isEditing && (
+            <View style={{ marginTop: 0, paddingHorizontal: 16 }}>
+              <TouchableOpacity
+                onPress={() => setDeleteModalVisible(true)}
+                style={styles.logoutBtn}
+              >
+                <Icons.Trash2 size={22} color={colors.white} />
+                <Text style={styles.logoutText}>Delete Account</Text>
+              </TouchableOpacity>
+            </View>)}
 
         </ScrollView>
+        <DeleteAccountModal
+          visible={deleteModalVisible}
+          password={deletePassword}
+          setPassword={setDeletePassword}
+          showPassword={showDeletePassword}
+          setShowPassword={setShowDeletePassword}
+          onCancel={handleCancelDeleteAccount}
+          onDelete={handleConfirmDeleteAccount}
+          colors={colors}
+          isLoading={isPending}
+        />
         <LoaderModal visible={isPending} />
 
         {showDatePicker && (

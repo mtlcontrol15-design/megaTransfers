@@ -108,7 +108,7 @@ const RoleSelectionScreen = ({ navigation }) => {
                     </Text>
                 </View>
 
-                <Text style={styles.sectionLabel}>I AM A</Text>
+                <Text style={styles.sectionLabel}>SELECT YOUR ROLE</Text>
 
                 <FlatList
                     data={roleOptions}

@@ -43,15 +43,15 @@
 		<true/>
 	</dict>
 	<key>NSCameraUsageDescription</key>
-	<string>We need camera access to capture photos and documents.</string>
+		<string>MegaTransfers uses the camera to capture customer and driver images, such as customer documents, vehicle photos, or driver proof of identity.</string>
 	<key>NSContactsUsageDescription</key>
 	<string>We need contacts access for sharing and calling features.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>We need your location even in background for live trip tracking.</string>
+		<string>MegaTransfers uses background location only during an active driver trip so customers and dispatchers can track pickup and drop-off progress.</string>
 	<key>NSLocationAlwaysUsageDescription</key>
 	<string>We need your location always for dispatch tracking.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>We use your location to track trips and improve dispatch services.</string>
+	<string>MegaTransfers uses your location to show pickup/drop-off routes and assign nearby bookings.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>We need microphone access for audio features.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>

@@ -2,6 +2,7 @@ export const EndPoints = {
   customerSignUp: '/api/register-dashboard-customer',
   corporateSignUp: '/api/corporate-customer/register',
   signUp: '/api/register',
+  deleteAccount: '/api/auth/delete-account',
   login: '/api/auth/login',
   logOut: '/api/auth/logout',
   forgotPassword: '/api/auth/forgot-password',
