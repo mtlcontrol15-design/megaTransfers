@@ -775,7 +775,11 @@ const HomeScreen = () => {
 
 
   useEffect(() => {
-    getToken()
+    const timer = setTimeout(() => {
+      getToken();
+    }, 300);
+
+    return () => clearTimeout(timer);
   }, [])
 
   useFocusEffect(
@@ -1136,7 +1140,7 @@ const HomeScreen = () => {
           visible={
             shouldShowFetchLoader &&
             !refreshing &&
-            (isDriver ? isFetching : bookingsIsFetching)
+            (isDriver ? isLoading : bookingsIsLoading)
           }
         />
         <ExtrasModal

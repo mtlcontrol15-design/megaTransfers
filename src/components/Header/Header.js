@@ -132,9 +132,17 @@ const Header = ({
             renderActiveText={true}
             renderInActiveText={true}
             activeText={"Online"}
-            activeTextStyle={{ color: 'white' }}
+            activeTextStyle={{ color: 'white', width: moderateScale(42), textAlign: 'center', fontSize: moderateScale(12) }}
             inActiveText={"Offline"}
-            inactiveTextStyle={{ color: colors?.primary }}
+            inactiveTextStyle={{
+              color: colors?.primary,
+              width: moderateScale(42),
+              textAlign: "center",
+              fontSize: moderateScale(10),
+              lineHeight: moderateScale(12),
+              fontWeight: "600",
+              includeFontPadding: false,
+            }}
             switchWidthMultiplier={3.7}
           />
         </View>}
