@@ -60,5 +60,7 @@ export const EndPoints = {
   getBookingReviews: '/api/settings/public/review-details',
   getSuggestions: '/api/booking/get-booking-suggestion',
   getSuggestedCompanies: '/api/companies/register-suggestions?search=',
-  getCompaniesForRoleSelection: '/api/companies/getAllCompaniesForApp'
+  getCompaniesForRoleSelection: '/api/companies/getAllCompaniesForApp',
+  createOrder: '/api/paypal/create-order',
+  captureOrder: '/api/paypal/capture-order',
 };
