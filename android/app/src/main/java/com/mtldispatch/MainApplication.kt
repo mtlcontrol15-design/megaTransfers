@@ -1,4 +1,4 @@
-package com.mtldispatch
+package megatransfers.com
 
 import android.app.Application
 import com.facebook.react.PackageList

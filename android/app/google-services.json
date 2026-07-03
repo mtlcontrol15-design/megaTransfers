@@ -7,25 +7,6 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:89805297317:android:2d93cb14a76ee202275f4c",
-        "android_client_info": {
-          "package_name": "com.megatransfers"
-        }
-      },
-      "oauth_client": [],
-      "api_key": [
-        {
-          "current_key": "AIzaSyD9kmt6AYfJ0umGZWde9KCwHInUMKUqbEQ"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": []
-        }
-      }
-    },
-    {
-      "client_info": {
         "mobilesdk_app_id": "1:89805297317:android:05f6fcf761c51e0b275f4c",
         "android_client_info": {
           "package_name": "com.mtldispatch"
@@ -48,6 +29,25 @@
         "mobilesdk_app_id": "1:89805297317:android:ae4c629a215fa7c3275f4c",
         "android_client_info": {
           "package_name": "com.myapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD9kmt6AYfJ0umGZWde9KCwHInUMKUqbEQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:89805297317:android:ee2a0f7257140fe8275f4c",
+        "android_client_info": {
+          "package_name": "megatransfers.com"
         }
       },
       "oauth_client": [],

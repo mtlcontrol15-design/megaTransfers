@@ -184,18 +184,6 @@ const HomeScreen = () => {
   );
 
 
-
-  // const { mutate: postNotificationMutate, isPending: isPostingNotification } = mutationHandler(
-  //   EndPoints.postNotification,
-  //   null,
-  //   (res) => {
-  //   },
-  //   (err) => {
-  //     console.log('Error posting notification:', err);
-  //   },
-  // );
-
-
   const { mutate: updateJobMutate, isPending: isUpdatingJob } = mutationHandler(
     `${EndPoints.updateJob}/${selectedJob?._id}`,
     null,

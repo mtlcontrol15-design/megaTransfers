@@ -28,7 +28,7 @@ const LocationDisclosureModal = ({
                     </Text>
 
                     <Text style={styles.description}>
-                        MTL Dispatch collects and uses your location data to show your live
+                        Mega-Transfers collects and uses your location data to show your live
                         driver position to dispatchers and assigned customers during active
                         bookings, even when the app is closed or running in the background.
                     </Text>

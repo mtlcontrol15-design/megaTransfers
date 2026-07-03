@@ -29,7 +29,7 @@ export async function requestUserPermission() {
         console.log('Permission denied');
         Alert.alert(
           'Notification Access',
-          'Allow MtlDispatch to access notification permission and then restart your app',
+          'Allow Mega-Transfers to access notification permission and then restart your app',
           [
             {
               text: 'Cancel',
@@ -59,7 +59,7 @@ export async function requestUserPermission() {
         console.log('Permission denied');
         Alert.alert(
           'Notification Access',
-          'Allow Comechop to access notification permission and then restart your app',
+          'Allow Mega-Transfers to access notification permission and then restart your app',
           [
             {
               text: 'Cancel',
