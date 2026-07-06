@@ -1,4 +1,4 @@
-package megatransfers.com
+package com.megatransfers
 
 import android.app.Application
 import com.facebook.react.PackageList
