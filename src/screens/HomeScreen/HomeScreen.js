@@ -1,6 +1,6 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Text, TouchableOpacity, View, FlatList, RefreshControl, TouchableWithoutFeedback } from "react-native";
+import { Text, TouchableOpacity, View, FlatList, RefreshControl, AppState } from "react-native";
 
 import DeviceInfo from 'react-native-device-info';
 import { useRoute } from "@react-navigation/native";
@@ -154,10 +154,13 @@ const HomeScreen = () => {
   const { data: companyDataCustomer, error: companyDataerror, status: companyDataCustomerStatus, isFetching: companyDataCustomerIsFetching, refetch: companyDataCustomerRefetch } = queryHandler(EndPoints.getCompanyDetailsCustomer);
   const { data: reviewLinkData, error: reviewLinkError, status: reviewLinkStatus, isFetching: reviewLinkIsFetching, refetch: reviewLinkRefetch } = queryHandler(EndPoints.getReviewLink);
   const { data: settingData, error: settingDataError, status: settingDataStatus, isFetching: settingDataIsFetching, refetch: settingDataRefetch } = queryHandler(`${EndPoints.systemDetailsAPI}/${companyId}`);
+  const { data: bidData, error: bidDataError, status: bidDataStatus, isFetching: bidDataIsFetching, refetch: bidDataRefetch } = queryHandler(EndPoints.newBid);
+  const bidCount = bidData?.count ?? bidData?.data?.count ?? 0;
 
   // console.log('========reviewLinkData', reviewLinkData);
   // console.log('========companyDataCustomer', companyDataCustomer);
   // console.log('========system settings are here', settingData);
+  // console.log('========bid data is here', bidData);
 
   const { mutate: mutateFcmToken } = mutationHandler(
     EndPoints?.registerFcm,
@@ -456,8 +459,8 @@ const HomeScreen = () => {
       return [
         { id: "1", icon: Icons.Home, label: "Home", route: "Home" },
         { id: "2", icon: Icons.Car, label: "Bookings", route: "Bookings" },
+        { id: "4", icon: Icons.Spool, label: "Pool", route: "Pool" },
         { id: "3", icon: Icons.BadgeEuroIcon, label: "Earnings", route: "Earnings" },
-        { id: "4", icon: Icons.User, label: "Profile", route: "Profile" },
       ];
     }
 
@@ -472,7 +475,6 @@ const HomeScreen = () => {
 
     return [
       { id: "1", icon: Icons.Home, label: "Home", route: "Home" },
-      { id: "2", icon: Icons.User, label: "Profile", route: "Profile" },
     ];
   };
 
@@ -621,6 +623,7 @@ const HomeScreen = () => {
     }
     await notificationsRefetch();
     await chatUsersRefetch();
+    await bidDataRefetch();
   }, [isDriver, refetch, bookingsRefetch, notificationsRefetch, chatUsersRefetch]);
 
 
@@ -640,15 +643,18 @@ const HomeScreen = () => {
     setRefreshing(false);
   };
 
-  const handleSwipe = async (isOnlineStatus) => {
+  const handleSwipe = async (isOnlineStatus, showPermissionToast = true) => {
     try {
       const hasPermission = await requestLocationPermission(isOnlineStatus);
 
       if (!hasPermission && isOnlineStatus) {
-        toastUtils.showError(
-          "Location Permission Required",
-          "Please allow location permission to go online"
-        );
+        if (showPermissionToast) {
+          toastUtils.showError(
+            "Location Permission Required",
+            "Please allow location permission to go online"
+          );
+        }
+
         return false;
       }
 
@@ -685,10 +691,14 @@ const HomeScreen = () => {
           },
           (error) => {
             console.log("Location error:", error);
-            toastUtils.showError(
-              "Location Error",
-              "Unable to get your current location"
-            );
+
+            if (showPermissionToast) {
+              toastUtils.showError(
+                "Location Error",
+                "Unable to get your current location"
+              );
+            }
+
             resolve(false);
           },
           {
@@ -701,6 +711,28 @@ const HomeScreen = () => {
       return false;
     }
   };
+
+  const continuePendingOnlineAfterPermission = useCallback(async () => {
+    const hasPermission = await checkLocationPermissionOnly();
+
+    if (!hasPermission) {
+      return;
+    }
+
+    const onlineUpdated = await handleSwipe(true, false);
+
+    if (!onlineUpdated) {
+      return;
+    }
+
+    if (pendingStatusJob) {
+      setSelectedJob(pendingStatusJob);
+      setShowStatusModal(true);
+    }
+
+    setPendingOnlineStatus(null);
+    setPendingStatusJob(null);
+  }, [handleSwipe, pendingStatusJob]);
 
   const handleGoOnlineRequest = async (job = null) => {
     const hasLocationPermission = await checkLocationPermissionOnly();
@@ -760,6 +792,24 @@ const HomeScreen = () => {
   }, [sortedUpcomingJobs]);
 
   // console.log('=======filtered job is here', filteredJobs);
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", async (nextAppState) => {
+      if (nextAppState !== "active") {
+        return;
+      }
+
+      if (pendingOnlineStatus !== true) {
+        return;
+      }
+
+      await continuePendingOnlineAfterPermission();
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [pendingOnlineStatus, continuePendingOnlineAfterPermission]);
 
 
   useEffect(() => {
@@ -1036,6 +1086,7 @@ const HomeScreen = () => {
           onNavigate={handleNavigate}
           colors={colors}
           profileImage={userImage}
+          bidCount={bidCount}
         />
         <FlatList
           data={isDriver ? filteredJobs : sortedBookings}
@@ -1155,12 +1206,9 @@ const HomeScreen = () => {
           setShowLocationModal(false);
 
           if (pendingOnlineStatus === true) {
-            const onlineUpdated = await handleSwipe(true);
+            const onlineUpdated = await handleSwipe(true, false);
 
             if (!onlineUpdated) {
-              setPendingOnlineStatus(null);
-              setPendingStatusJob(null);
-              setShowStatusModal(false);
               return;
             }
 
@@ -1168,10 +1216,10 @@ const HomeScreen = () => {
               setSelectedJob(pendingStatusJob);
               setShowStatusModal(true);
             }
-          }
 
-          setPendingOnlineStatus(null);
-          setPendingStatusJob(null);
+            setPendingOnlineStatus(null);
+            setPendingStatusJob(null);
+          }
         }}
       />
     </View>

@@ -96,6 +96,7 @@ import {
     ImageOff,
     StarOffIcon,
     UserStar,
+    Spool,
     Image as ImageIcon,
 } from "lucide-react-native";
 
@@ -198,6 +199,7 @@ const Icons = {
     ImageOff,
     StarOffIcon,
     UserStar,
+    Spool,
 };
 
 export default Icons;

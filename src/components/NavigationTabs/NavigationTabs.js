@@ -11,7 +11,7 @@ import {
   moderateScale,
 } from "react-native-size-matters";
 
-const NavigationTabs = ({ navItems, selectedNav, onNavigate, colors }) => {
+const NavigationTabs = ({ navItems, selectedNav, onNavigate, colors, bidCount = 0 }) => {
   return (
     <View style={[styles.wrapper, { backgroundColor: colors.bg }]}>
       <View
@@ -43,17 +43,27 @@ const NavigationTabs = ({ navItems, selectedNav, onNavigate, colors }) => {
                 ],
               ]}
             >
-              <Icon
-                size={moderateScale(18)}
-                color={active ? colors.bttonColor : colors.gray600}
-                strokeWidth={active ? 2.4 : 1.8}
-              />
+              <View style={styles.iconWrapper}>
+                <Icon
+                  size={moderateScale(18)}
+                  color={active ? colors.primary : colors.gray600}
+                  strokeWidth={active ? 2.4 : 1.8}
+                />
+
+                {item.label === "Pool" && bidCount > 0 && (
+                  <View style={[styles.badge, { backgroundColor: colors.red || "#E53935" }]}>
+                    <Text style={styles.badgeText} numberOfLines={1}>
+                      {bidCount > 99 ? "99+" : bidCount}
+                    </Text>
+                  </View>
+                )}
+              </View>
 
               <Text
                 style={[
                   styles.label,
                   {
-                    color: active ? colors.bttonColor : colors.gray600,
+                    color: active ? colors.primary : colors.gray600,
                     fontWeight: active ? "600" : "500",
                   },
                 ]}
@@ -66,7 +76,7 @@ const NavigationTabs = ({ navItems, selectedNav, onNavigate, colors }) => {
                 <View
                   style={[
                     styles.activeDot,
-                    { backgroundColor: colors.bttonColor },
+                    { backgroundColor: colors.primary },
                   ]}
                 />
               )}
@@ -104,6 +114,12 @@ const styles = StyleSheet.create({
     borderRadius: moderateScale(10),
   },
 
+  iconWrapper: {
+    position: "relative",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
   activeTab: {
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
@@ -121,5 +137,27 @@ const styles = StyleSheet.create({
     height: moderateScale(5),
     borderRadius: moderateScale(3),
     marginTop: verticalScale(4),
+  },
+
+  badge: {
+    position: "absolute",
+    top: -6,
+    right: -10,
+    minWidth: moderateScale(16),
+    height: moderateScale(16),
+    borderRadius: moderateScale(8),
+    paddingHorizontal: moderateScale(4),
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "#fff",
+  },
+
+  badgeText: {
+    color: "#fff",
+    fontSize: moderateScale(9),
+    fontWeight: "700",
+    includeFontPadding: false,
+    textAlign: "center",
   },
 });

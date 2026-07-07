@@ -63,4 +63,7 @@ export const EndPoints = {
   getCompaniesForRoleSelection: '/api/companies/getAllCompaniesForApp',
   createOrder: '/api/paypal/create-order',
   captureOrder: '/api/paypal/capture-order',
+  getPoolJobs: '/api/pool-jobs/get-all-pool-jobs',
+  postBid: '/api/pool-jobs/add-bid',
+  newBid: '/api/pool-jobs/get-driver-pool-jobs-counts',
 };

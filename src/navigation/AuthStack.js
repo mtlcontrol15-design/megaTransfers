@@ -16,6 +16,8 @@ import PdfViewScreen from "../screens/PdfViewScreen/PdfViewScreen";
 import TermAndConditionsScreen from "../screens/TermAndConditionsScreen/TermAndConditionsScreen";
 import SignBoardScreen from "../screens/SignBoardScreen/SignBoardScreen";
 import HomeTabs from "./HomeTabs";
+import ProfileScreen from "../screens/ProfileScreen/ProfileScreen";
+
 
 
 const Stack = createNativeStackNavigator();
@@ -41,8 +43,8 @@ const AuthStack = () => {
       <Stack.Screen name="MapScreen" component={MapScreen} />
       <Stack.Screen name="PdfView" component={PdfViewScreen} />
       <Stack.Screen name="TermAndConditions" component={TermAndConditionsScreen} />
-      <Stack.Screen name="SignBoard" component={SignBoardScreen}
-      />
+      <Stack.Screen name="SignBoard" component={SignBoardScreen} />
+      <Stack.Screen name="Profile" component={ProfileScreen} />
     </Stack.Navigator>
   );
 };

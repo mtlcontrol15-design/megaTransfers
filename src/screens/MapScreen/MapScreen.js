@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Linking, Platform, Text, TouchableOpacity, View } from 'react-native';
+import { Linking, Platform, Text, TouchableOpacity, View, AppState } from 'react-native';
 
 import MapView, { Marker } from 'react-native-maps';
 import { useDispatch, useSelector } from 'react-redux';
@@ -32,6 +32,7 @@ const MapScreen = ({ navigation }) => {
   const [heading, setHeading] = useState(0);
   const [showDriverInfo, setShowDriverInfo] = useState(false);
   const [showLocationModal, setShowLocationModal] = useState(false);
+  const [pendingOnlineStatus, setPendingOnlineStatus] = useState(null);
   const locationWatchRef = useRef(null);
   const locationIntervalRef = useRef(null);
   const latestPositionRef = useRef(null);
@@ -207,62 +208,76 @@ const MapScreen = ({ navigation }) => {
     return `${diffInDays} day${diffInDays > 1 ? 's' : ''}`;
   };
 
-  const handleSwipe = useCallback(async (nextStatus) => {
+  const handleSwipe = useCallback(async (nextStatus, showPermissionToast = true) => {
     try {
       const hasPermission = await requestLocationPermission(nextStatus);
 
       if (!hasPermission && nextStatus) {
-        toastUtils.showError(
-          "Location Permission Required",
-          "Please allow location permission to go online"
-        );
-        return;
+        if (showPermissionToast) {
+          toastUtils.showError(
+            "Location Permission Required",
+            "Please allow location permission to go online"
+          );
+        }
+
+        return false;
       }
 
-      Geolocation.getCurrentPosition(
-        (position) => {
-          applyLocation(position);
+      return await new Promise((resolve) => {
+        Geolocation.getCurrentPosition(
+          (position) => {
+            applyLocation(position);
 
-          const payload = {
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-            isOnline: nextStatus,
-          };
+            const payload = {
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude,
+              isOnline: nextStatus,
+            };
 
-          console.log('payload is here', payload);
+            mutateSaveLocation(payload);
+            dispatch(dispatchOnlineStatus(nextStatus));
 
-          mutateSaveLocation(payload);
+            const socket = getSocket();
 
-          dispatch(dispatchOnlineStatus(nextStatus));
+            socket?.emit("map:location:updated", {
+              ...payload,
+              userId: user?._id,
+              companyId: user?.companyId,
+              employeeNumber: user?.employeeNumber,
+            });
 
-          const socket = getSocket();
+            if (!nextStatus) {
+              console.log("You are now OFFLINE");
 
-          socket?.emit('map:location:updated', {
-            ...payload,
-            userId: user?._id,
-            companyId: user?.companyId,
-            employeeNumber: user?.employeeNumber,
-          });
+              stopWatchingLocation();
+              stopLocationInterval();
+            } else {
+              console.log("You are now ONLINE");
 
-          if (!nextStatus) {
-            console.log("You are now OFFLINE");
+              startWatchingLocation();
+              startLocationInterval();
+            }
 
-            stopWatchingLocation();
-            stopLocationInterval();
-          } else {
-            console.log("You are now ONLINE");
+            resolve(true);
+          },
+          (error) => {
+            console.log("Location error:", error);
 
-            startWatchingLocation();
-            startLocationInterval();
-          }
-        },
-        (error) => {
-          console.log('Location error:', error);
-        },
-        { timeout: 1500 }
-      );
+            if (showPermissionToast) {
+              toastUtils.showError(
+                "Location Error",
+                "Unable to get your current location"
+              );
+            }
+
+            resolve(false);
+          },
+          { timeout: 15000 }
+        );
+      });
     } catch (error) {
-      console.log('Swipe error:', error);
+      console.log("Swipe error:", error);
+      return false;
     }
   }, [
     applyLocation,
@@ -275,20 +290,37 @@ const MapScreen = ({ navigation }) => {
     user,
   ]);
 
+  const continuePendingOnlineAfterPermission = useCallback(async () => {
+    const hasPermission = await checkLocationPermissionOnly();
+
+    if (!hasPermission) {
+      return false;
+    }
+
+    const onlineUpdated = await handleSwipe(true, false);
+
+    if (!onlineUpdated) {
+      return false;
+    }
+
+    setPendingOnlineStatus(null);
+    return true;
+  }, [handleSwipe]);
+
   const handleSwipeRequest = useCallback(async (nextStatus) => {
     if (!isDriver || !nextStatus) {
-      await handleSwipe(nextStatus);
-      return;
+      return await handleSwipe(nextStatus);
     }
 
     const hasLocationPermission = await checkLocationPermissionOnly();
 
     if (!hasLocationPermission) {
+      setPendingOnlineStatus(true);
       setShowLocationModal(true);
-      return;
+      return false;
     }
 
-    await handleSwipe(nextStatus);
+    return await handleSwipe(nextStatus);
   }, [handleSwipe, isDriver]);
 
   const isDriverOnlineFromAPI = currentLocation?.isOnline === true;
@@ -385,6 +417,25 @@ const MapScreen = ({ navigation }) => {
       longitudeDelta: 0.01,
     });
   }, [currentLocation, isDriver, trackingEnded]);
+
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", async (nextAppState) => {
+      if (nextAppState !== "active") {
+        return;
+      }
+
+      if (pendingOnlineStatus !== true) {
+        return;
+      }
+
+      await continuePendingOnlineAfterPermission();
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [pendingOnlineStatus, continuePendingOnlineAfterPermission]);
 
 
   useFocusEffect(
@@ -555,10 +606,22 @@ const MapScreen = ({ navigation }) => {
       <LocationDisclosureModal
         visible={showLocationModal}
         colors={colors}
-        onCancel={() => setShowLocationModal(false)}
+        onCancel={() => {
+          setShowLocationModal(false);
+          setPendingOnlineStatus(null);
+        }}
         onAgree={async () => {
           setShowLocationModal(false);
-          await handleSwipe(true);
+
+          if (pendingOnlineStatus === true) {
+            const onlineUpdated = await handleSwipe(true, false);
+
+            if (!onlineUpdated) {
+              return;
+            }
+
+            setPendingOnlineStatus(null);
+          }
         }}
       />
     </View>

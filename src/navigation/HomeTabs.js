@@ -5,7 +5,9 @@ import { useSelector } from "react-redux";
 import HomeScreen from "../screens/HomeScreen/HomeScreen";
 import BookingScreen from "../screens/BookingScreen/BookingScreen";
 import EarningsScreen from "../screens/EarningsScreen/EarningsScreen";
+import PoolScreen from "../screens/PoolScreen/PoolScreen";
 import ProfileScreen from "../screens/ProfileScreen/ProfileScreen";
+
 
 import MyRidesScreen from "../screens/MyRidesScreen/MyRidesScreen";
 
@@ -30,6 +32,7 @@ const HomeTabs = () => {
             {isDriver && (
                 <>
                     <Tab.Screen name="BookingsTab" component={BookingScreen} />
+                    <Tab.Screen name="PoolTab" component={PoolScreen} />
                     <Tab.Screen name="EarningsTab" component={EarningsScreen} />
                 </>
             )}
@@ -38,10 +41,9 @@ const HomeTabs = () => {
                 <>
                     <Tab.Screen name="MyRidesTab" component={MyRidesScreen} />
                     <Tab.Screen name="EarningsTab" component={EarningsScreen} />
+                    <Tab.Screen name="ProfileTab" component={ProfileScreen} />
                 </>
             )}
-
-            <Tab.Screen name="ProfileTab" component={ProfileScreen} />
         </Tab.Navigator>
     );
 };

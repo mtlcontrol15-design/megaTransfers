@@ -130,11 +130,10 @@ const RoleSelectionScreen = ({ navigation }) => {
                                     setSelectedRole(item.value);
 
                                     if (item.value !== 'corporate') {
-                                        setCompanySearch('');
-                                        setSelectedCompany(null);
                                         setCompanySuggestions([]);
                                         setShowCompanyDropdown(false);
                                         setCompanyError('');
+                                        setCompanyNotFound(false);
                                     }
                                 }}
                             >

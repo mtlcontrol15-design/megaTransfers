@@ -49,7 +49,7 @@ const Footer = ({ colors, navigation, chatCount, dashBoardCustomer }) => {
 
     const actions = isCustomer
         ? ["New Booking", "Chat", "Map", "Support"]
-        : ["Chat", "Map", "Support"];
+        : ["Chat", "Map", "Support", "Profile"];
 
     const displayName = isCustomer ? userName : companyName;
     const displayImage = isCustomer ? userImage : companyLogo;
@@ -194,6 +194,8 @@ const Footer = ({ colors, navigation, chatCount, dashBoardCustomer }) => {
                         IconComponent = Icons.Map;
                     } else if (label === "Support") {
                         IconComponent = Icons.Phone;
+                    } else if (label === "Profile") {
+                        IconComponent = Icons.User;
                     }
 
                     return (
@@ -212,6 +214,8 @@ const Footer = ({ colors, navigation, chatCount, dashBoardCustomer }) => {
                                         navigation.navigate("MapScreen");
                                     } else if (label === "Support") {
                                         navigation.navigate("Support");
+                                    } else if (label === "Profile") {
+                                        navigation.navigate("Profile");
                                     }
                                 }}
                                 style={[
@@ -243,8 +247,8 @@ const Footer = ({ colors, navigation, chatCount, dashBoardCustomer }) => {
                                                 right: scale(18),
                                             }
                                             : {
-                                                top: -verticalScale(4),
-                                                right: scale(28),
+                                                top: -verticalScale(7),
+                                                right: scale(25),
                                             },
                                     ]}
                                 >
@@ -330,8 +334,8 @@ const styles = StyleSheet.create({
 
     badge: {
         position: "absolute",
-        top: -verticalScale(4),
-        right: scale(28),
+        top: -verticalScale(7),
+        right: scale(25),
         backgroundColor: "#EF4444",
         minWidth: scale(16),
         height: scale(16),
