@@ -34,6 +34,8 @@ const AppContent = () => {
     const jobId = data?.jobId;
     const bookingId = data?.bookingId;
     const userId = data?.senderId;
+    const poolJobId = data?.poolJobId;
+    const poolJobRef = data?.poolJobRef;
 
     console.log(
       "Notification Navigation:",
@@ -82,6 +84,17 @@ const AppContent = () => {
         jobId,
       });
 
+      return;
+    }
+
+    if (screen === "PoolScreen") {
+      navigate("Home", {
+        screen: "PoolTab",
+        params: {
+          poolJobId,
+          poolJobRef,
+        },
+      });
       return;
     }
   };

@@ -97,6 +97,8 @@ export const registerBackgroundHandler = () => {
             const jobId = data?.jobId;
             const bookingId = data?.bookingId;
             const userId = data?.senderId;
+            const poolJobId = data?.poolJobId;
+            const poolJobRef = data?.poolJobRef;
 
             if (userId) {
 
@@ -129,6 +131,17 @@ export const registerBackgroundHandler = () => {
                     jobId,
                 });
 
+                return;
+            }
+            if (screen === "PoolScreen") {
+                navigate("Home", {
+                    screen: "PoolTab",
+                    params: {
+                        poolJobId,
+                        poolJobRef,
+                        bookingId,
+                    },
+                });
                 return;
             }
         }
@@ -164,6 +177,8 @@ export const registerForegroundHandler = () => {
             const jobId = data?.jobId;
             const bookingId = data?.bookingId;
             const userId = data?.senderId;
+            const poolJobId = data?.poolJobId;
+            const poolJobRef = data?.poolJobRef;
 
             if (userId) {
 
@@ -196,6 +211,18 @@ export const registerForegroundHandler = () => {
                     jobId,
                 });
 
+                return;
+            }
+
+            if (screen === "PoolScreen") {
+                navigate("Home", {
+                    screen: "PoolTab",
+                    params: {
+                        poolJobId,
+                        poolJobRef,
+                        bookingId,
+                    },
+                });
                 return;
             }
         }

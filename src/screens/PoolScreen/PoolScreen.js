@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
     View,
     Text,
@@ -13,6 +13,7 @@ import { useSelector } from "react-redux";
 import getStyles from "./style";
 import Icons from "../../assets/icons";
 import toastUtils from "../../utils/Toast/toast";
+import { getSocket } from "../../services/socket";
 import { EndPoints } from "../../services/EndPoints";
 import useQueryHandler from "../../services/queries/useQueryHandler";
 import BidBottomSheet from "../../components/BidBottomSheet/BidBottomSheet";
@@ -52,6 +53,7 @@ const PoolScreen = () => {
 
     // console.log("Pool Jobs Data:", data);
 
+
     const { mutate, isPending } = mutationHandler(
         `${EndPoints.postBid}/${selectedPoolJob?._id}`,
         null,
@@ -78,12 +80,18 @@ const PoolScreen = () => {
     const poolJobs = useMemo(() => {
         if (!data?.pages) return [];
 
-        return data.pages.flatMap(page =>
+        const allPoolJobs = data.pages.flatMap(page =>
             page?.jobs ||
             page?.poolJobs ||
             page?.data ||
             []
         );
+
+        return allPoolJobs.filter(job => {
+            const status = job?.status?.toLowerCase();
+
+            return !["new", "accepted", "completed", "rejected"].includes(status);
+        });
     }, [data]);
 
     const onRefresh = async () => {
@@ -104,6 +112,72 @@ const PoolScreen = () => {
         setSelectedPoolJob(job);
         setShowBidSheet(true);
     };
+
+    useEffect(() => {
+        if (!user?.companyId) return;
+
+        let socket = getSocket();
+        let intervalId = null;
+
+        const handlePoolJobsUpdated = (payload = {}) => {
+            const eventCompanyId =
+                payload?.companyId ||
+                payload?.poolJob?.companyId ||
+                payload?.job?.companyId;
+
+            if (eventCompanyId && eventCompanyId !== user?.companyId) {
+                return;
+            }
+
+            refetch?.();
+        };
+
+        const attachSocketListeners = (s) => {
+            s.off("poolJob:updated", handlePoolJobsUpdated);
+            s.off("poolJob:created", handlePoolJobsUpdated);
+            s.off("poolJob:deleted", handlePoolJobsUpdated);
+            s.off("bid:created", handlePoolJobsUpdated);
+            s.off("bid:updated", handlePoolJobsUpdated);
+            s.off("job:updated", handlePoolJobsUpdated);
+            s.off("booking:updated", handlePoolJobsUpdated);
+
+            s.on("poolJob:updated", handlePoolJobsUpdated);
+            s.on("poolJob:created", handlePoolJobsUpdated);
+            s.on("poolJob:deleted", handlePoolJobsUpdated);
+            s.on("bid:created", handlePoolJobsUpdated);
+            s.on("bid:updated", handlePoolJobsUpdated);
+            s.on("job:updated", handlePoolJobsUpdated);
+            s.on("booking:updated", handlePoolJobsUpdated);
+        };
+
+        if (socket) {
+            attachSocketListeners(socket);
+        } else {
+            intervalId = setInterval(() => {
+                socket = getSocket();
+                if (socket) {
+                    clearInterval(intervalId);
+                    attachSocketListeners(socket);
+                }
+            }, 500);
+        }
+
+        return () => {
+            if (intervalId) {
+                clearInterval(intervalId);
+            }
+
+            if (socket) {
+                socket.off("poolJob:updated", handlePoolJobsUpdated);
+                socket.off("poolJob:created", handlePoolJobsUpdated);
+                socket.off("poolJob:deleted", handlePoolJobsUpdated);
+                socket.off("bid:created", handlePoolJobsUpdated);
+                socket.off("bid:updated", handlePoolJobsUpdated);
+                socket.off("job:updated", handlePoolJobsUpdated);
+                socket.off("booking:updated", handlePoolJobsUpdated);
+            }
+        };
+    }, [user?.companyId, refetch]);
 
     useFocusEffect(
         useCallback(() => {

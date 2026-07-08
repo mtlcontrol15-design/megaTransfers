@@ -119,6 +119,20 @@ const getStyles = (colors) => StyleSheet.create({
         fontSize: moderateScale(15),
         fontWeight: "700",
     },
+    currentFareButton: {
+        height: verticalScale(46),
+        borderRadius: moderateScale(12),
+        borderWidth: 1,
+        alignItems: "center",
+        justifyContent: "center",
+        marginBottom: verticalScale(12),
+        backgroundColor: "transparent",
+    },
+
+    currentFareButtonText: {
+        fontSize: moderateScale(16),
+        fontWeight: "700",
+    },
 });
 
 export default getStyles;

@@ -58,6 +58,22 @@ const BidBottomSheet = ({
         onSubmit?.(payload, job);
     };
 
+    const handleSubmitCurrentFare = () => {
+        const currentFare = Number(job?.fare);
+
+        if (Number.isNaN(currentFare) || currentFare <= 0) {
+            return;
+        }
+
+        const payload = {
+            bidder: user?._id,
+            bidderName: user?.fullName,
+            amount: currentFare,
+        };
+
+        onSubmit?.(payload, job);
+    };
+
     return (
         <Modal
             visible={visible}
@@ -98,9 +114,6 @@ const BidBottomSheet = ({
                             </View>
 
                             <View style={styles.jobInfoBox}>
-                                <Text numberOfLines={1} style={styles.jobInfoText}>
-                                    Passenger: {job?.passengerName || "N/A"}
-                                </Text>
 
                                 <Text numberOfLines={1} style={styles.jobInfoText}>
                                     Vehicle: {job?.vehicle || "N/A"}
@@ -129,6 +142,30 @@ const BidBottomSheet = ({
                                     style={styles.input}
                                 />
                             </View>
+
+                            {job?.fare !== undefined && (
+                                <TouchableOpacity
+                                    activeOpacity={0.8}
+                                    disabled={isSubmitting}
+                                    onPress={handleSubmitCurrentFare}
+                                    style={[
+                                        styles.currentFareButton,
+                                        {
+                                            borderColor: colors.redBorder || colors.bttonColor,
+                                            opacity: isSubmitting ? 0.6 : 1,
+                                        },
+                                    ]}
+                                >
+                                    <Text
+                                        style={[
+                                            styles.currentFareButtonText,
+                                            { color: colors.redBorder || colors.bttonColor },
+                                        ]}
+                                    >
+                                        Bid With Current Fare £{job?.fare}
+                                    </Text>
+                                </TouchableOpacity>
+                            )}
 
                             <TouchableOpacity
                                 activeOpacity={0.8}
