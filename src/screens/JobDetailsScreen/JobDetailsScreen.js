@@ -888,7 +888,7 @@ const JobDetailsScreen = () => {
                                 <TouchableOpacity
                                     activeOpacity={0.7}
                                     style={[
-                                        styles.phoneBtn,
+                                        styles.row,
                                         {
                                             marginTop: moderateScale(12),
                                             justifyContent: "center",
@@ -914,7 +914,7 @@ const JobDetailsScreen = () => {
                                 </TouchableOpacity>
                                 <TouchableOpacity
                                     style={[
-                                        styles.phoneBtn,
+                                        styles.row,
                                         {
                                             // marginTop: moderateScale(12),
                                             justifyContent: "center",
@@ -1389,7 +1389,7 @@ const JobDetailsScreen = () => {
                                                 style={{
                                                     fontSize: moderateScale(16),
                                                     fontWeight: "bold",
-                                                    color: colors?.lightBlue,
+                                                    color: colors?.white,
                                                     textDecorationLine: "underline",
                                                 }}
                                             >
@@ -1398,7 +1398,7 @@ const JobDetailsScreen = () => {
 
                                             <Icons.Search
                                                 size={moderateScale(16)}
-                                                color={colors?.lightBlue}
+                                                color={colors?.white}
                                                 style={{ marginLeft: scale(6) }}
                                             />
                                         </TouchableOpacity>

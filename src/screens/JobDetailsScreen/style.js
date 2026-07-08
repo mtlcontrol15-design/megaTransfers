@@ -131,11 +131,10 @@ const getStyles = (colors) => StyleSheet.create({
   },
   copyBtn: {
     marginTop: verticalScale(10),
-    backgroundColor: colors?.bttonColor,
+    backgroundColor: colors?.primary,
     paddingHorizontal: scale(10),
     paddingVertical: verticalScale(6),
     borderRadius: scale(8),
-    opacity: 0.7,
     // alignItems:'center',
     // justifyContent:'center',
   },

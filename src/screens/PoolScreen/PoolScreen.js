@@ -391,13 +391,13 @@ const PoolJobCard = ({ job, colors, styles, onBidPress, user }) => {
                         Booking ID: {job?.bookingId || job?.poolJobId || "N/A"}
                     </Text>
 
-                    <Text
+                    {/* <Text
                         numberOfLines={1}
                         ellipsizeMode="tail"
                         style={[styles.customerName, { color: colors.black }]}
                     >
                         {job?.passengerName || "Pool Job"}
-                    </Text>
+                    </Text> */}
                 </View>
 
                 <TouchableOpacity

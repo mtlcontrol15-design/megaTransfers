@@ -1,4 +1,4 @@
-import { StyleSheet } from "react-native";
+import { Platform, StyleSheet } from "react-native";
 import {
     moderateScale,
     scale,
@@ -112,6 +112,7 @@ const getStyles = (colors) => StyleSheet.create({
         borderRadius: moderateScale(12),
         alignItems: "center",
         justifyContent: "center",
+        marginBottom: Platform.OS === "ios" ? verticalScale(20) : 0,
     },
 
     submitButtonText: {
