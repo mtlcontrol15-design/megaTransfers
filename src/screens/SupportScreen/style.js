@@ -12,6 +12,7 @@ const getStyles = (colors) => StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: scale(16),
     paddingTop: verticalScale(45),
     paddingBottom: verticalScale(10),
@@ -28,7 +29,6 @@ const getStyles = (colors) => StyleSheet.create({
   },
 
   roleBadge: {
-    marginLeft: "auto",
     paddingHorizontal: scale(10),
     paddingVertical: verticalScale(4),
     borderRadius: moderateScale(20),

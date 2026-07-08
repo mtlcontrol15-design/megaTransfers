@@ -236,6 +236,70 @@ const getStyles = (colors) => StyleSheet.create({
         fontSize: moderateScale(13),
         maxWidth: scale(120),
     },
+    vehicleInfoCard: {
+        marginHorizontal: moderateScale(14),
+        marginTop: verticalScale(8),
+        marginBottom: verticalScale(8),
+        padding: moderateScale(12),
+        borderRadius: moderateScale(12),
+        backgroundColor: colors?.white,
+        borderWidth: 1,
+        borderColor: colors?.gray100 || "#E5E7EB",
+    },
+
+    vehicleSectionTitle: {
+        fontSize: moderateScale(14),
+        fontWeight: "700",
+        color: colors?.black || "#111827",
+        marginBottom: verticalScale(8),
+    },
+
+    vehicleNameRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        marginBottom: verticalScale(10),
+    },
+
+    vehicleNameText: {
+        marginLeft: scale(10),
+        fontSize: moderateScale(14),
+        fontWeight: "600",
+        color: colors?.text || "#111827",
+        flex: 1,
+    },
+
+    vehicleStatsRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-around",
+        backgroundColor: colors?.primary,
+        paddingVertical: verticalScale(12),
+        paddingHorizontal: moderateScale(6),
+        borderRadius: scale(8),
+        flexWrap: "wrap",
+        rowGap: verticalScale(10),
+    },
+
+    vehicleStatItem: {
+        minWidth: scale(54),
+        alignItems: "center",
+        justifyContent: "center",
+    },
+
+    vehicleStatLabel: {
+        color: colors?.white,
+        fontSize: moderateScale(9),
+        fontWeight: "600",
+        marginTop: verticalScale(3),
+        textAlign: "center",
+    },
+
+    vehicleStatValue: {
+        color: colors?.white,
+        fontSize: moderateScale(13),
+        fontWeight: "800",
+        marginTop: verticalScale(2),
+    },
 });
 
 export default getStyles;

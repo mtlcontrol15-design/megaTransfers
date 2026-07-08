@@ -324,6 +324,34 @@ const PoolJobCard = ({ job, colors, styles, onBidPress, user }) => {
 
     const { date, time } = formatPoolDateTime(job);
 
+    const vehicleDetails = job?.vehicleDetails || {};
+
+    const hasValue = (value) => {
+        return value !== undefined && value !== null && value !== "";
+    };
+
+    const getNumber = (value) => {
+        return Number(value || 0);
+    };
+
+    const vehicleName = vehicleDetails?.vehicleName || job?.vehicle;
+
+    const passenger = getNumber(vehicleDetails?.passenger);
+    const checkinLuggage = getNumber(vehicleDetails?.checkinLuggage);
+    const handLuggage = getNumber(vehicleDetails?.handLuggage);
+    const babySeat = getNumber(vehicleDetails?.babySeat);
+    const childSeat = getNumber(vehicleDetails?.childSeat || vehicleDetails?.carSeat);
+    const boosterSeat = getNumber(vehicleDetails?.boosterSeat);
+
+    const showVehicleInfo =
+        hasValue(vehicleName) ||
+        passenger > 0 ||
+        checkinLuggage > 0 ||
+        handLuggage > 0 ||
+        babySeat > 0 ||
+        childSeat > 0 ||
+        boosterSeat > 0;
+
     return (
         <View
             style={[
@@ -334,39 +362,31 @@ const PoolJobCard = ({ job, colors, styles, onBidPress, user }) => {
                 },
             ]}
         >
-            <View style={[styles.cardTop, { backgroundColor: colors.gray100 }]}>
-                <View style={styles.footerItem}>
-                    <Icons.Calendar size={14} color={colors.gray600} />
-                    <Text style={[styles.footerText, { color: colors.text }]}>
-                        {date}
-                    </Text>
-                </View>
-
-                <View style={styles.divider} />
-
-                <View style={styles.footerItem}>
-                    <Icons.Clock size={14} color={colors.gray600} />
-                    <Text style={[styles.footerText, { color: colors.text }]}>
-                        {time}
-                    </Text>
-                </View>
-
-                <View style={{ flex: 1 }} />
-
-                {job?.vehicle && (
-                    <View style={styles.footerBadge}>
-                        <Text style={styles.footerBadgeText}>
-                            {job.vehicle}
+            <View style={[styles.cardTop, { backgroundColor: colors.gray100, flexDirection: "row", alignItems: "center", justifyContent: 'space-between' }]}>
+                <Text style={[styles.bookingId, { color: colors.black, fontWeight: "700" }]}>
+                    Pool Job ID: {job?.poolJobId || "N/A"}
+                </Text>
+                <View style={{ flexDirection: "row", alignItems: "center" }}>
+                    <View style={styles.footerItem}>
+                        <Icons.Calendar size={14} color={colors.gray600} />
+                        <Text style={[styles.footerText, { color: colors.text }]}>
+                            {date}
                         </Text>
                     </View>
-                )}
+
+                    <View style={styles.divider} />
+
+                    <View style={styles.footerItem}>
+                        <Icons.Clock size={14} color={colors.gray600} />
+                        <Text style={[styles.footerText, { color: colors.text }]}>
+                            {time}
+                        </Text>
+                    </View>
+                </View>
             </View>
 
             <View style={styles.cardHeader}>
                 <View style={{ flex: 1 }}>
-                    <Text style={[styles.bookingId, { color: colors.black, fontWeight: "700" }]}>
-                        Pool Job ID: {job?.poolJobId || "N/A"}
-                    </Text>
                     <Text style={[styles.bookingId, { color: colors.black, fontWeight: "700" }]}>
                         Booking ID: {job?.bookingId || job?.poolJobId || "N/A"}
                     </Text>
@@ -420,6 +440,83 @@ const PoolJobCard = ({ job, colors, styles, onBidPress, user }) => {
                     </Text>
                 </View>
             </View>
+
+            {showVehicleInfo && (
+                <View style={styles.vehicleInfoCard}>
+                    <Text style={styles.vehicleSectionTitle}>
+                        Vehicle & Passenger Info
+                    </Text>
+
+                    {hasValue(vehicleName) && (
+                        <View style={styles.vehicleNameRow}>
+                            <Icons.Car size={20} color={colors?.gray600} />
+                            <Text
+                                numberOfLines={1}
+                                style={styles.vehicleNameText}
+                            >
+                                {vehicleName}
+                            </Text>
+                        </View>
+                    )}
+
+                    <View style={styles.vehicleStatsRow}>
+                        <View style={styles.vehicleStatItem}>
+                            <Icons.User size={16} color={colors?.gray100} />
+                            <Text style={styles.vehicleStatLabel}>PAX</Text>
+                            <Text style={styles.vehicleStatValue}>
+                                {passenger}
+                            </Text>
+                        </View>
+
+                        <View style={styles.vehicleStatItem}>
+                            <Icons.Package size={16} color={colors?.gray100} />
+                            <Text style={styles.vehicleStatLabel}>CHECK-IN</Text>
+                            <Text style={styles.vehicleStatValue}>
+                                {checkinLuggage}
+                            </Text>
+                        </View>
+
+                        <View style={styles.vehicleStatItem}>
+                            <Icons.Luggage size={16} color={colors?.gray100} />
+                            <Text style={styles.vehicleStatLabel}>HAND</Text>
+                            <Text style={styles.vehicleStatValue}>
+                                {handLuggage}
+                            </Text>
+                        </View>
+
+                        {babySeat > 0 && (
+                            <View style={styles.vehicleStatItem}>
+                                <Icons.Baby size={16} color={colors?.gray100} />
+                                <Text style={styles.vehicleStatLabel}>BABY</Text>
+                                <Text style={styles.vehicleStatValue}>
+                                    {babySeat}
+                                </Text>
+                            </View>
+                        )}
+
+                        {childSeat > 0 && (
+                            <View style={styles.vehicleStatItem}>
+                                <Icons.Baby size={16} color={colors?.gray100} />
+                                <Text style={styles.vehicleStatLabel}>CHILD</Text>
+                                <Text style={styles.vehicleStatValue}>
+                                    {childSeat}
+                                </Text>
+                            </View>
+                        )}
+
+                        {boosterSeat > 0 && (
+                            <View style={styles.vehicleStatItem}>
+                                <Icons.Baby size={16} color={colors?.gray100} />
+                                <Text style={styles.vehicleStatLabel}>BOOSTER</Text>
+                                <Text style={styles.vehicleStatValue}>
+                                    {boosterSeat}
+                                </Text>
+                            </View>
+                        )}
+                    </View>
+                </View>
+            )}
+
             {job?.bids?.length > 0 && (
                 <View style={styles.bidInfoBox}>
                     <Text style={styles.bidInfoText}>

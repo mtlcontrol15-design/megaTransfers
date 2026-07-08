@@ -751,6 +751,8 @@ const ProfileScreen = ({ navigation }) => {
                   <Image
                     source={{ uri: imageUri }}
                     style={{ width: moderateScale(85), height: moderateScale(85), borderRadius: 45 }}
+                    resizeMode="cover"
+                    resizeMethod="resize"
                   />
 
                   {isImageUploading && form?.profileImage?.uri && (

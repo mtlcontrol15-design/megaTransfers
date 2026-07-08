@@ -121,6 +121,8 @@ const Footer = ({ colors, navigation, chatCount, dashBoardCustomer }) => {
                                                 styles.avatar,
                                                 isCustomer && { borderRadius: moderateScale(50) }
                                             ]}
+                                            resizeMode="cover"
+                                            resizeMethod="resize"
                                         />
                                     </TouchableOpacity>
                                 ) : (
