@@ -17,6 +17,7 @@ import TermAndConditionsScreen from "../screens/TermAndConditionsScreen/TermAndC
 import SignBoardScreen from "../screens/SignBoardScreen/SignBoardScreen";
 import HomeTabs from "./HomeTabs";
 import ProfileScreen from "../screens/ProfileScreen/ProfileScreen";
+import BlockedScreen from "../screens/BlockedScreen/BlockedScreen";
 
 
 
@@ -45,6 +46,7 @@ const AuthStack = () => {
       <Stack.Screen name="TermAndConditions" component={TermAndConditionsScreen} />
       <Stack.Screen name="SignBoard" component={SignBoardScreen} />
       <Stack.Screen name="Profile" component={ProfileScreen} />
+      <Stack.Screen name="BlockedScreen" component={BlockedScreen} />
     </Stack.Navigator>
   );
 };

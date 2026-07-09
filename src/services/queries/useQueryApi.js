@@ -4,8 +4,8 @@ import {
   keepPreviousData,
   useInfiniteQuery,
 } from '@tanstack/react-query';
-import { useNavigation } from '@react-navigation/native';
 import { API_CONFIG } from '../../config/config';
+import { handleBlockedAccountError } from '../accountStatusHandler';
 
 const useQueryApi = (
   queryKey,
@@ -17,8 +17,6 @@ const useQueryApi = (
   queryParams = {},
   useInfiniteQueryFlag = false,
 ) => {
-  const navigation = useNavigation();
-
   const defaultConfig = {
     method: 'get',
     baseURL: API_CONFIG.BASE_URL,
@@ -45,13 +43,8 @@ const useQueryApi = (
 
       return response.data;
     } catch (error) {
-      // Handle network errors, failed requests, etc.
-      // console.log("==============>>>", error, urlWithOutBase);
-      const message = error?.response?.data?.message;
-      if (['Account blocked', 'Account removed'].includes(message)) {
-        navigation.navigate("DisableUserProfile", error?.response?.data);
-      }
-      throw new Error(message || error.message || 'Something went wrong.');
+      handleBlockedAccountError(error);
+      throw error;
     }
   };
 

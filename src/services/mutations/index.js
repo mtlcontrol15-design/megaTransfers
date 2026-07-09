@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { useMutation } from '@tanstack/react-query';
-import { useNavigation } from '@react-navigation/native';
 import { API_CONFIG } from '../../config/config';
+import { handleBlockedAccountError } from '../accountStatusHandler';
 
 const useApi = (
   urlWithOutBase,
@@ -12,8 +12,6 @@ const useApi = (
   method = 'post',
   contentType = 'application/json',
 ) => {
-
-  const navigation = useNavigation();
   const defaultConfig = {
     method,
     baseURL: API_CONFIG.BASE_URL,
@@ -55,13 +53,8 @@ const useApi = (
       return response.data;
 
     } catch (error) {
-      const message = error?.response?.data?.message;
-
-      if (['Account blocked', 'Account removed'].includes(message)) {
-        navigation.navigate("DisableUserProfile", error?.response?.data);
-      }
-
-      throw new Error(message || error.message || 'Something went wrong try again later.');
+      handleBlockedAccountError(error);
+      throw error;
     }
   };
 

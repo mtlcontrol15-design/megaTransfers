@@ -9,6 +9,7 @@ import NewPassword from '../screens/NewPassword/NewPassword';
 import RoleSelectionScreen from '../screens/RoleSelectionScreen/RoleSelectionScreen';
 import RegisterDriverScreen from '../screens/RegisterDriverScreen/RegisterDriverScreen';
 import PdfView from '../screens/PdfView/PdfView';
+import BlockedScreen from '../screens/BlockedScreen/BlockedScreen';
 
 function UnAuthStack() {
   const Stack = createNativeStackNavigator();
@@ -21,7 +22,8 @@ function UnAuthStack() {
     NewPassword,
     RoleSelectionScreen,
     RegisterDriverScreen,
-    PdfView
+    PdfView,
+    BlockedScreen,
   };
 
   return (
