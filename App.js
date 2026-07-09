@@ -8,6 +8,7 @@ import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/reac
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 import messaging from '@react-native-firebase/messaging';
+import InternetConnectionHandler from './src/utils/InternetConnectionHandler';
 import { registerBackgroundHandler, registerForegroundHandler } from './src/utils/notificationHandler/notificationHandler';
 
 import AppNavigation from './src/navigation';
@@ -187,6 +188,7 @@ const AppContent = () => {
     <>
       <StatusBar backgroundColor="#000000" barStyle="light-content" />
       <AppNavigation />
+      <InternetConnectionHandler />
       <Toast />
     </>
   );

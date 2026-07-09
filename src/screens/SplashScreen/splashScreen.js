@@ -8,6 +8,7 @@ import { SvgXml } from 'react-native-svg';
 import { splash, Splash1 } from '../../assets/svg/svg';
 import { SafeFlexView } from '../../components';
 import LoaderKit from 'react-native-loader-kit';
+import { moderateScale } from 'react-native-size-matters';
 
 
 const SplashScreen = () => {
