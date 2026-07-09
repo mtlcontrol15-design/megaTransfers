@@ -114,7 +114,7 @@ const Footer = ({ colors, navigation, chatCount, dashBoardCustomer }) => {
                         <View style={styles.profileLeft}>
                             <View style={{ flexDirection: "row", alignItems: "center", gap: scale(14) }}>
                                 {showImage ? (
-                                    <TouchableOpacity activeOpacity={0.7} onPress={() => navigation.navigate('ProfileTab')}>
+                                    <TouchableOpacity activeOpacity={0.7} onPress={() => navigation.navigate('Profile')}>
                                         <Image
                                             source={{ uri: displayImage }}
                                             style={[

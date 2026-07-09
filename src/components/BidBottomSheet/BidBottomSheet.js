@@ -135,6 +135,7 @@ const BidBottomSheet = ({
 
                                 <TextInput
                                     value={amount}
+                                    maxLength={8}
                                     onChangeText={setAmount}
                                     placeholder="0.00"
                                     placeholderTextColor={colors.gray600}
