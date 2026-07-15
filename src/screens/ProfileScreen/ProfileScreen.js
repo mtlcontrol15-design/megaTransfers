@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { View, Text, TouchableOpacity, ScrollView, TextInput, Linking, Alert, KeyboardAvoidingView, Platform, Image, ActionSheetIOS, ActivityIndicator } from "react-native";
+import { View, Text, TouchableOpacity, ScrollView, TextInput, KeyboardAvoidingView, Platform, Image } from "react-native";
 
 import LoaderKit from 'react-native-loader-kit'
 import { useDispatch, useSelector } from "react-redux";
@@ -15,12 +15,11 @@ import LoaderModal from "../../utils/loaderModal";
 import { EndPoints } from "../../services/EndPoints";
 import { handleLogout } from "../../utils/logout.utils";
 import { formatPhoneWithPlus } from "../../utils/phoneUtils";
-import { handleDeleteAccount } from "../../utils/deleteUtils";
-import { uploadImageToBackend } from "../../utils/imageUpload.utils";
 import { openCameraOrGallery } from "../../utils/mediaPicker.utils";
+import { uploadImageToBackend } from "../../utils/imageUpload.utils";
 import useQueryHandler from "../../services/queries/useQueryHandler";
 import { getDriverDocuments } from "../../utils/driverDocuments.utils";
-import { pickAndUploadDriverDocument } from '../../utils/pdfUpload.utils'
+import { pickAndUploadDriverDocument } from '../../utils/pdfUpload.utils';
 import { mutationHandler } from "../../services/mutations/mutationHandler";
 import { checkExpiry, viewDocumentInApp } from "../../utils/document.utils";
 import { setFormValue, mapUserToForm } from "../../utils/profileForm.utils";
@@ -55,11 +54,20 @@ const ProfileScreen = ({ navigation }) => {
     (err) => {
       reset();
 
-      // console.log('profile update error is here', err?.message);
+      const data = err?.response?.data;
+
+      console.log('Profile update failed:', {
+        status: err?.response?.status,
+        message: data?.message,
+        errors: data?.errors,
+        data,
+      });
 
       toastUtils.showError(
-        "Update Failed",
-        err?.message || "Current password is incorrect"
+        'Update Failed',
+        data?.message ||
+        err?.message ||
+        'Failed to update profile.',
       );
     },
     "put"
@@ -161,7 +169,6 @@ const ProfileScreen = ({ navigation }) => {
   const isCustomer = user?.role === "customer";
 
   const [isEditing, setIsEditing] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
   const [isImageUploading, setIsImageUploading] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [currentDocumentBeingEdited, setCurrentDocumentBeingEdited] = useState(null);
@@ -187,8 +194,6 @@ const ProfileScreen = ({ navigation }) => {
     make: "Toyota",
     model: "Prius 2022",
     category: "Hybrid Taxi",
-    currentPassword: "",
-    newPassword: "",
     profileImage: null,
     documents: {
       driverPicture: { url: "", expiry: null },
@@ -332,7 +337,6 @@ const ProfileScreen = ({ navigation }) => {
 
   const renderField = (label, key, half = false) => {
     const isEmail = key === "email";
-    const isPassword = key.toLowerCase().includes("password");
 
     return (
       <View style={half ? styles.fieldHalf : styles.fieldContainer}>
@@ -355,7 +359,6 @@ const ProfileScreen = ({ navigation }) => {
                     ? form[key].join(", ")
                     : form[key]
                 }
-                secureTextEntry={isPassword && !showPassword}
                 onChangeText={(text) => {
                   if (!isEmail) {
 
@@ -383,17 +386,6 @@ const ProfileScreen = ({ navigation }) => {
                 placeholder={label}
                 placeholderTextColor={colors?.gray600}
               />
-              {isPassword && (
-                <View style={{ marginLeft: 5 }}>
-                  <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                    {showPassword ? (
-                      <Icons.EyeOff size={20} color={colors.primary} />
-                    ) : (
-                      <Icons.Eye size={20} color={colors.primary} />
-                    )}
-                  </TouchableOpacity>
-                </View>
-              )}
             </View>
             {isEmail && (
               <Text style={styles?.adminText}>
@@ -401,8 +393,6 @@ const ProfileScreen = ({ navigation }) => {
               </Text>
             )}
           </>
-        ) : isPassword ? (
-          <Text style={styles.fieldValue}>••••••••</Text>
         ) : key === "category" && Array.isArray(form[key]) ? (
           form[key].map((item, index) => (
             <Text key={index} style={styles.fieldValue}>
@@ -536,18 +526,6 @@ const ProfileScreen = ({ navigation }) => {
     );
   }
   const handleSave = async () => {
-    let newErrors = {};
-
-    if (!form.currentPassword) {
-      newErrors.currentPassword = "Current password is required";
-    }
-
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      Alert.alert("Required", "Current password is required");
-      return;
-    }
-
     setErrors({});
 
     try {
@@ -558,7 +536,6 @@ const ProfileScreen = ({ navigation }) => {
       }
 
       const accountBody = {
-        currentPassword: form.currentPassword,
         fullName: form.fullName,
         phone: form.phone,
         profileImage: imageUrl,
@@ -626,7 +603,23 @@ const ProfileScreen = ({ navigation }) => {
       console.log("DRIVER BODY:", driverBody);
 
       mutate(accountBody);
-      driverUpdateMutate(driverBody);
+
+      if (isDriver) {
+        if (!driverId) {
+          console.log('Driver update skipped: driverId is missing');
+
+          toastUtils.showError(
+            'Driver Update Failed',
+            'Driver ID is missing. Please sign in again or refresh your profile.',
+          );
+
+          return;
+        }
+
+        driverUpdateMutate(driverBody);
+      }
+
+      setIsEditing(false);
 
       setIsEditing(false);
     } catch (error) {
@@ -705,7 +698,7 @@ const ProfileScreen = ({ navigation }) => {
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
-    // behavior={Platform.OS === "ios" ? "padding" : "height"}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <View style={styles.container}>
         <View style={styles.header}>
@@ -814,7 +807,6 @@ const ProfileScreen = ({ navigation }) => {
 
             {renderField("Full Name", "fullName")}
             {renderField("Email", "email")}
-            {isEditing && renderField("Current Password", "currentPassword")}
           </View>
 
           {isDriver && (
@@ -906,6 +898,8 @@ const ProfileScreen = ({ navigation }) => {
             </View>)}
 
         </ScrollView>
+        <LoaderModal visible={isPending} />
+
         <DeleteAccountModal
           visible={deleteModalVisible}
           password={deletePassword}
@@ -917,7 +911,6 @@ const ProfileScreen = ({ navigation }) => {
           colors={colors}
           isLoading={isPending}
         />
-        <LoaderModal visible={isPending} />
 
         {showDatePicker && (
           <DateTimePicker

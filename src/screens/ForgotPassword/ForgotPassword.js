@@ -1,53 +1,65 @@
-import React from 'react';
+import { useRef } from 'react';
 import { View, Text, TextInput, TouchableOpacity } from 'react-native';
 
 import { Formik } from 'formik';
-import { Mail, ArrowLeft } from 'lucide-react-native';
+import { Mail } from 'lucide-react-native';
 import { useNavigation, useTheme } from '@react-navigation/native';
-import { moderateScale } from 'react-native-size-matters';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 import getStyles from "./styles";
+import Icons from '../../assets/icons';
 import toastUtils from '../../utils/Toast/toast';
 import LoaderModal from '../../utils/loaderModal';
 import { EndPoints } from '../../services/EndPoints';
 import { mutationHandler } from '../../services/mutations/mutationHandler';
 import { validationForgotPasswordSchema } from '../../utils/validationUtils';
-import Icons from '../../assets/icons';
 
 const ForgotPassword = () => {
     const { colors } = useTheme();
     const styles = getStyles(colors);
     const navigation = useNavigation();
+    const submittedEmailRef = useRef("");
 
     const { mutate, isPending, reset } = mutationHandler(
         EndPoints.forgotPassword,
         null,
-        (res) => {
-            reset();
-            toastUtils.showSuccess('Success', 'Otp sent to your email');
-        },
-        (err) => {
-            console.error("error:", err);
+        res => {
             reset();
 
+            toastUtils.showSuccess(
+                "Success",
+                res?.data?.message || "OTP sent to your email"
+            );
+
+            navigation.navigate("NewPassword", {
+                email: submittedEmailRef.current,
+            });
+        },
+        err => {
+            reset();
+
+            const status = err?.response?.status;
+            const responseData = err?.response?.data;
+
+            const errorMessage =
+                responseData?.message ||
+                responseData?.error ||
+                (status === 404
+                    ? "This email address is not registered."
+                    : "Unable to send OTP. Please try again.");
+
             toastUtils.showError(
-                'Forgot Password Failed',
-                err.message || 'Email does not exist'
+                "Forgot Password Failed",
+                errorMessage
             );
         }
     );
 
+    const handleSend = values => {
+        const email = values.email.trim().toLowerCase();
 
+        submittedEmailRef.current = email;
 
-    const handSend = (values) => {
-        const body = {
-            email: values?.email,
-        };
-
-        mutate(body);
-
-        navigation.navigate('NewPassword', { email: values?.email });
+        mutate({ email });
     };
 
     return (
@@ -75,7 +87,7 @@ const ForgotPassword = () => {
                 validateOnBlur
                 validateOnChange
                 onSubmit={(values) => {
-                    handSend(values);
+                    handleSend(values);
                 }}
             >
                 {({

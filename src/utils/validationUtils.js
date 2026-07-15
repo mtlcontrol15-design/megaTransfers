@@ -107,19 +107,29 @@ export const validationSignUpSchema = Yup.object({
     otherwise: schema => schema.notRequired(),
   }),
 
-  password: Yup.string()
-    .min(8, 'Password must be at least 8 characters')
-    .max(20, 'Password must be at most 20 characters')
-    .matches(/^[^\s]*$/, 'Password must not contain spaces')
-    .matches(/[A-Z]/, 'Password must contain at least one uppercase letter')
-    .matches(/[a-z]/, 'Password must contain at least one lowercase letter')
-    .matches(/\d/, 'Password must contain at least one number')
-    .matches(/[!@#$%^&*(),.?":{}|<>]/, 'Password must contain at least one special character')
-    .required('Password is required'),
+  password: Yup.string().when('isSocialSignUp', {
+    is: false,
+    then: schema =>
+      schema.required('Password is required')
+        .min(8, 'Password must be at least 8 characters')
+        .max(20, 'Password must be at most 20 characters')
+        .matches(/^[^\s]*$/, 'Password must not contain spaces')
+        .matches(/[A-Z]/, 'Password must contain at least one uppercase letter')
+        .matches(/[a-z]/, 'Password must contain at least one lowercase letter')
+        .matches(/\d/, 'Password must contain at least one number')
+        .matches(/[!@#$%^&*(),.?":{}|<>]/, 'Password must contain at least one special character')
+        .required('Password is required'),
+    otherwise: schema => schema.notRequired(),
+  }),
 
-  confirmPassword: Yup.string()
-    .oneOf([Yup.ref('password'), null], 'Passwords must match')
-    .required('Confirm password is required'),
+  confirmPassword: Yup.string().when('isSocialSignUp', {
+    is: false,
+    then: schema =>
+      schema
+        .oneOf([Yup.ref('password'), null], 'Passwords must match')
+        .required('Confirm password is required'),
+    otherwise: schema => schema.notRequired(),
+  }),
 
   role: Yup.string().required('Role is required'),
 });

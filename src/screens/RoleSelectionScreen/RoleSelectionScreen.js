@@ -33,7 +33,7 @@ const roleOptions = [
 
 const CURRENT_COMPANY_NAME = 'Mega Transfers Limited';
 
-const RoleSelectionScreen = ({ navigation }) => {
+const RoleSelectionScreen = ({ navigation, route }) => {
     const { colors } = useTheme();
     const styles = getStyles(colors);
     const [selectedRole, setSelectedRole] = useState('driver');
@@ -44,6 +44,10 @@ const RoleSelectionScreen = ({ navigation }) => {
     const [loadingCompanies, setLoadingCompanies] = useState(false);
     const [companyError, setCompanyError] = useState('');
     const [companyNotFound, setCompanyNotFound] = useState(false);
+
+    const { socialAuth } = route.params || {};
+
+    // console.log('socialAuth', socialAuth);
 
     const { data, error, status, isFetching, refetch } = queryHandler(EndPoints.getCompaniesForRoleSelection);
 
@@ -74,6 +78,7 @@ const RoleSelectionScreen = ({ navigation }) => {
         }
 
         navigation.navigate('SignUp', {
+            socialAuth,
             role: selectedRole,
             company: selectedCompany?.companyName || '',
             companyId: selectedCompany?._id || '',

@@ -12,7 +12,28 @@
           "package_name": "com.mtldispatch"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "89805297317-j7vlv4t6uktbf9vsg9o3du12usgl2e2q.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.mtldispatch",
+            "certificate_hash": "3ed9a42d2579c9218707089a580d894020349c07"
+          }
+        },
+        {
+          "client_id": "89805297317-ooimdi36v67lko8vb0lk1eu9d6bu60rs.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.mtldispatch",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
+          "client_id": "89805297317-tb4fg6nu1d2lrbgjk590f1sth18tkmd8.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyD9kmt6AYfJ0umGZWde9KCwHInUMKUqbEQ"
@@ -20,7 +41,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "89805297317-tb4fg6nu1d2lrbgjk590f1sth18tkmd8.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "89805297317-3o4lhscvvo5uk4a2p9qurf12gku1ckk9.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.youritexpert.megatransfersuk"
+              }
+            }
+          ]
         }
       }
     },
@@ -31,7 +64,12 @@
           "package_name": "com.myapp"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "89805297317-tb4fg6nu1d2lrbgjk590f1sth18tkmd8.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyD9kmt6AYfJ0umGZWde9KCwHInUMKUqbEQ"
@@ -39,7 +77,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "89805297317-tb4fg6nu1d2lrbgjk590f1sth18tkmd8.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "89805297317-3o4lhscvvo5uk4a2p9qurf12gku1ckk9.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.youritexpert.megatransfersuk"
+              }
+            }
+          ]
         }
       }
     },
@@ -50,7 +100,28 @@
           "package_name": "megatransfers.com"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "89805297317-8s3l0sfmp8ojar52m9fo7kkrevdfugq2.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "megatransfers.com",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
+          "client_id": "89805297317-dfv9hucc14o5ac6cpd415k2u677lgo59.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "megatransfers.com",
+            "certificate_hash": "d38ad0ae17e4ec8e976bf5719a439771a2918eeb"
+          }
+        },
+        {
+          "client_id": "89805297317-tb4fg6nu1d2lrbgjk590f1sth18tkmd8.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyD9kmt6AYfJ0umGZWde9KCwHInUMKUqbEQ"
@@ -58,7 +129,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "89805297317-tb4fg6nu1d2lrbgjk590f1sth18tkmd8.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "89805297317-3o4lhscvvo5uk4a2p9qurf12gku1ckk9.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.youritexpert.megatransfersuk"
+              }
+            }
+          ]
         }
       }
     }

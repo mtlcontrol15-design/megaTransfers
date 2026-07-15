@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { View, Text, TextInput, TouchableOpacity, Image, Platform } from 'react-native';
 
 import { Formik } from 'formik';
 import { useDispatch } from 'react-redux';
@@ -17,6 +17,8 @@ import { EndPoints } from '../../services/EndPoints';
 import { validationLoginSchema } from '../../utils/validationUtils';
 import { mutationHandler } from '../../services/mutations/mutationHandler';
 import { dispatchIsSignedIn, dispatchToken, dispatchUser } from '../../redux/slices/userSlice';
+import { googleConfig, signInWithGoogle, signInWithApple } from '../../utils/SocialLogin/GoogleSignIn'
+
 
 const Login = ({ navigation }) => {
     const { colors } = useTheme();
@@ -27,6 +29,8 @@ const Login = ({ navigation }) => {
         email: '',
         password: '',
     });
+
+    const pendingSocialResponseRef = useRef(null);
 
     const dispatch = useDispatch();
 
@@ -115,6 +119,227 @@ const Login = ({ navigation }) => {
     );
 
 
+    useEffect(() => {
+        googleConfig();
+    }, []);
+
+    const onSuccessGoogle = res => {
+        console.log('Google login response:', res);
+        resetGoogle();
+        if (
+            res?.isNewProfile === true ||
+            res?.requiresRegistration === true
+        ) {
+            const googleData = pendingSocialResponseRef.current;
+            const user = res?.user;
+
+            const fullName =
+                user?.fullName?.trim() ||
+                `${googleData?.firstName || ''} ${googleData?.lastName || ''}`.trim();
+
+            const nameParts = fullName
+                .split(/\s+/)
+                .filter(Boolean);
+
+            navigation.replace('RoleSelectionScreen', {
+                socialAuth: {
+                    provider: res?.provider || 'google',
+
+                    idToken: googleData?.idToken,
+
+                    token:
+                        res?.token ||
+                        res?.access_token ||
+                        '',
+                    accessToken:
+                        res?.access_token ||
+                        res?.token ||
+                        '',
+                    refreshToken:
+                        res?.refresh_token ||
+                        '',
+
+                    userId: user?._id || '',
+
+                    emailAddress:
+                        user?.email ||
+                        googleData?.email ||
+                        '',
+
+                    firstName:
+                        googleData?.firstName ||
+                        nameParts[0] ||
+                        '',
+
+                    lastName:
+                        googleData?.lastName ||
+                        nameParts.slice(1).join(' ') ||
+                        '',
+
+                    profileImage:
+                        user?.profileImage ||
+                        googleData?.photo ||
+                        '',
+
+                    isNewProfile: true,
+                },
+            });
+
+            pendingSocialResponseRef.current = null;
+            return;
+        }
+
+        const user = res?.user;
+        const driver = res?.driver;
+        const userRole = user?.role;
+
+        const driverStatus =
+            user?.status ||
+            driver?.DriverData?.status ||
+            driver?.status;
+
+        const hasCompletedDriverProfile =
+            user?.hasUploadedDocuments === true ||
+            driver?.DriverData?.hasUploadedDocuments === true ||
+            driver?.hasUploadedDocuments === true;
+
+        if (!user) {
+            toastUtils.showError(
+                'Google Sign-In Failed',
+                'The server did not return user information.',
+            );
+            return;
+        }
+
+        if (
+            userRole !== 'customer' &&
+            userRole !== 'driver' &&
+            userRole !== 'corporate'
+        ) {
+            toastUtils.showError(
+                'Access Denied',
+                'Only customers, drivers, and corporate users can log in.',
+            );
+            return;
+        }
+
+        if (
+            userRole === 'driver' &&
+            !hasCompletedDriverProfile
+        ) {
+            navigation.replace('RegisterDriverScreen', {
+                driverId:
+                    driver?._id ||
+                    driver?.DriverData?._id,
+                userId: user?._id,
+                driver,
+                user,
+                isSocialLogin: true,
+                token:
+                    res?.token ||
+                    res?.access_token,
+            });
+
+            return;
+        }
+
+        if (
+            userRole === 'driver' &&
+            driverStatus?.toLowerCase() === 'pending'
+        ) {
+            toastUtils.showInfo(
+                'Account Pending',
+                'Your account is pending approval. Please contact the administrator.',
+            );
+            return;
+        }
+
+        dispatch(dispatchUser(user));
+        dispatch(
+            dispatchToken(
+                res?.token ||
+                res?.access_token,
+            ),
+        );
+        dispatch(dispatchIsSignedIn(true));
+
+        pendingSocialResponseRef.current = null;
+
+        toastUtils.showSuccess(
+            'Success',
+            `Welcome ${userRole}!`,
+        );
+    };
+
+
+    const onErrorGoogle = (err) => {
+        console.log("err", err?.response?.data?.message || err?.message || 'Google login failed');
+        toastUtils.showError('Error', err?.response?.data?.message || err?.message || 'Google login failed');
+        resetGoogle();
+    }
+
+    const {
+        mutate: mutateGoogle,
+        isPending: isPendingGoogle,
+        reset: resetGoogle,
+    } = mutationHandler(
+        EndPoints.socialLogin,
+        null,
+        onSuccessGoogle,
+        onErrorGoogle
+    );
+
+    const handleSocialLoginResponse = response => {
+        if (!response?.idToken) {
+            toastUtils.showError(
+                'Social Sign-In Failed',
+                'The authentication token was not returned.',
+            );
+            return;
+        }
+
+        const provider = response.provider?.toLowerCase();
+
+        if (!['google', 'apple'].includes(provider)) {
+            toastUtils.showError(
+                'Social Sign-In Failed',
+                'Unsupported social login provider.',
+            );
+            return;
+        }
+
+        const fullName = response?.name?.trim() || '';
+        const nameParts = fullName.split(/\s+/).filter(Boolean);
+
+        pendingSocialResponseRef.current = {
+            provider,
+            idToken: response.idToken,
+            email: response?.email || '',
+            firstName: nameParts[0] || '',
+            lastName: nameParts.slice(1).join(' ') || '',
+        };
+
+        mutateGoogle({
+            provider,
+            idToken: response.idToken,
+        });
+    };
+
+    const handleSocialLogin = async provider => {
+        let response = null;
+
+        if (provider === 'Google') {
+            response = await signInWithGoogle();
+        } else if (provider === 'Apple') {
+            response = await signInWithApple();
+        }
+
+        if (response) {
+            handleSocialLoginResponse(response);
+        }
+    };
+
+
 
     const handleLogin = async (values) => {
         const body = {
@@ -198,7 +423,7 @@ const Login = ({ navigation }) => {
                                     <Icons.LogIn size={40} color="#FFFFFF" />
                                 </View>
 
-                                <Text style={styles.title}>Welcome Back</Text>
+                                <Text style={styles.title}>Welcome</Text>
                                 <Text style={styles.subtitle}>
                                     Sign in to continue to your account
                                 </Text>
@@ -301,6 +526,35 @@ const Login = ({ navigation }) => {
                                 </View>
                             </TouchableOpacity>
 
+                            <View style={styles.continueWithContainer}>
+                                <View style={styles.grayLine} />
+                                <View style={styles.continueTxtContainer}>
+                                    <Text style={styles.continueTxt}>
+                                        or continue with
+                                    </Text>
+                                </View>
+                                <View style={styles.grayLine} />
+                            </View>
+
+                            <View style={styles.socialRow}>
+                                {Platform.OS === 'ios' && (
+                                    <TouchableOpacity onPress={() => handleSocialLogin('Apple')}>
+                                        <Image
+                                            source={require('../../assets/images/apple.png')}
+                                            style={styles.icon}
+                                        />
+                                    </TouchableOpacity>
+                                )}
+
+                                <TouchableOpacity onPress={() => handleSocialLogin('Google')}>
+                                    <Image
+                                        source={require('../../assets/images/Google.png')}
+                                        style={styles.icon}
+                                    />
+                                </TouchableOpacity>
+
+                            </View>
+
                             <View style={styles.signupContainer}>
                                 <Text style={styles.signupText}>Don't have an account? </Text>
                                 <TouchableOpacity
@@ -312,7 +566,7 @@ const Login = ({ navigation }) => {
                             </View>
 
                         </View>
-                        <LoaderModal visible={isPending} />
+                        <LoaderModal visible={isPending || isPendingGoogle} />
                     </KeyboardAwareScrollView>
                 </View>
             )}

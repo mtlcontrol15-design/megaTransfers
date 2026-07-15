@@ -344,7 +344,7 @@ const CustomPhoneInput = ({
                     ]}
                     value={phoneNumber}
                     onChangeText={handlePhoneChange}
-                    placeholder="1234567890"
+                    placeholder="Enter phone number"
                     placeholderTextColor="#d1d5db"
                     keyboardType="phone-pad"
                     maxLength={maxLength}

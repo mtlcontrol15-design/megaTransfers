@@ -1,5 +1,5 @@
 import { StyleSheet } from 'react-native';
-import { scale, moderateScale } from 'react-native-size-matters';
+import { scale, moderateScale, verticalScale } from 'react-native-size-matters';
 import { Theme } from '../../libs';
 
 const getStyles = (colors) => StyleSheet.create({
@@ -16,7 +16,7 @@ const getStyles = (colors) => StyleSheet.create({
 
   header: {
     alignItems: 'center',
-    marginBottom: scale(50),
+    marginBottom: scale(30),
   },
 
   logoContainer: {
@@ -76,7 +76,7 @@ const getStyles = (colors) => StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: scale(32),
+    marginBottom: scale(20),
   },
 
   rememberMe: {
@@ -150,7 +150,7 @@ const getStyles = (colors) => StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: scale(24),
+    marginTop: scale(14),
   },
   signupText: {
     fontSize: moderateScale(14),
@@ -160,8 +160,43 @@ const getStyles = (colors) => StyleSheet.create({
   signupLink: {
     fontSize: moderateScale(14),
     fontWeight: '600',
-    color: Theme.colors?.red,
+    color: Theme.colors?.primary,
     textDecorationLine: 'underline',
+  },
+  continueWithContainer: {
+    flexDirection: 'row',
+    marginVertical: verticalScale(15),
+    width: '88%',
+    alignSelf: 'center',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  grayLine: {
+    height: scale(0.5),
+    backgroundColor: colors.primary,
+    width: '29%',
+  },
+  continueTxtContainer: {
+    width: '40%',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  continueTxt: {
+    textAlign: 'center',
+    textAlignVertical: 'center',
+    color: Theme.colors?.grey,
+    fontSize: moderateScale(14),
+  },
+  socialRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: moderateScale(20),
+    // marginTop: verticalScale(10),
+  },
+  icon: {
+    width: moderateScale(50),
+    height: moderateScale(50),
+    marginHorizontal: moderateScale(10),
   },
 });
 

@@ -22,6 +22,17 @@
 	<string>0.0.1</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.89805297317-3o4lhscvvo5uk4a2p9qurf12gku1ckk9</string>
+			</array>
+		</dict>
+	</array>
 	<key>CFBundleVersion</key>
 	<string>1</string>
 	<key>INIntentsSupported</key>
@@ -43,11 +54,11 @@
 		<true/>
 	</dict>
 	<key>NSCameraUsageDescription</key>
-		<string>MegaTransfers uses the camera to capture customer and driver images, such as customer documents, vehicle photos, or driver proof of identity.</string>
+	<string>MegaTransfers uses the camera to capture customer and driver images, such as customer documents, vehicle photos, or driver proof of identity.</string>
 	<key>NSContactsUsageDescription</key>
 	<string>We need contacts access for sharing and calling features.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-		<string>MegaTransfers uses background location only during an active driver trip so customers and dispatchers can track pickup and drop-off progress.</string>
+	<string>MegaTransfers uses background location only during an active driver trip so customers and dispatchers can track pickup and drop-off progress.</string>
 	<key>NSLocationAlwaysUsageDescription</key>
 	<string>We need your location always for dispatch tracking.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>

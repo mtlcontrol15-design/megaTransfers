@@ -41,7 +41,11 @@ const AuthStack = () => {
       <Stack.Screen name="MyRides" component={MyRidesScreen} />
       <Stack.Screen name="NewBooking" component={BookingWrapperScreen} />
       <Stack.Screen name="JourneyDetails" component={JourneyDetailsScreen} />
-      <Stack.Screen name="MapScreen" component={MapScreen} />
+      <Stack.Screen
+        name="MapScreen"
+        component={MapScreen}
+        options={{ gestureEnabled: false }}
+      />
       <Stack.Screen name="PdfView" component={PdfViewScreen} />
       <Stack.Screen name="TermAndConditions" component={TermAndConditionsScreen} />
       <Stack.Screen name="SignBoard" component={SignBoardScreen} />

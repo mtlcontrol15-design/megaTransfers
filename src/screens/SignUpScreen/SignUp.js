@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity } from 'react-native';
 
 import { Formik } from 'formik';
 import { useTheme } from '@react-navigation/native';
@@ -7,14 +7,16 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view
 
 import getStyles from './styles';
 import Icons from '../../assets/icons';
-import { API_CONFIG } from '../../config/config';
+import { useDispatch } from 'react-redux';
+import toastUtils from '../../utils/Toast/toast';
+import LoaderModal from '../../utils/loaderModal';
+import { EndPoints } from '../../services/EndPoints';
+import { moderateScale } from 'react-native-size-matters';
 import { validationSignUpSchema } from '../../utils/validationUtils';
+import { mutationHandler } from '../../services/mutations/mutationHandler';
 import CustomPhoneInput from '../../components/CustomerInfo/CustomPhoneInput';
 import LocationSearchModal from "../../components/JourneyCard/components/LocationSearchModal";
-import { moderateScale } from 'react-native-size-matters';
-import { mutationHandler } from '../../services/mutations/mutationHandler';
-import { EndPoints } from '../../services/EndPoints';
-import toastUtils from '../../utils/Toast/toast';
+import { dispatchIsSignedIn, dispatchToken, dispatchUser } from '../../redux/slices/userSlice';
 
 
 
@@ -26,16 +28,18 @@ const SignUp = ({ navigation, route }) => {
     const [activeField, setActiveField] = useState('');
     const [showLocationModal, setShowLocationModal] = useState(false);
     const [searchText, setSearchText] = useState('');
-    const [companySearch, setCompanySearch] = useState('');
-    const [companySuggestions, setCompanySuggestions] = useState([]);
-    const [showCompanyDropdown, setShowCompanyDropdown] = useState(false);
-    const [loadingCompanies, setLoadingCompanies] = useState(false);
     const selectedRole = route?.params?.role || '';
     const selectedCompany = route?.params?.company || '';
     const selectedCompanyId = route?.params?.companyId || '';
+    const socialAuth = route?.params?.socialAuth || null;
+    const isSocialSignUp = Boolean(
+        socialAuth?.provider && socialAuth?.idToken,
+    );
 
-    // console.log('=======selected role is here', selectedRole);
+    // console.log('=======selected role is here', selectedRole);s
     // console.log('========sign up colors are here',colors);
+    // console.log('=======socialAuth is here', socialAuth);
+    const dispatch = useDispatch();
 
 
     const { mutate, isPending, reset } = mutationHandler(
@@ -84,19 +88,95 @@ const SignUp = ({ navigation, route }) => {
         'post'
     );
 
+    const {
+        mutate: mutateSocialSignUp,
+        isPending: isPendingSocialSignUp,
+        reset: resetSocialSignUp,
+    } = mutationHandler(
+        EndPoints.socialLogin,
+        null,
+        res => {
+            console.log('Social Sign Up response:', res);
+            resetSocialSignUp();
+
+            const user = res?.user;
+            const driver = res?.driver;
+            const role = user?.role;
+            const status =
+                user?.status || driver?.DriverData?.status;
+
+            if (role === 'driver') {
+                navigation.replace('RegisterDriverScreen', {
+                    driverId: driver?._id,
+                    userId: user?._id,
+                    driver,
+                    user,
+                });
+                return;
+            }
+
+            dispatch(dispatchUser(user));
+            dispatch(dispatchToken(res?.token));
+            dispatch(dispatchIsSignedIn(true));
+
+            toastUtils.showSuccess(
+                'Registration Complete',
+                'Your account has been created successfully.',
+            );
+        },
+        err => {
+            resetSocialSignUp();
+
+            const data = err?.response?.data || err;
+
+            toastUtils.showError(
+                'Registration Failed',
+                data?.message ||
+                err?.message ||
+                'Unable to complete registration.',
+            );
+        },
+        'post',
+    );
+
 
     const handleSignUp = async (values) => {
-        const baseBody = {
-            role: selectedRole,
-            firstName: values.firstName?.trim(),
-            lastName: values.lastName?.trim(),
-            profileImage: '',
-            emailAddress: values.emailAddress,
-            phoneNumber: values.phoneNumber,
-            password: values.password,
-            companyName: values.company,
-            companyId: values.companyId,
-        };
+        if (isSocialSignUp) {
+            const baseBody = {
+                provider: socialAuth.provider,
+                idToken: socialAuth.idToken,
+                emailAddress: socialAuth.emailAddress,
+                role: selectedRole,
+                firstName: values.firstName?.trim(),
+                lastName: values.lastName?.trim(),
+                phoneNumber: values.phoneNumber,
+                companyId: values.companyId || selectedCompanyId,
+            };
+
+            let socialBody = { ...baseBody };
+
+            if (selectedRole === 'corporate') {
+                socialBody = {
+                    ...baseBody,
+                    vatnumber: values.vatNumber?.trim(),
+                    postcode: values.postCode?.trim(),
+                    homeAddress: values.address?.trim(),
+                };
+            }
+
+            if (selectedRole === 'driver') {
+                socialBody = {
+                    ...baseBody,
+                    homeAddress: values.address?.trim(),
+                    status: 'pending',
+                };
+            }
+
+            console.log('Social signup body:', socialBody);
+
+            mutateSocialSignUp(socialBody);
+            return;
+        }
 
         let body = {};
 
@@ -137,11 +217,11 @@ const SignUp = ({ navigation, route }) => {
 
 
     const initialValues = {
-        firstName: '',
-        lastName: '',
+        firstName: socialAuth?.firstName || '',
+        lastName: socialAuth?.lastName || '',
         vatNumber: '',
         postCode: '',
-        emailAddress: '',
+        emailAddress: socialAuth?.emailAddress || '',
         phoneNumber: '',
         password: '',
         confirmPassword: '',
@@ -159,6 +239,8 @@ const SignUp = ({ navigation, route }) => {
             validateOnBlur
             validateOnChange
             onSubmit={handleSignUp}
+            validationContext={{ isSocialSignUp }}
+
         >
             {({
                 values,
@@ -208,7 +290,12 @@ const SignUp = ({ navigation, route }) => {
                                         ]}
                                     >
                                         <TextInput
-                                            style={styles.input}
+                                            style={[
+                                                styles.input,
+                                                isSocialSignUp && {
+                                                    opacity: 0.7,
+                                                },
+                                            ]}
                                             placeholder="First name"
                                             placeholderTextColor="#9CA3AF"
                                             value={values.firstName}
@@ -220,6 +307,7 @@ const SignUp = ({ navigation, route }) => {
                                             }}
                                             onFocus={() => setActiveField('firstName')}
                                             autoCapitalize="words"
+                                            editable={!isSocialSignUp}
                                         />
                                     </View>
                                     {touched.firstName && errors.firstName && (
@@ -236,7 +324,12 @@ const SignUp = ({ navigation, route }) => {
                                         ]}
                                     >
                                         <TextInput
-                                            style={styles.input}
+                                            style={[
+                                                styles.input,
+                                                isSocialSignUp && {
+                                                    opacity: 0.7,
+                                                },
+                                            ]}
                                             placeholder="Last name"
                                             placeholderTextColor="#9CA3AF"
                                             value={values.lastName}
@@ -248,6 +341,7 @@ const SignUp = ({ navigation, route }) => {
                                             }}
                                             onFocus={() => setActiveField('lastName')}
                                             autoCapitalize="words"
+                                            editable={!isSocialSignUp}
                                         />
                                     </View>
                                     {touched.lastName && errors.lastName && (
@@ -317,11 +411,20 @@ const SignUp = ({ navigation, route }) => {
                                     ]}
                                 >
                                     <TextInput
-                                        style={styles.input}
+                                        style={[
+                                            styles.input,
+                                            isSocialSignUp && {
+                                                opacity: 0.7,
+                                            },
+                                        ]}
                                         placeholder="Enter your email"
                                         placeholderTextColor="#9CA3AF"
                                         value={values.emailAddress}
-                                        onChangeText={handleChange('emailAddress')}
+                                        onChangeText={
+                                            isSocialSignUp
+                                                ? undefined
+                                                : handleChange('emailAddress')
+                                        }
                                         onBlur={() => {
                                             handleBlur('emailAddress');
                                             setFieldTouched('emailAddress');
@@ -333,6 +436,7 @@ const SignUp = ({ navigation, route }) => {
                                         textContentType="username"
                                         importantForAutofill="yes"
                                         autoCapitalize="none"
+                                        editable={!isSocialSignUp}
                                     />
                                 </View>
                                 {touched.emailAddress && errors.emailAddress && (
@@ -416,188 +520,84 @@ const SignUp = ({ navigation, route }) => {
                                     )}
                                 </View>
                             )}
-
-                            {/* {selectedRole === 'corporate' && (
-                                <View style={styles.inputGroup}>
-                                    <Text style={styles.label}>Company</Text>
-
-                                    <View
-                                        style={[
-                                            styles.inputWrapper,
-                                            activeField === 'company' && styles.inputWrapperActive,
-                                        ]}
-                                    >
-                                        <TextInput
-                                            style={styles.input}
-                                            placeholder="Search company"
-                                            placeholderTextColor="#9CA3AF"
-                                            value={companySearch}
-                                            onChangeText={(text) => {
-                                                setFieldValue('company', '');
-                                                fetchCompanies(text);
-                                            }}
-                                            onFocus={() => {
-                                                setActiveField('company');
-                                                if (companySuggestions.length > 0) {
-                                                    setShowCompanyDropdown(true);
-                                                }
-                                            }}
-                                        />
-
-                                        {loadingCompanies ? (
-                                            <ActivityIndicator size="small" color={colors.primary} />
-                                        ) : companySearch ? (
-                                            <TouchableOpacity
-                                                onPress={() => {
-                                                    setFieldValue('company', '');
-                                                    setCompanySearch('');
-                                                    setCompanySuggestions([]);
-                                                    setShowCompanyDropdown(false);
+                            {!isSocialSignUp && (
+                                <>
+                                    <View style={styles.inputGroup}>
+                                        <Text style={styles.label}>Password</Text>
+                                        <View
+                                            style={[
+                                                styles.inputWrapper,
+                                                activeField === 'password' && styles.inputWrapperActive,
+                                            ]}
+                                        >
+                                            <TextInput
+                                                style={styles.input}
+                                                placeholder="Create password"
+                                                placeholderTextColor="#9CA3AF"
+                                                value={values.password}
+                                                onChangeText={handleChange('password')}
+                                                onBlur={() => {
+                                                    handleBlur('password');
+                                                    setFieldTouched('password');
+                                                    setActiveField('');
                                                 }}
-                                            >
-                                                <Icons.X size={18} color={colors.placeholder} />
+                                                onFocus={() => setActiveField('password')}
+                                                secureTextEntry={!showPassword}
+                                                autoComplete="password"
+                                                textContentType="newPassword"
+                                            />
+                                            <TouchableOpacity onPress={() => setShowPassword((prev) => !prev)}>
+                                                {showPassword ? (
+                                                    <Icons.EyeOff size={20} color={colors.primary} />
+                                                ) : (
+                                                    <Icons.Eye size={20} color={colors.primary} />
+                                                )}
                                             </TouchableOpacity>
-                                        ) : (
-                                            <Icons.Search size={18} color={colors.primary} />
+                                        </View>
+                                        {touched.password && errors.password && (
+                                            <Text style={styles.errorText}>{errors.password}</Text>
                                         )}
                                     </View>
 
-                                    {showCompanyDropdown && companySuggestions.length > 0 && (
+                                    <View style={styles.inputGroup}>
+                                        <Text style={styles.label}>Confirm Password</Text>
                                         <View
-                                            style={{
-                                                marginTop: 6,
-                                                borderWidth: 1,
-                                                borderColor: colors.border,
-                                                borderRadius: 10,
-                                                backgroundColor: colors.bg,
-                                                overflow: 'hidden',
-                                                height: companySuggestions.length * 62,
-                                            }}
+                                            style={[
+                                                styles.inputWrapper,
+                                                activeField === 'confirmPassword' && styles.inputWrapperActive,
+                                            ]}
                                         >
-                                            {companySuggestions.map((item) => (
-                                                <TouchableOpacity
-                                                    key={item._id}
-                                                    activeOpacity={0.7}
-                                                    style={{
-                                                        height: 62,
-                                                        paddingHorizontal: 14,
-                                                        justifyContent: 'center',
-                                                        borderBottomWidth: 1,
-                                                        borderBottomColor: colors.gray50,
-                                                    }}
-                                                    onPress={() => {
-                                                        setFieldValue('company', item.companyName);
-                                                        setCompanySearch(item.companyName);
-                                                        setShowCompanyDropdown(false);
-                                                    }}
-                                                >
-                                                    <Text
-                                                        style={{
-                                                            color: colors.text,
-                                                            fontSize: 14,
-                                                            fontWeight: '500',
-                                                        }}
-                                                        numberOfLines={1}
-                                                    >
-                                                        {item.companyName}
-                                                    </Text>
-
-                                                    {!!item.tradingName && item.tradingName !== item.companyName && (
-                                                        <Text
-                                                            style={{
-                                                                color: colors.gray300,
-                                                                fontSize: 12,
-                                                                marginTop: 3,
-                                                            }}
-                                                            numberOfLines={1}
-                                                        >
-                                                            {item.tradingName}
-                                                        </Text>
-                                                    )}
-                                                </TouchableOpacity>
-                                            ))}
+                                            <TextInput
+                                                style={styles.input}
+                                                placeholder="Confirm password"
+                                                placeholderTextColor="#9CA3AF"
+                                                value={values.confirmPassword}
+                                                onChangeText={handleChange('confirmPassword')}
+                                                onBlur={() => {
+                                                    handleBlur('confirmPassword');
+                                                    setFieldTouched('confirmPassword');
+                                                    setActiveField('');
+                                                }}
+                                                onFocus={() => setActiveField('confirmPassword')}
+                                                secureTextEntry={!showConfirmPassword}
+                                                autoComplete="password"
+                                                textContentType="password"
+                                            />
+                                            <TouchableOpacity onPress={() => setShowConfirmPassword((prev) => !prev)}>
+                                                {showConfirmPassword ? (
+                                                    <Icons.EyeOff size={20} color={colors.primary} />
+                                                ) : (
+                                                    <Icons.Eye size={20} color={colors.primary} />
+                                                )}
+                                            </TouchableOpacity>
                                         </View>
-                                    )}
-
-                                    {touched.company && errors.company && (
-                                        <Text style={styles.errorText}>{errors.company}</Text>
-                                    )}
-                                </View>
-                            )} */}
-
-                            <View style={styles.inputGroup}>
-                                <Text style={styles.label}>Password</Text>
-                                <View
-                                    style={[
-                                        styles.inputWrapper,
-                                        activeField === 'password' && styles.inputWrapperActive,
-                                    ]}
-                                >
-                                    <TextInput
-                                        style={styles.input}
-                                        placeholder="Create password"
-                                        placeholderTextColor="#9CA3AF"
-                                        value={values.password}
-                                        onChangeText={handleChange('password')}
-                                        onBlur={() => {
-                                            handleBlur('password');
-                                            setFieldTouched('password');
-                                            setActiveField('');
-                                        }}
-                                        onFocus={() => setActiveField('password')}
-                                        secureTextEntry={!showPassword}
-                                        autoComplete="password"
-                                        textContentType="newPassword"
-                                    />
-                                    <TouchableOpacity onPress={() => setShowPassword((prev) => !prev)}>
-                                        {showPassword ? (
-                                            <Icons.EyeOff size={20} color={colors.primary} />
-                                        ) : (
-                                            <Icons.Eye size={20} color={colors.primary} />
+                                        {touched.confirmPassword && errors.confirmPassword && (
+                                            <Text style={styles.errorText}>{errors.confirmPassword}</Text>
                                         )}
-                                    </TouchableOpacity>
-                                </View>
-                                {touched.password && errors.password && (
-                                    <Text style={styles.errorText}>{errors.password}</Text>
-                                )}
-                            </View>
+                                    </View>
+                                </>
 
-                            <View style={styles.inputGroup}>
-                                <Text style={styles.label}>Confirm Password</Text>
-                                <View
-                                    style={[
-                                        styles.inputWrapper,
-                                        activeField === 'confirmPassword' && styles.inputWrapperActive,
-                                    ]}
-                                >
-                                    <TextInput
-                                        style={styles.input}
-                                        placeholder="Confirm password"
-                                        placeholderTextColor="#9CA3AF"
-                                        value={values.confirmPassword}
-                                        onChangeText={handleChange('confirmPassword')}
-                                        onBlur={() => {
-                                            handleBlur('confirmPassword');
-                                            setFieldTouched('confirmPassword');
-                                            setActiveField('');
-                                        }}
-                                        onFocus={() => setActiveField('confirmPassword')}
-                                        secureTextEntry={!showConfirmPassword}
-                                        autoComplete="password"
-                                        textContentType="password"
-                                    />
-                                    <TouchableOpacity onPress={() => setShowConfirmPassword((prev) => !prev)}>
-                                        {showConfirmPassword ? (
-                                            <Icons.EyeOff size={20} color={colors.primary} />
-                                        ) : (
-                                            <Icons.Eye size={20} color={colors.primary} />
-                                        )}
-                                    </TouchableOpacity>
-                                </View>
-                                {touched.confirmPassword && errors.confirmPassword && (
-                                    <Text style={styles.errorText}>{errors.confirmPassword}</Text>
-                                )}
-                            </View>
+                            )}
 
                             <TouchableOpacity
                                 style={styles.signUpButton}
@@ -615,6 +615,7 @@ const SignUp = ({ navigation, route }) => {
                             </View>
                         </View>
                     </KeyboardAwareScrollView>
+                    <LoaderModal visible={isPending || isPendingSocialSignUp} />
                     <LocationSearchModal
                         visible={showLocationModal}
                         onClose={() => setShowLocationModal(false)}

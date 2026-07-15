@@ -4,6 +4,7 @@ export const EndPoints = {
   signUp: '/api/register',
   deleteAccount: '/api/auth/delete-account',
   login: '/api/auth/login',
+  socialLogin: '/api/auth/social-login',
   logOut: '/api/auth/logout',
   forgotPassword: '/api/auth/forgot-password',
   resetPassword: '/api/auth/new-password',
