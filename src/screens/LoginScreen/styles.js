@@ -26,7 +26,7 @@ const getStyles = (colors) => StyleSheet.create({
     backgroundColor: Theme.colors?.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    marginVertical: scale(24),
+    marginVertical: scale(4),
   },
 
   title: {
@@ -150,7 +150,6 @@ const getStyles = (colors) => StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: scale(14),
   },
   signupText: {
     fontSize: moderateScale(14),
@@ -165,7 +164,7 @@ const getStyles = (colors) => StyleSheet.create({
   },
   continueWithContainer: {
     flexDirection: 'row',
-    marginVertical: verticalScale(15),
+    marginTop: verticalScale(15),
     width: '88%',
     alignSelf: 'center',
     alignItems: 'center',
@@ -191,7 +190,7 @@ const getStyles = (colors) => StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     gap: moderateScale(20),
-    // marginTop: verticalScale(10),
+    marginVertical: verticalScale(15),
   },
   icon: {
     width: moderateScale(50),
