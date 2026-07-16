@@ -131,6 +131,7 @@ const NewBookingScreen = ({ route }) => {
   // console.log('=======companyId is here', companyId);
 
   const isCorporate = user?.role === "corporate";
+  const isSocialProvider = user?.provider === "google" || user?.provider === "apple";
 
   // console.log('=========isCorporate is here', isCorporate);
 
@@ -390,7 +391,7 @@ const NewBookingScreen = ({ route }) => {
   };
 
   useEffect(() => {
-    if (isCorporate && user?.email) {
+    if ((isCorporate || isSocialProvider) && user?.email) {
       setPassengerDetails(prev => ({
         ...prev,
         email: user.email,
@@ -398,7 +399,7 @@ const NewBookingScreen = ({ route }) => {
 
       formikRef.current?.setFieldValue("email", user.email);
     }
-  }, [isCorporate, user?.email]);
+  }, [isCorporate, isSocialProvider, user?.email]);
 
 
   useEffect(() => {
@@ -1468,6 +1469,7 @@ const NewBookingScreen = ({ route }) => {
                 values={values}
                 validateForm={validateForm}
                 isCorporate={isCorporate}
+                isEmailLocked={isCorporate || isSocialProvider}
               />
             </ScrollView>
           </View>

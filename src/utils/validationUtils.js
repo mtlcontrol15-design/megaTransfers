@@ -66,14 +66,14 @@ export const validationSignUpSchema = Yup.object({
     .transform(value => value?.trim())
     .min(1, 'First name must be at least 1 character')
     .max(30, 'First name must be at most 30 characters')
-    .matches(/^[A-Za-z]+(?: [A-Za-z]+)*$/, 'First name must contain letters only')
+    // .matches(/^[A-Za-z]+(?: [A-Za-z]+)*$/, 'First name must contain letters only')
     .required('First name is required'),
 
   lastName: Yup.string()
     .transform(value => value?.trim())
     .min(1, 'Last name must be at least 1 character')
     .max(30, 'Last name must be at most 30 characters')
-    .matches(/^[A-Za-z]+(?: [A-Za-z]+)*$/, 'Last name must contain letters only')
+    // .matches(/^[A-Za-z]+(?: [A-Za-z]+)*$/, 'Last name must contain letters only')
     .required('Last name is required'),
 
   vatNumber: Yup.string().when('role', {
@@ -152,7 +152,7 @@ export const validationProfileSchemaEdit = Yup.object({
     .transform(value => value?.trim())
     .min(5, 'Full name must be at least 5 characters')
     .max(50, 'Full name must be at most 50 characters')
-    .matches(/^[A-Za-z]+(?: [A-Za-z]+)*$/, 'Name must contain letters only')
+    // .matches(/^[A-Za-z]+(?: [A-Za-z]+)*$/, 'Name must contain letters only')
     .required('Full name is required'),
 });
 

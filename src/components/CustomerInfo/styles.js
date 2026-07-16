@@ -54,6 +54,12 @@ const getStyles = (colors) =>
             backgroundColor: "#fff",
         },
 
+        lockNote: {
+            fontSize: moderateScale(11),
+            color: "#6b7280",
+            marginTop: verticalScale(4),
+        },
+
         input: {
             flex: 1,
             marginLeft: scale(8),

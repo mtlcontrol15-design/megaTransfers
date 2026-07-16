@@ -125,26 +125,14 @@ const CustomerInfo = ({ passengerDetails, setPassengerDetails, colors, role, vat
                             <Text style={styles.label}>
                                 Email Address <Text style={{ color: colors.error, fontSize: moderateScale(16) }}>*</Text>
                             </Text>
-
-                            {isEmailLocked && (
-                                <Icons.Lock size={12} color="#6b7280" />
-                            )}
                         </View>
 
-                        <View
-                            style={[
-                                styles.inputRow,
-                                isEmailLocked && styles.lockedInput
-                            ]}
-                        >
+                        <View style={styles.inputRow}>
                             <Icons.Mail size={18} color="#666" />
 
                             <TextInput
                                 ref={emailInputRef}
-                                style={[
-                                    styles.input,
-                                    isEmailLocked && styles.lockedText
-                                ]}
+                                style={styles.input}
                                 value={
                                     passengerDetails.email ||
                                     (isCorporate ? "" : "")
@@ -156,8 +144,8 @@ const CustomerInfo = ({ passengerDetails, setPassengerDetails, colors, role, vat
                                 autoCapitalize="none"
                                 editable={!isEmailLocked}
                                 placeholderTextColor={colors.gray300}
-                                autoComplete="email"  // Add autoComplete for better suggestions
-                                textContentType="emailAddress"  // iOS: helps with auto-fill
+                                autoComplete="email"
+                                textContentType="emailAddress"
                             />
                         </View>
 
@@ -169,7 +157,7 @@ const CustomerInfo = ({ passengerDetails, setPassengerDetails, colors, role, vat
 
                         {isEmailLocked && (
                             <Text style={styles.lockNote}>
-                                Email is locked for VAT-verified customers
+                                Email can change only by Admin.
                             </Text>
                         )}
                     </View>
