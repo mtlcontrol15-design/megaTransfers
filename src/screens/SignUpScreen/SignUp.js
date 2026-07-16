@@ -76,7 +76,7 @@ const SignUp = ({ navigation, route }) => {
             navigation.navigate('Login');
         },
         (err) => {
-            console.log('Sign Up error:', err);
+            console.log('Sign Up error:', err?.response?.data || err);
 
             reset();
 
@@ -140,24 +140,29 @@ const SignUp = ({ navigation, route }) => {
     );
 
 
-    const handleSignUp = async (values) => {
+    const handleSignUp = async values => {
+        const commonBody = {
+            emailAddress: values.emailAddress?.trim().toLowerCase(),
+            role: selectedRole,
+            firstName: values.firstName?.trim(),
+            lastName: values.lastName?.trim(),
+            phoneNumber: values.phoneNumber,
+            companyId: values.companyId || selectedCompanyId,
+        };
+
         if (isSocialSignUp) {
-            const baseBody = {
+            const socialBaseBody = {
+                ...commonBody,
                 provider: socialAuth.provider,
                 idToken: socialAuth.idToken,
-                emailAddress: socialAuth.emailAddress,
-                role: selectedRole,
-                firstName: values.firstName?.trim(),
-                lastName: values.lastName?.trim(),
-                phoneNumber: values.phoneNumber,
-                companyId: values.companyId || selectedCompanyId,
             };
 
-            let socialBody = { ...baseBody };
+            let socialBody = { ...socialBaseBody };
 
             if (selectedRole === 'corporate') {
                 socialBody = {
-                    ...baseBody,
+                    ...socialBaseBody,
+                    companyname: values.company?.trim(),
                     vatnumber: values.vatNumber?.trim(),
                     postcode: values.postCode?.trim(),
                     homeAddress: values.address?.trim(),
@@ -166,7 +171,7 @@ const SignUp = ({ navigation, route }) => {
 
             if (selectedRole === 'driver') {
                 socialBody = {
-                    ...baseBody,
+                    ...socialBaseBody,
                     homeAddress: values.address?.trim(),
                     status: 'pending',
                 };
@@ -178,34 +183,35 @@ const SignUp = ({ navigation, route }) => {
             return;
         }
 
-        let body = {};
+        const emailBaseBody = {
+            ...commonBody,
+            password: values.password,
+            confirmPassword: values.confirmPassword,
+        };
 
-        if (selectedRole === 'customer') {
-            body = {
-                ...baseBody,
-            };
-        }
+        let body = { ...emailBaseBody };
 
         if (selectedRole === 'corporate') {
             body = {
-                ...baseBody,
-                companyname: values.company,
-                vatnumber: values.vatNumber,
+                ...emailBaseBody,
+                companyname: values.company?.trim(),
+                vatnumber: values.vatNumber?.trim(),
                 phone: values.phoneNumber,
-                homeAddress: values.address,
-                postcode: values.postCode,
+                homeAddress: values.address?.trim(),
+                postcode: values.postCode?.trim(),
             };
         }
 
         if (selectedRole === 'driver') {
             body = {
-                ...baseBody,
-                homeAddress: values.address,
+                ...emailBaseBody,
+                homeAddress: values.address?.trim(),
                 status: 'pending',
             };
         }
 
         console.log('Sign Up payload:', body);
+
         mutate(body);
     };
 

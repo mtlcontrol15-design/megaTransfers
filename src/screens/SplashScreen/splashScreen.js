@@ -35,11 +35,9 @@ const SplashScreen = () => {
           color="#fff"
           size={50}
         />
-        <Text style={{ color: Theme.colors?.white, fontSize: moderateScale(14), marginTop: moderateScale(20), width: '80%', textAlign: 'center' }}>
+        <Text style={{ color: Theme.colors?.white, fontSize: moderateScale(14), marginTop: moderateScale(20), marginHorizontal: moderateScale(20), textAlign: 'center' }}>
           Welcome to Mega Transfers
         </Text>
-      </View>
-      <View style={{ alignSelf: 'center' }}>
       </View>
     </SafeFlexView>
   );

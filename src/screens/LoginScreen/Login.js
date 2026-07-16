@@ -15,6 +15,7 @@ import toastUtils from '../../utils/Toast/toast';
 import LoaderModal from '../../utils/loaderModal';
 import { EndPoints } from '../../services/EndPoints';
 import { validationLoginSchema } from '../../utils/validationUtils';
+import CompanySelectionModal from '../../components/CompanySelectionModal/CompanySelectionModal';
 import { mutationHandler } from '../../services/mutations/mutationHandler';
 import { dispatchIsSignedIn, dispatchToken, dispatchUser } from '../../redux/slices/userSlice';
 import { googleConfig, signInWithGoogle, signInWithApple } from '../../utils/SocialLogin/GoogleSignIn'
@@ -30,7 +31,11 @@ const Login = ({ navigation }) => {
         password: '',
     });
 
+    const [companies, setCompanies] = useState([]);
+    const [showCompanyModal, setShowCompanyModal] = useState(false);
+
     const pendingSocialResponseRef = useRef(null);
+
 
     const dispatch = useDispatch();
 
@@ -289,6 +294,59 @@ const Login = ({ navigation }) => {
         onErrorGoogle
     );
 
+    const {
+        mutate: mutateGetCompanies,
+        isPending: companiesIsPending,
+        reset: resetGetCompanies,
+    } = mutationHandler(
+        EndPoints.loginAccountCompanies,
+        null,
+        res => {
+            console.log('Get Companies Response:', res);
+
+            resetGetCompanies();
+
+            const availableCompanies = Array.isArray(res?.companies)
+                ? res.companies
+                : [];
+
+            if (
+                res?.isEmailExist === true &&
+                availableCompanies.length > 1
+            ) {
+                setCompanies(availableCompanies);
+                setShowCompanyModal(true);
+                return;
+            }
+
+            if (
+                res?.isEmailExist === true &&
+                availableCompanies.length === 1
+            ) {
+                continueSocialLogin(availableCompanies[0]);
+                return;
+            }
+
+            // Email does not exist, so continue to your normal
+            // social registration/login endpoint.
+            const socialAuth = pendingSocialResponseRef.current;
+
+            mutateGoogle({
+                provider: socialAuth?.provider,
+                idToken: socialAuth?.idToken,
+            });
+        },
+        err => {
+            resetGetCompanies();
+
+            toastUtils.showError(
+                'Get Companies Failed',
+                err?.response?.data?.message ||
+                'Failed to retrieve companies',
+            );
+        },
+    );
+
     const handleSocialLoginResponse = response => {
         if (!response?.idToken) {
             toastUtils.showError(
@@ -310,6 +368,10 @@ const Login = ({ navigation }) => {
 
         const fullName = response?.name?.trim() || '';
         const nameParts = fullName.split(/\s+/).filter(Boolean);
+        const socialLoginBody = {
+            provider,
+            idToken: response.idToken,
+        };
 
         pendingSocialResponseRef.current = {
             provider,
@@ -319,10 +381,7 @@ const Login = ({ navigation }) => {
             lastName: nameParts.slice(1).join(' ') || '',
         };
 
-        mutateGoogle({
-            provider,
-            idToken: response.idToken,
-        });
+        mutateGetCompanies(socialLoginBody);
     };
 
     const handleSocialLogin = async provider => {
@@ -363,6 +422,54 @@ const Login = ({ navigation }) => {
         mutate(body);
     };
 
+    const continueSocialLogin = selectedCompany => {
+        const socialAuth = pendingSocialResponseRef.current;
+
+        if (!socialAuth?.provider || !socialAuth?.idToken) {
+            setShowCompanyModal(false);
+
+            toastUtils.showError(
+                'Login Failed',
+                'Your social login session is unavailable. Please sign in again.',
+            );
+
+            return;
+        }
+
+        if (!selectedCompany?.companyId) {
+            toastUtils.showError(
+                'Company Required',
+                'Please select a valid company.',
+            );
+
+            return;
+        }
+
+        mutateGoogle({
+            provider: socialAuth.provider,
+            idToken: socialAuth.idToken,
+            companyId: selectedCompany.companyId,
+        });
+    };
+
+    const handleCompanySelection = selectedCompany => {
+        console.log('Selected company:', selectedCompany);
+
+        setShowCompanyModal(false);
+
+        continueSocialLogin(selectedCompany);
+    };
+
+    const handleCloseCompanyModal = () => {
+        if (isPendingGoogle) {
+            return;
+        }
+
+        setShowCompanyModal(false);
+        setCompanies([]);
+        pendingSocialResponseRef.current = null;
+    };
+
     useEffect(() => {
         const loadCredentials = async () => {
             const saved = await AsyncStorage.getItem('rememberUser');
@@ -382,195 +489,204 @@ const Login = ({ navigation }) => {
     }, []);
 
     return (
-        <Formik
-            initialValues={initialValues}
-            enableReinitialize
-            validationSchema={validationLoginSchema}
-            validateOnBlur
-            validateOnChange
-            onSubmit={(values) => {
-                console.log('Form Values:', values);
+        <>
+            <Formik
+                initialValues={initialValues}
+                enableReinitialize
+                validationSchema={validationLoginSchema}
+                validateOnBlur
+                validateOnChange
+                onSubmit={(values) => {
+                    console.log('Form Values:', values);
 
-                handleLogin(values);
-            }}
-        >
-            {({
-                values,
-                errors,
-                touched,
-                handleChange,
-                handleBlur,
-                handleSubmit,
-                setFieldTouched,
-            }) => (
-                <View style={{ flex: 1 }}>
-                    <View style={styles.header1}>
-                        <View style={{ justifyContent: 'center', alignItems: 'center' }}>
-                            <Text style={styles.headerTitle}>
-                                Sign In
-                            </Text>
-                        </View>
-                    </View>
-                    <KeyboardAwareScrollView
-                        contentContainerStyle={styles.scrollContainer}
-                        enableOnAndroid
-                        extraScrollHeight={70}
-                        keyboardShouldPersistTaps="handled"
-                    >
-                        <View style={styles.container}>
-                            <View style={styles.header}>
-                                <View style={styles.logoContainer}>
-                                    <Icons.LogIn size={40} color="#FFFFFF" />
-                                </View>
-
-                                <Text style={styles.title}>Welcome</Text>
-                                <Text style={styles.subtitle}>
-                                    Sign in to continue to your account
+                    handleLogin(values);
+                }}
+            >
+                {({
+                    values,
+                    errors,
+                    touched,
+                    handleChange,
+                    handleBlur,
+                    handleSubmit,
+                    setFieldTouched,
+                }) => (
+                    <View style={{ flex: 1 }}>
+                        <View style={styles.header1}>
+                            <View style={{ justifyContent: 'center', alignItems: 'center' }}>
+                                <Text style={styles.headerTitle}>
+                                    Sign In
                                 </Text>
                             </View>
-                            <View style={styles.inputGroup}>
-                                <Text style={styles.label}>Email Address</Text>
+                        </View>
+                        <KeyboardAwareScrollView
+                            contentContainerStyle={styles.scrollContainer}
+                            enableOnAndroid
+                            extraScrollHeight={70}
+                            keyboardShouldPersistTaps="handled"
+                        >
+                            <View style={styles.container}>
+                                <View style={styles.header}>
+                                    <View style={styles.logoContainer}>
+                                        <Icons.LogIn size={40} color="#FFFFFF" />
+                                    </View>
 
-                                <View style={styles.inputWrapper}>
-                                    <Icons.Mail size={20} color={Theme.colors.primary} />
-                                    <TextInput
-                                        style={styles.input}
-                                        placeholder="Enter your email"
-                                        placeholderTextColor="#9CA3AF"
-                                        value={values.email}
-                                        onChangeText={handleChange('email')}
-                                        onBlur={() => {
-                                            handleBlur('email');
-                                            setFieldTouched('email');
-                                        }}
-                                        keyboardType="email-address"
-                                        autoComplete="email"
-                                        textContentType="username"
-                                        importantForAutofill="yes"
-                                        autoCapitalize='none'
+                                    <Text style={styles.title}>Welcome</Text>
+                                    <Text style={styles.subtitle}>
+                                        Sign in to continue to your account
+                                    </Text>
+                                </View>
+                                <View style={styles.inputGroup}>
+                                    <Text style={styles.label}>Email Address</Text>
+
+                                    <View style={styles.inputWrapper}>
+                                        <Icons.Mail size={20} color={Theme.colors.primary} />
+                                        <TextInput
+                                            style={styles.input}
+                                            placeholder="Enter your email"
+                                            placeholderTextColor="#9CA3AF"
+                                            value={values.email}
+                                            onChangeText={handleChange('email')}
+                                            onBlur={() => {
+                                                handleBlur('email');
+                                                setFieldTouched('email');
+                                            }}
+                                            keyboardType="email-address"
+                                            autoComplete="email"
+                                            textContentType="username"
+                                            importantForAutofill="yes"
+                                            autoCapitalize='none'
 
 
-                                    />
+                                        />
+                                    </View>
+
+                                    {touched.email && errors.email && (
+                                        <Text style={styles.errorText}>{errors.email}</Text>
+                                    )}
+                                </View>
+                                <View style={styles.inputGroup}>
+                                    <Text style={styles.label}>Password</Text>
+
+                                    <View style={styles.inputWrapper}>
+                                        <Icons.Lock size={20} color={Theme.colors.primary} />
+                                        <TextInput
+                                            style={styles.input}
+                                            placeholder="Enter your password"
+                                            placeholderTextColor="#9CA3AF"
+                                            value={values.password}
+                                            onChangeText={handleChange('password')}
+                                            onBlur={() => {
+                                                handleBlur('password');
+                                                setFieldTouched('password');
+                                            }}
+                                            secureTextEntry={!showPassword}
+                                            autoComplete="password"
+                                            textContentType="password"
+                                            importantForAutofill="yes"
+
+                                        />
+
+                                        <TouchableOpacity
+                                            onPress={() => setShowPassword(!showPassword)}
+                                        >
+                                            {/* <Eye size={20} color="#6B7280" /> */}
+                                            {showPassword ? (
+                                                <Icons.EyeOff size={20} color={Theme.colors.primary} />
+                                            ) : (
+                                                <Icons.Eye size={20} color={Theme.colors.primary} />
+                                            )}
+                                        </TouchableOpacity>
+                                    </View>
+
+                                    {touched.password && errors.password && (
+                                        <Text style={styles.errorText}>{errors.password}</Text>
+                                    )}
                                 </View>
 
-                                {touched.email && errors.email && (
-                                    <Text style={styles.errorText}>{errors.email}</Text>
-                                )}
-                            </View>
-                            <View style={styles.inputGroup}>
-                                <Text style={styles.label}>Password</Text>
-
-                                <View style={styles.inputWrapper}>
-                                    <Icons.Lock size={20} color={Theme.colors.primary} />
-                                    <TextInput
-                                        style={styles.input}
-                                        placeholder="Enter your password"
-                                        placeholderTextColor="#9CA3AF"
-                                        value={values.password}
-                                        onChangeText={handleChange('password')}
-                                        onBlur={() => {
-                                            handleBlur('password');
-                                            setFieldTouched('password');
-                                        }}
-                                        secureTextEntry={!showPassword}
-                                        autoComplete="password"
-                                        textContentType="password"
-                                        importantForAutofill="yes"
-
-                                    />
-
+                                <View style={styles.optionsRow}>
                                     <TouchableOpacity
-                                        onPress={() => setShowPassword(!showPassword)}
+                                        style={styles.rememberMe}
+                                        onPress={() => setRemember(prev => !prev)}
+                                        activeOpacity={0.7}
                                     >
-                                        {/* <Eye size={20} color="#6B7280" /> */}
-                                        {showPassword ? (
-                                            <Icons.EyeOff size={20} color={Theme.colors.primary} />
+                                        {remember ? (
+                                            <Icons.CheckSquare size={24} color={Theme.colors.primary} />
                                         ) : (
-                                            <Icons.Eye size={20} color={Theme.colors.primary} />
+                                            <Icons.Square size={24} color={Theme.colors.primary} />
                                         )}
+                                        <Text style={styles.rememberText}>Remember Me</Text>
+                                    </TouchableOpacity>
+
+                                    <TouchableOpacity activeOpacity={0.7} onPress={() => navigation.navigate('ForgotPassword')}>
+                                        <Text style={styles.forgotText}>Forgot Password?</Text>
                                     </TouchableOpacity>
                                 </View>
 
-                                {touched.password && errors.password && (
-                                    <Text style={styles.errorText}>{errors.password}</Text>
-                                )}
-                            </View>
-
-                            <View style={styles.optionsRow}>
                                 <TouchableOpacity
-                                    style={styles.rememberMe}
-                                    onPress={() => setRemember(prev => !prev)}
-                                    activeOpacity={0.7}
+                                    style={styles.loginButton}
+                                    activeOpacity={0.8}
+                                    onPress={handleSubmit}
                                 >
-                                    {remember ? (
-                                        <Icons.CheckSquare size={24} color={Theme.colors.red} />
-                                    ) : (
-                                        <Icons.Square size={24} color={Theme.colors.red} />
+                                    <View style={styles.buttonContent}>
+                                        <Icons.LogIn size={24} color="#FFFFFF" />
+                                        <Text style={styles.buttonText}>Sign In</Text>
+                                    </View>
+                                </TouchableOpacity>
+
+                                <View style={styles.continueWithContainer}>
+                                    <View style={styles.grayLine} />
+                                    <View style={styles.continueTxtContainer}>
+                                        <Text style={styles.continueTxt}>
+                                            or continue with
+                                        </Text>
+                                    </View>
+                                    <View style={styles.grayLine} />
+                                </View>
+
+                                <View style={styles.socialRow}>
+                                    {Platform.OS === 'ios' && (
+                                        <TouchableOpacity onPress={() => handleSocialLogin('Apple')}>
+                                            <Image
+                                                source={require('../../assets/images/apple.png')}
+                                                style={styles.icon}
+                                            />
+                                        </TouchableOpacity>
                                     )}
-                                    <Text style={styles.rememberText}>Remember Me</Text>
-                                </TouchableOpacity>
 
-                                <TouchableOpacity activeOpacity={0.7} onPress={() => navigation.navigate('ForgotPassword')}>
-                                    <Text style={styles.forgotText}>Forgot Password?</Text>
-                                </TouchableOpacity>
-                            </View>
-
-                            <TouchableOpacity
-                                style={styles.loginButton}
-                                activeOpacity={0.8}
-                                onPress={handleSubmit}
-                            >
-                                <View style={styles.buttonContent}>
-                                    <Icons.LogIn size={24} color="#FFFFFF" />
-                                    <Text style={styles.buttonText}>Sign In</Text>
-                                </View>
-                            </TouchableOpacity>
-
-                            <View style={styles.continueWithContainer}>
-                                <View style={styles.grayLine} />
-                                <View style={styles.continueTxtContainer}>
-                                    <Text style={styles.continueTxt}>
-                                        or continue with
-                                    </Text>
-                                </View>
-                                <View style={styles.grayLine} />
-                            </View>
-
-                            <View style={styles.socialRow}>
-                                {Platform.OS === 'ios' && (
-                                    <TouchableOpacity onPress={() => handleSocialLogin('Apple')}>
+                                    <TouchableOpacity onPress={() => handleSocialLogin('Google')}>
                                         <Image
-                                            source={require('../../assets/images/apple.png')}
+                                            source={require('../../assets/images/Google.png')}
                                             style={styles.icon}
                                         />
                                     </TouchableOpacity>
-                                )}
 
-                                <TouchableOpacity onPress={() => handleSocialLogin('Google')}>
-                                    <Image
-                                        source={require('../../assets/images/Google.png')}
-                                        style={styles.icon}
-                                    />
-                                </TouchableOpacity>
+                                </View>
+
+                                <View style={styles.signupContainer}>
+                                    <Text style={styles.signupText}>Don't have an account? </Text>
+                                    <TouchableOpacity
+                                        activeOpacity={0.7}
+                                        onPress={() => navigation.navigate('RoleSelectionScreen')}
+                                    >
+                                        <Text style={styles.signupLink}>Sign Up</Text>
+                                    </TouchableOpacity>
+                                </View>
 
                             </View>
-
-                            <View style={styles.signupContainer}>
-                                <Text style={styles.signupText}>Don't have an account? </Text>
-                                <TouchableOpacity
-                                    activeOpacity={0.7}
-                                    onPress={() => navigation.navigate('RoleSelectionScreen')}
-                                >
-                                    <Text style={styles.signupLink}>Sign Up</Text>
-                                </TouchableOpacity>
-                            </View>
-
-                        </View>
-                        <LoaderModal visible={isPending || isPendingGoogle} />
-                    </KeyboardAwareScrollView>
-                </View>
-            )}
-        </Formik>
+                            <LoaderModal visible={isPending || isPendingGoogle || companiesIsPending} />
+                        </KeyboardAwareScrollView>
+                    </View>
+                )}
+            </Formik>
+            <CompanySelectionModal
+                visible={showCompanyModal}
+                companies={companies}
+                loading={isPendingGoogle}
+                onClose={handleCloseCompanyModal}
+                onContinue={handleCompanySelection}
+            />
+        </>
     );
 };
 

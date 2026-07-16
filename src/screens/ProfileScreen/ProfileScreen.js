@@ -24,7 +24,9 @@ import { mutationHandler } from "../../services/mutations/mutationHandler";
 import { checkExpiry, viewDocumentInApp } from "../../utils/document.utils";
 import { setFormValue, mapUserToForm } from "../../utils/profileForm.utils";
 import { dispatchUser, dispatchIsSignedIn } from "../../redux/slices/userSlice";
+import { googleConfig, signInWithGoogle, signInWithApple } from '../../utils/SocialLogin/GoogleSignIn'
 import DeleteAccountModal from "../../components/DeleteAccountModal/DeleteAccountModal";
+
 
 const ProfileScreen = ({ navigation }) => {
   const { colors } = useTheme();
@@ -37,6 +39,15 @@ const ProfileScreen = ({ navigation }) => {
   // console.log('=======user====', user);
 
   const driverId = user?.driverId;
+  const loginProvider =
+    user?.provider?.toLowerCase();
+
+  const isSocialLogin =
+    loginProvider === 'google' ||
+    loginProvider === 'apple';
+
+  // console.log('======isSocialLogin',isSocialLogin);
+
 
 
   const { mutate, isPending, reset } = mutationHandler(
@@ -56,13 +67,6 @@ const ProfileScreen = ({ navigation }) => {
 
       const data = err?.response?.data;
 
-      console.log('Profile update failed:', {
-        status: err?.response?.status,
-        message: data?.message,
-        errors: data?.errors,
-        data,
-      });
-
       toastUtils.showError(
         'Update Failed',
         data?.message ||
@@ -78,22 +82,35 @@ const ProfileScreen = ({ navigation }) => {
     EndPoints?.logOut,
     null,
     (res) => {
-      console.log(' Logout successfully:', res);
     },
     (err) => {
-      console.log('Logout error:', err);
     },
     "post"
   );
 
-  const { mutate: mutateDeleteAccount } = mutationHandler(
+  const {
+    mutate: mutateDeleteAccount,
+    isPending: deleteAccountIsPending,
+    reset: resetDeleteAccount,
+  } = mutationHandler(
     EndPoints?.deleteAccount,
     null,
-    (res) => {
-      console.log(' Account deleted successfully:', res);
+    res => {
+      // console.log("Account deleted successfully:", res);
+
+      resetDeleteAccount();
+      completeAccountDeletion();
     },
-    (err) => {
-      console.log('Delete account error:', err);
+    err => {
+
+      resetDeleteAccount();
+
+      toastUtils.showError(
+        "Delete Failed",
+        err?.response?.data?.message ||
+        err?.message ||
+        "Unable to delete your account."
+      );
     },
     "delete"
   );
@@ -102,7 +119,6 @@ const ProfileScreen = ({ navigation }) => {
     `${EndPoints.updateDrivers}/${driverId}`,
     null,
     (res) => {
-      console.log("=======Driver Update Response:", res);
       driverProfileIsReset();
       refetch()
       dispatch(dispatchUser({
@@ -113,7 +129,7 @@ const ProfileScreen = ({ navigation }) => {
     (err) => {
       driverProfileIsReset();
 
-      console.log("Driver Update Error:", err?.message);
+      // console.log("Driver Update Error:", err?.message);
       toastUtils.showError(
         "Update Failed",
         err?.message || "Failed to update driver profile"
@@ -178,6 +194,7 @@ const ProfileScreen = ({ navigation }) => {
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [deletePassword, setDeletePassword] = useState("");
   const [showDeletePassword, setShowDeletePassword] = useState(false);
+  const [isSocialReauthenticating, setIsSocialReauthenticating] = useState(false);
 
   const [form, setForm] = useState({
     fullName: "",
@@ -541,9 +558,6 @@ const ProfileScreen = ({ navigation }) => {
         profileImage: imageUrl,
       };
 
-      console.log('=======account body is here', accountBody);
-
-
       const driverBody = {
         firstName: form.firstName,
         surName: form.surname,
@@ -600,13 +614,13 @@ const ProfileScreen = ({ navigation }) => {
         }),
       };
 
-      console.log("DRIVER BODY:", driverBody);
+      // console.log("DRIVER BODY:", driverBody);
 
       mutate(accountBody);
 
       if (isDriver) {
         if (!driverId) {
-          console.log('Driver update skipped: driverId is missing');
+          // console.log('Driver update skipped: driverId is missing');
 
           toastUtils.showError(
             'Driver Update Failed',
@@ -623,7 +637,7 @@ const ProfileScreen = ({ navigation }) => {
 
       setIsEditing(false);
     } catch (error) {
-      console.log('error message is here', error);
+      // console.log('error message is here', error);
     }
   };
 
@@ -632,6 +646,10 @@ const ProfileScreen = ({ navigation }) => {
       refetch();
     }, [refetch])
   );
+
+  useEffect(() => {
+    googleConfig();
+  }, []);
 
   useEffect(() => {
     if (user) {
@@ -657,6 +675,7 @@ const ProfileScreen = ({ navigation }) => {
   const imageUri =
     form?.profileImage?.uri || user?.profileImage || null;
 
+
   const handleCancelDeleteAccount = () => {
     setDeleteModalVisible(false);
     setDeletePassword("");
@@ -664,35 +683,127 @@ const ProfileScreen = ({ navigation }) => {
   };
 
   const handleConfirmDeleteAccount = () => {
-    if (!deletePassword.trim()) {
+    const password = deletePassword.trim();
+
+    if (!password) {
       toastUtils.showError(
-        "Password Required",
-        "Please enter your password to delete your account."
+        'Password Required',
+        'Please enter your password to delete your account.',
       );
       return;
     }
 
-    mutateDeleteAccount(
-      {
-        password: deletePassword,
-      },
-      {
-        onSuccess: () => {
-          setDeleteModalVisible(false);
-          setDeletePassword("");
-          setShowDeletePassword(false);
+    // console.log('Email delete request:', {
+    //   hasPassword: true,
+    //   isSocialLogin,
+    // });
 
-          dispatch(dispatchIsSignedIn(false));
-          dispatch(dispatchUser(null));
-        },
-        onError: (err) => {
-          toastUtils.showError(
-            "Delete Failed",
-            err?.message || "Password is incorrect."
-          );
-        },
-      }
+    mutateDeleteAccount({
+      password,
+    });
+  };
+
+  const completeAccountDeletion = () => {
+    setDeleteModalVisible(false);
+    setDeletePassword("");
+    setShowDeletePassword(false);
+
+    dispatch(dispatchIsSignedIn(false));
+    dispatch(dispatchUser(null));
+
+    toastUtils.showSuccess(
+      "Account Deleted",
+      "Your account has been deleted successfully."
     );
+  };
+
+  const handleSocialDeleteAccount = async () => {
+    if (
+      isSocialReauthenticating ||
+      deleteAccountIsPending
+    ) {
+      return;
+    }
+
+    try {
+      setIsSocialReauthenticating(true);
+
+      const provider =
+        user?.provider?.toLowerCase();
+
+      let socialResponse = null;
+
+      if (provider === 'google') {
+        socialResponse = await signInWithGoogle();
+      } else if (provider === 'apple') {
+        if (Platform.OS !== 'ios') {
+          toastUtils.showError(
+            'Not Supported',
+            'Apple authentication is only available on iOS.',
+          );
+          return;
+        }
+
+        socialResponse = await signInWithApple();
+      } else {
+        toastUtils.showError(
+          'Authentication Failed',
+          'Unsupported social login provider.',
+        );
+        return;
+      }
+
+      if (!socialResponse?.idToken) {
+        toastUtils.showError(
+          'Authentication Failed',
+          `${provider === 'apple' ? 'Apple' : 'Google'} did not return a valid token.`,
+        );
+        return;
+      }
+
+      const deleteBody = {
+        provider,
+        idToken: socialResponse.idToken,
+      };
+
+      // Useful for Apple token revocation on the backend.
+      if (
+        provider === 'apple' &&
+        socialResponse.authorizationCode
+      ) {
+        deleteBody.authorizationCode =
+          socialResponse.authorizationCode;
+      }
+
+      mutateDeleteAccount(deleteBody);
+    } catch (error) {
+      console.log(
+        'Social account deletion authentication error:',
+        error,
+      );
+
+      toastUtils.showError(
+        'Authentication Failed',
+        error?.message ||
+        'Could not verify your social account.',
+      );
+    } finally {
+      setIsSocialReauthenticating(false);
+    }
+  };
+
+  const handleDeleteAccountPress = () => {
+    // console.log('Delete pressed:', {
+    //   provider: user?.provider,
+    //   isSocialLogin,
+    // });
+
+    if (isSocialLogin) {
+      handleSocialDeleteAccount();
+      return;
+    }
+
+    setDeleteModalVisible(true);
   };
 
   return (
@@ -889,11 +1000,31 @@ const ProfileScreen = ({ navigation }) => {
           {!isEditing && (
             <View style={{ marginTop: 0, paddingHorizontal: 16 }}>
               <TouchableOpacity
-                onPress={() => setDeleteModalVisible(true)}
-                style={styles.logoutBtn}
+                disabled={
+                  isSocialReauthenticating ||
+                  deleteAccountIsPending
+                }
+                onPress={handleDeleteAccountPress}
+                style={[
+                  styles.logoutBtn,
+                  {
+                    opacity:
+                      isSocialReauthenticating ||
+                        deleteAccountIsPending
+                        ? 0.5
+                        : 1,
+                  },
+                ]}
               >
                 <Icons.Trash2 size={22} color={colors.white} />
-                <Text style={styles.logoutText}>Delete Account</Text>
+
+                <Text style={styles.logoutText}>
+                  {isSocialReauthenticating
+                    ? "Verifying Account..."
+                    : deleteAccountIsPending
+                      ? "Deleting Account..."
+                      : "Delete Account"}
+                </Text>
               </TouchableOpacity>
             </View>)}
 

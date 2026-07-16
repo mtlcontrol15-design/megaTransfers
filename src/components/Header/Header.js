@@ -62,7 +62,7 @@ const Header = ({
         {showImage ? (
           <TouchableOpacity onPress={onImagePress} activeOpacity={0.7}>
             <Image
-              resizeMode="contain"
+              resizeMode="cover"
               source={{ uri: companyLogo }}
               style={[
                 styles.logo,
