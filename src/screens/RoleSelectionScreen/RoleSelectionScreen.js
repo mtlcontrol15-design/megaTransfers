@@ -97,7 +97,7 @@ const RoleSelectionScreen = ({ navigation, route }) => {
             <View style={styles.header1}>
                 <TouchableOpacity
                     style={styles.headerIcon}
-                    onPress={() => navigation.goBack()}
+                    onPress={() => navigation.navigate('Login')}
                 >
                     <Icons.ArrowLeft size={26} color={colors.white} />
                 </TouchableOpacity>

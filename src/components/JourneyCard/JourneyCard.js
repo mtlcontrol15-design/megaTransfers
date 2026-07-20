@@ -380,17 +380,26 @@ const JourneyCard = ({
             {mode === "Hourly" && (
                 <View style={{ marginBottom: 10, backgroundColor: colors?.gray100, padding: moderateScale(16) }}>
 
-                    <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-                        <Text style={{ fontWeight: "bold" }}>Hourly Packages</Text>
+                    <TouchableOpacity
+                        onPress={() => setShowPackages(prev => !prev)}
+                        activeOpacity={0.7}
+                        style={{
+                            flexDirection: "row",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            marginBottom: 10
+                        }}
+                    >
+                        <Text style={{ fontWeight: "bold" }}>
+                            Hourly Packages
+                        </Text>
 
-                        <TouchableOpacity onPress={() => setShowPackages(prev => !prev)}>
-                            {showPackages ? (
-                                <Icons.ChevronUp size={18} color={colors.black} />
-                            ) : (
-                                <Icons.ChevronDown size={18} color={colors.black} />
-                            )}
-                        </TouchableOpacity>
-                    </View>
+                        {showPackages ? (
+                            <Icons.ChevronUp size={18} color={colors.black} />
+                        ) : (
+                            <Icons.ChevronDown size={18} color={colors.black} />
+                        )}
+                    </TouchableOpacity>
 
                     {showPackages && hourlyData?.map((item) => {
                         const isSelected = selectedHourly?._id === item._id;
@@ -398,7 +407,11 @@ const JourneyCard = ({
                         return (
                             <TouchableOpacity
                                 key={item._id}
-                                onPress={() => setSelectedHourly(item)}
+                                onPress={() => {
+                                    setSelectedHourly(item);
+                                    setShowPackages(false);
+                                }}
+                                activeOpacity={0.7}
                                 style={{
                                     padding: 12,
                                     borderColor: isSelected ? colors.primary : colors?.gray200,
@@ -504,7 +517,7 @@ const JourneyCard = ({
                                     <TextInput
                                         value={journeyData.flightNumber}
                                         onChangeText={handleFlightNumberChange}
-                                        placeholder="Enter Flight Number"
+                                        placeholder="Enter Flight No."
                                         placeholderTextColor={colors.gray300}
                                         style={styles.input}
                                         maxLength={15}

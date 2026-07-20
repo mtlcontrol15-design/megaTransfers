@@ -46,6 +46,7 @@ export const signInWithApple = async () => {
         idToken: appleAuthRequestResponse.identityToken,
         name: `${appleAuthRequestResponse.fullName?.givenName || ''} ${appleAuthRequestResponse.fullName?.familyName || ''}`.trim(),
         email: appleAuthRequestResponse.email,
+        authorizationCode: appleAuthRequestResponse.authorizationCode,
       };
     }
     return null;

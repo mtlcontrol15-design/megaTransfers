@@ -92,14 +92,42 @@ const Login = ({ navigation }) => {
             );
         },
         (err) => {
-            console.error("Login error:", err);
+            console.error("Login error:", err?.response?.data || err);
             reset();
 
             const data = err?.response?.data || err;
             const user = data?.user;
             const driver = data?.driver;
             const status = user?.status || driver?.DriverData?.status;
-            const message = data?.message || err?.message || "User does not exist";
+
+            const message =
+                data?.message ||
+                err?.message ||
+                "Unable to sign in";
+
+            const normalizedMessage = message
+                .toLowerCase()
+                .trim();
+
+            const accountNotFound =
+                normalizedMessage.includes("no account found") ||
+                normalizedMessage.includes("user does not exist") ||
+                normalizedMessage.includes("account does not exist");
+
+            if (accountNotFound) {
+                navigation.replace("RoleSelectionScreen", {
+                    registrationData: {
+                        email: initialValues.email.trim().toLowerCase(),
+                    },
+                });
+
+                toastUtils.showInfo(
+                    "Account Not Found",
+                    "Please select a role type to sign up."
+                );
+
+                return;
+            }
 
             if (user?.role === "driver") {
                 if (user?.hasUploadedDocuments === false) {
@@ -135,12 +163,13 @@ const Login = ({ navigation }) => {
             res?.isNewProfile === true ||
             res?.requiresRegistration === true
         ) {
-            const googleData = pendingSocialResponseRef.current;
-            const user = res?.user;
+            const socialData = pendingSocialResponseRef.current;
+            const profile = res?.socialProfile || res?.user || {};
 
             const fullName =
-                user?.fullName?.trim() ||
-                `${googleData?.firstName || ''} ${googleData?.lastName || ''}`.trim();
+                profile?.fullName?.trim() ||
+                `${profile?.firstName || ''} ${profile?.lastName || ''}`.trim() ||
+                `${socialData?.firstName || ''} ${socialData?.lastName || ''}`.trim();
 
             const nameParts = fullName
                 .split(/\s+/)
@@ -150,7 +179,7 @@ const Login = ({ navigation }) => {
                 socialAuth: {
                     provider: res?.provider || 'google',
 
-                    idToken: googleData?.idToken,
+                    idToken: socialData?.idToken,
 
                     token:
                         res?.token ||
@@ -164,27 +193,37 @@ const Login = ({ navigation }) => {
                         res?.refresh_token ||
                         '',
 
-                    userId: user?._id || '',
+                    userId: profile?._id || '',
 
                     emailAddress:
-                        user?.email ||
-                        googleData?.email ||
+                        profile?.emailAddress ||
+                        profile?.email ||
+                        socialData?.email ||
                         '',
 
                     firstName:
-                        googleData?.firstName ||
+                        profile?.firstName ||
+                        socialData?.firstName ||
                         nameParts[0] ||
                         '',
 
                     lastName:
-                        googleData?.lastName ||
+                        profile?.lastName ||
+                        socialData?.lastName ||
                         nameParts.slice(1).join(' ') ||
                         '',
 
                     profileImage:
-                        user?.profileImage ||
-                        googleData?.photo ||
+                        profile?.profileImage ||
+                        socialData?.photo ||
                         '',
+
+                    authorizationCode:
+                        socialData?.authorizationCode ||
+                        res?.authorizationCode ||
+                        '',
+
+                    socialProfile: profile,
 
                     isNewProfile: true,
                 },
@@ -379,6 +418,7 @@ const Login = ({ navigation }) => {
             email: response?.email || '',
             firstName: nameParts[0] || '',
             lastName: nameParts.slice(1).join(' ') || '',
+            authorizationCode: response?.authorizationCode || '',
         };
 
         mutateGetCompanies(socialLoginBody);

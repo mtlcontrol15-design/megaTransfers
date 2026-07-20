@@ -66,7 +66,8 @@ const getStyles = (colors) =>
 
     activeTabText: {
       color: "#fff",
-      fontWeight: '500'
+      fontWeight: '500',
+      fontSize: moderateScale(14),
     },
     buttonContainer: {
       padding: moderateScale(16)

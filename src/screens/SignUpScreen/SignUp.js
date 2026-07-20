@@ -32,6 +32,7 @@ const SignUp = ({ navigation, route }) => {
     const selectedCompany = route?.params?.company || '';
     const selectedCompanyId = route?.params?.companyId || '';
     const socialAuth = route?.params?.socialAuth || null;
+    const socialProfile = socialAuth?.socialProfile || null;
     const isSocialSignUp = Boolean(
         socialAuth?.provider && socialAuth?.idToken,
     );
@@ -39,6 +40,7 @@ const SignUp = ({ navigation, route }) => {
     // console.log('=======selected role is here', selectedRole);s
     // console.log('========sign up colors are here',colors);
     // console.log('=======socialAuth is here', socialAuth);
+    // console.log('=======socialProfile is here', socialProfile);
     const dispatch = useDispatch();
 
 
@@ -223,11 +225,15 @@ const SignUp = ({ navigation, route }) => {
 
 
     const initialValues = {
-        firstName: socialAuth?.firstName || '',
-        lastName: socialAuth?.lastName || '',
+        firstName: socialAuth?.firstName || socialProfile?.firstName || '',
+        lastName: socialAuth?.lastName || socialProfile?.lastName || socialProfile?.fullName || '',
         vatNumber: '',
         postCode: '',
-        emailAddress: socialAuth?.emailAddress || '',
+        emailAddress:
+            socialAuth?.emailAddress ||
+            socialProfile?.emailAddress ||
+            socialProfile?.email ||
+            '',
         phoneNumber: '',
         password: '',
         confirmPassword: '',

@@ -246,7 +246,7 @@ const RideCard = ({ ride, onViewDetails, onEditBooking, onCancelBooking, reviewL
             <View style={styles.locationRow}>
               <Icons.MapPin size={16} color={colors?.error} />
               <View style={{ marginLeft: 10, flex: 1 }}>
-                <Text style={styles.locationLabel}>PICKUP</Text>
+                <Text style={styles.locationLabel}>PICK-UP</Text>
                 <Text style={styles.locationText}>
                   {journey?.pickup || "Pickup location"}
                 </Text>
@@ -258,7 +258,7 @@ const RideCard = ({ ride, onViewDetails, onEditBooking, onCancelBooking, reviewL
             <View style={styles.locationRow}>
               <Icons.MapPin size={16} color={colors?.lightGreen} />
               <View style={{ marginLeft: 10, flex: 1 }}>
-                <Text style={styles.locationLabel}>DROPOFF</Text>
+                <Text style={styles.locationLabel}>DROP-OFF</Text>
                 <Text style={styles.locationText}>
                   {journey?.dropoff || "Dropoff location"}
                 </Text>
