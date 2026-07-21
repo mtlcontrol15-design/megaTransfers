@@ -1,19 +1,26 @@
 import React from 'react';
 import { View, StyleSheet, Text } from 'react-native';
-import LoaderKit from 'react-native-loader-kit'
+import LottieView from 'lottie-react-native';
+import { moderateScale } from 'react-native-size-matters';
 
 const LoaderModal = ({ visible }) => {
-  if (!visible) return null;
+  if (!visible) {
+    return null;
+  }
 
   return (
     <View style={styles.overlay} pointerEvents="auto">
-      <LoaderKit
-        style={{ width: 40, height: 40 }}
-        name="BallSpinFadeLoader"
-        color="#ffff"
-        size={50}
-      />
-      <Text style={styles.text}>Processing</Text>
+      <View style={styles.loaderContainer}>
+        <LottieView
+          source={require('../assets/images/Dashboard.json')}
+          style={styles.animation}
+          autoPlay
+          loop
+          resizeMode="contain"
+        />
+
+        {/* <Text style={styles.text}>{text}</Text> */}
+      </View>
     </View>
   );
 };
@@ -21,15 +28,28 @@ const LoaderModal = ({ visible }) => {
 const styles = StyleSheet.create({
   overlay: {
     ...StyleSheet.absoluteFill,
-    backgroundColor: '#00000066',
+    backgroundColor: 'rgba(0, 0, 0, 0.45)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 9999,
+    elevation: 9999,
+  },
+
+  loaderContainer: {
     justifyContent: 'center',
     alignItems: 'center',
   },
+
+  animation: {
+    width: moderateScale(230),
+    height: moderateScale(230),
+  },
+
   text: {
-    color: 'white',
-    fontSize: 15,
-    marginTop: 20,
-    width: '100%',
+    color: '#FFFFFF',
+    fontSize: moderateScale(16),
+    fontWeight: '500',
+    marginTop: moderateScale(10),
     textAlign: 'center',
   },
 });
