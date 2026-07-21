@@ -1,7 +1,9 @@
+
 import { useEffect, useState, useRef } from "react";
-import { View, Text, TouchableOpacity, ScrollView, RefreshControl } from "react-native";
+import { View, Text, TouchableOpacity, ScrollView, RefreshControl, Modal } from "react-native";
 
 import { useSelector } from "react-redux";
+import { WebView } from "react-native-webview";
 import { useStripe } from "@stripe/stripe-react-native";
 import { useTheme, useNavigation } from "@react-navigation/native";
 
@@ -42,6 +44,10 @@ const NewBookingScreen = ({ route }) => {
   const [showPaymentMethods, setShowPaymentMethods] = useState(false);
   const [distanceText, setDistanceText] = useState("");
   const [durationText, setDurationText] = useState("");
+  const [showPaypalWebView, setShowPaypalWebView] = useState(false);
+  const [paypalApprovalUrl, setPaypalApprovalUrl] = useState("");
+  const [paypalOrderID, setPaypalOrderID] = useState("");
+  const paypalResolveRef = useRef(null);
 
   const [returnDistanceText, setReturnDistanceText] = useState("");
   const [returnDurationText, setReturnDurationText] = useState("");
@@ -223,6 +229,28 @@ const NewBookingScreen = ({ route }) => {
     },
     (err) => {
       console.log("payment error:", err);
+    },
+    "post"
+  );
+  const { mutate: createOrderMutate, isPending: createOrderPending } = mutationHandler(
+    EndPoints.createOrder,
+    null,
+    (res) => {
+      console.log("create order response:", res);
+    },
+    (err) => {
+      console.log("create order error:", err);
+    },
+    "post"
+  );
+  const { mutate: captureOrderMutate, isPending: captureOrderPending } = mutationHandler(
+    EndPoints.captureOrder,
+    null,
+    (res) => {
+      console.log("capture response:", res);
+    },
+    (err) => {
+      console.log("capture error:", err);
     },
     "post"
   );
@@ -498,31 +526,6 @@ const NewBookingScreen = ({ route }) => {
   }, [booking, paymentMethodsData]);
 
   useEffect(() => {
-    if (mode === "edit" && booking?.vehicle && data && data.length > 0) {
-      const matchedVehicle = data.find(
-        v => v.vehicleName === booking.vehicle.vehicleName
-      );
-
-      if (matchedVehicle && matchedVehicle._id) {
-        setSelectedVehicle(matchedVehicle);
-
-        setVehicleExtras({
-          [matchedVehicle._id]: {
-            passenger: booking?.vehicle?.passenger || 0,
-            childSeat: booking?.vehicle?.childSeat || 0,
-            babySeat: booking?.vehicle?.babySeat || 0,
-            childSeatType: booking?.vehicle?.childSeatType || 0,
-            boosterSeat: booking?.vehicle?.boosterSeat || 0,
-            handLuggage: booking?.vehicle?.handLuggage || 0,
-            checkinLuggage: booking?.vehicle?.checkinLuggage || 0,
-          }
-        });
-      }
-    }
-  }, [mode, booking?.vehicle, data]);
-
-
-  useEffect(() => {
     if (mode !== "edit" || !booking?.vehicle || !data?.length) return;
 
     const bookingVehicleName = booking.vehicle.vehicleName
@@ -552,6 +555,28 @@ const NewBookingScreen = ({ route }) => {
       },
     });
   }, [mode, booking, data]);
+
+
+  useEffect(() => {
+    if (
+      bookingMode === "Hourly" &&
+      mode === "edit" &&
+      booking?.mode === "Hourly" &&
+      hourlyData &&
+      hourlyData.length > 0 &&
+      selectedVehicle &&
+      !selectedHourly
+    ) {
+      const matchedHourly = hourlyData.find(option =>
+        option.vehicleRates &&
+        option.vehicleRates[selectedVehicle?.vehicleName]
+      );
+
+      if (matchedHourly) {
+        setSelectedHourly(matchedHourly);
+      }
+    }
+  }, [bookingMode, mode, booking?.mode, hourlyData, selectedVehicle]);
 
   useEffect(() => {
     const origin = journeyData.pickup?.trim();
@@ -1090,6 +1115,139 @@ const NewBookingScreen = ({ route }) => {
     }
   };
 
+  const openPaypalPayment = async () => {
+    try {
+      const createOrderResponse = await new Promise((resolve, reject) => {
+        createOrderMutate(
+          {
+            amount: Number(totalFare || 0),
+            companyId: user?.companyId,
+            passengerEmail: passengerDetails?.email || user?.email,
+          },
+          {
+            onSuccess: resolve,
+            onError: reject,
+          }
+        );
+      });
+
+      console.log("PAYPAL CREATE ORDER RESPONSE:", createOrderResponse);
+
+      const orderID =
+        createOrderResponse?.orderID ||
+        createOrderResponse?.orderId ||
+        createOrderResponse?.id;
+
+      const approvalUrl =
+        createOrderResponse?.approveUrl ||
+        createOrderResponse?.approvalUrl ||
+        createOrderResponse?.approval_url ||
+        createOrderResponse?.links?.find(item => item?.rel === "approve")?.href;
+
+      if (!orderID || !approvalUrl) {
+        toastUtils.showError(
+          "PayPal Error",
+          "PayPal order or approval link not found"
+        );
+        return false;
+      }
+
+      setPaypalOrderID(orderID);
+      setPaypalApprovalUrl(approvalUrl);
+      setShowPaypalWebView(true);
+
+      return await new Promise(resolve => {
+        paypalResolveRef.current = resolve;
+      });
+    } catch (error) {
+      console.log("PAYPAL CREATE ORDER ERROR:", error);
+
+      toastUtils.showError(
+        "PayPal Failed",
+        error?.message || "Something went wrong"
+      );
+
+      return false;
+    }
+  };
+
+  const handlePaypalNavigation = async (navState) => {
+    const url = navState?.url || "";
+
+    console.log("PAYPAL WEBVIEW URL:", url);
+
+    if (url.includes("paypal-success")) {
+      try {
+        setShowPaypalWebView(false);
+
+        const captureResponse = await new Promise((resolve, reject) => {
+          captureOrderMutate(
+            {
+              orderID: paypalOrderID,
+              companyId: user?.companyId,
+              passengerEmail: passengerDetails?.email || user?.email,
+            },
+            {
+              onSuccess: resolve,
+              onError: reject,
+            }
+          );
+        });
+
+        console.log("PAYPAL CAPTURE RESPONSE:", captureResponse);
+
+        const isPaid =
+          captureResponse?.status === "COMPLETED" ||
+          captureResponse?.capture?.status === "COMPLETED" ||
+          captureResponse?.data?.status === "COMPLETED" ||
+          captureResponse?.success === true;
+
+        if (!isPaid) {
+          toastUtils.showError(
+            "PayPal Failed",
+            "Payment was not completed"
+          );
+
+          paypalResolveRef.current?.(false);
+          paypalResolveRef.current = null;
+          return;
+        }
+
+        toastUtils.showSuccess(
+          "PayPal Success",
+          "Payment completed successfully"
+        );
+
+        paypalResolveRef.current?.(true);
+        paypalResolveRef.current = null;
+        return;
+      } catch (error) {
+        console.log("PAYPAL CAPTURE ERROR:", error);
+
+        toastUtils.showError(
+          "PayPal Failed",
+          error?.message || "Could not capture PayPal payment"
+        );
+
+        paypalResolveRef.current?.(false);
+        paypalResolveRef.current = null;
+        return;
+      }
+    }
+
+    if (url.includes("paypal-cancel")) {
+      setShowPaypalWebView(false);
+
+      toastUtils.showError(
+        "PayPal Cancelled",
+        "Payment was cancelled"
+      );
+
+      paypalResolveRef.current?.(false);
+      paypalResolveRef.current = null;
+    }
+  };
+
 
   useEffect(() => {
     calculateFare();
@@ -1203,10 +1361,12 @@ const NewBookingScreen = ({ route }) => {
           },
 
           paymentMethod:
-            selectedPaymentMethod ===
-              "Pay Via Debit/Credit Card"
+            selectedPaymentMethod === "Pay Via Debit/Credit Card"
               ? "stripe"
-              : selectedPaymentMethod
+              : selectedPaymentMethod === "PayPal" ||
+                selectedPaymentMethod === "Pay Via PayPal"
+                ? "paypal"
+                : selectedPaymentMethod
         };
 
         try {
@@ -1218,6 +1378,17 @@ const NewBookingScreen = ({ route }) => {
 
             const paymentSuccess =
               await openStripePaymentSheet();
+
+            if (!paymentSuccess) {
+              return;
+            }
+          }
+
+          if (
+            selectedPaymentMethod === "PayPal" ||
+            selectedPaymentMethod === "Pay Via PayPal"
+          ) {
+            const paymentSuccess = await openPaypalPayment();
 
             if (!paymentSuccess) {
               return;
@@ -1590,7 +1761,71 @@ const NewBookingScreen = ({ route }) => {
             primaryJourneyData={journeyData}
           />
 
-          <LoaderModal visible={isPending || updateBookingPending} />
+          <Modal
+            visible={showPaypalWebView}
+            animationType="slide"
+            onRequestClose={() => {
+              setShowPaypalWebView(false);
+              paypalResolveRef.current?.(false);
+              paypalResolveRef.current = null;
+            }}
+          >
+            <View style={{ flex: 1 }}>
+              <View
+                style={{
+                  height: 55,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  paddingHorizontal: 16,
+                  backgroundColor: colors.primary,
+                }}
+              >
+                <TouchableOpacity
+                  onPress={() => {
+                    setShowPaypalWebView(false);
+                    paypalResolveRef.current?.(false);
+                    paypalResolveRef.current = null;
+                  }}
+                >
+                  <Text style={{ color: colors.white, fontSize: 16 }}>
+                    Cancel
+                  </Text>
+                </TouchableOpacity>
+
+                <Text
+                  style={{
+                    flex: 1,
+                    textAlign: "center",
+                    color: colors.white,
+                    fontSize: 18,
+                    fontWeight: "700",
+                  }}
+                >
+                  PayPal Payment
+                </Text>
+
+                <View style={{ width: 55 }} />
+              </View>
+
+              {!!paypalApprovalUrl && (
+                <WebView
+                  source={{ uri: paypalApprovalUrl }}
+                  onNavigationStateChange={handlePaypalNavigation}
+                  startInLoadingState
+                />
+              )}
+            </View>
+          </Modal>
+
+          <LoaderModal
+            visible={
+              isPending ||
+              updateBookingPending ||
+              // paymentIsPending ||
+              createOrderPending ||
+              captureOrderPending
+            }
+          />
         </View>
 
       )}

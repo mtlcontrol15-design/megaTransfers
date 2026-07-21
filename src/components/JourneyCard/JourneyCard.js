@@ -563,6 +563,7 @@ const JourneyCard = ({
                                 placeholder="Door / House No."
                                 placeholderTextColor={colors.gray300}
                                 style={styles.input}
+                                maxLength={10}
                             />
                         </View>
                     )
@@ -689,6 +690,7 @@ const JourneyCard = ({
                                             placeholder="Door / House Number"
                                             placeholderTextColor={colors.gray300}
                                             style={styles.input}
+                                            maxLength={10}
                                         />
                                     </View>
                                 )}
@@ -719,6 +721,7 @@ const JourneyCard = ({
                     placeholder="Driver instructions optional ..."
                     placeholderTextColor={colors.gray300}
                     style={styles.notes}
+                    maxLength={100}
                 />
             </View>
         </View>

@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback } from "react";
-import { Text, TouchableOpacity, View, ScrollView, FlatList, RefreshControl, TouchableWithoutFeedback } from "react-native";
+import { Text, TouchableOpacity, View, ScrollView, FlatList, RefreshControl } from "react-native";
 
 import { useSelector } from "react-redux";
 import { useFocusEffect, useTheme } from "@react-navigation/native";
@@ -7,14 +7,14 @@ import { useFocusEffect, useTheme } from "@react-navigation/native";
 import getStyles from "./style";
 import Icons from "../../assets/icons";
 import { STATUS_TABS } from "../../utils/export";
-import { EndPoints } from "../../services/EndPoints";
-import BookingList from "../../components/BookingList/BookingList";
-import useQueryHandler from "../../services/queries/useQueryHandler";
-import { mutationHandler } from "../../services/mutations/mutationHandler";
 import toastUtils from "../../utils/Toast/toast";
 import LoaderModal from "../../utils/loaderModal";
-import { moderateScale, verticalScale } from "react-native-size-matters";
+import { EndPoints } from "../../services/EndPoints";
 import queryHandler from "../../services/queries/queryHandler";
+import BookingList from "../../components/BookingList/BookingList";
+import useQueryHandler from "../../services/queries/useQueryHandler";
+import { moderateScale, verticalScale } from "react-native-size-matters";
+import { mutationHandler } from "../../services/mutations/mutationHandler";
 
 const MyRidesScreen = ({ navigation }) => {
   const { colors } = useTheme();
@@ -258,7 +258,11 @@ const MyRidesScreen = ({ navigation }) => {
   useFocusEffect(
     useCallback(() => {
       setOpenedMenuId(null);
-    }, [])
+
+      if (user?.companyId) {
+        refetch();
+      }
+    }, [refetch, user?.companyId])
   );
 
   return (
