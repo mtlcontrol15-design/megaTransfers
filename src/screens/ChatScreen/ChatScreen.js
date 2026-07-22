@@ -371,11 +371,24 @@ const ChatScreen = ({ navigation, route }) => {
                         activeOpacity={0.7}
                         onPress={handlePickDocument}
                         disabled={isUploadingDocument}
+                        style={{
+                            width: moderateScale(30),
+                            height: moderateScale(30),
+                            justifyContent: "center",
+                            alignItems: "center",
+                        }}
                     >
-                        <Icons.Paperclip
-                            size={24}
-                            color={isUploadingDocument ? colors.gray : colors.primary}
-                        />
+                        {isUploadingDocument ? (
+                            <ActivityIndicator
+                                size="small"
+                                color={colors.primary}
+                            />
+                        ) : (
+                            <Icons.Paperclip
+                                size={24}
+                                color={colors.primary}
+                            />
+                        )}
                     </TouchableOpacity>
                 </View>
 
@@ -630,7 +643,7 @@ const ChatScreen = ({ navigation, route }) => {
                                                 alignItems: 'center',
                                                 minHeight: 44,
                                             }}>
-                                                <ActivityIndicator size="small" color={colors.white} />
+                                                <ActivityIndicator size="small" color={colors.primary} />
                                             </View>
                                             {renderOptionsButton()}
                                         </View>

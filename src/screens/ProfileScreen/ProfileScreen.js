@@ -643,6 +643,7 @@ const ProfileScreen = ({ navigation }) => {
 
   useFocusEffect(
     useCallback(() => {
+      setIsEditing(false);
       refetch();
     }, [refetch])
   );

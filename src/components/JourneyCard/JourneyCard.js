@@ -395,9 +395,9 @@ const JourneyCard = ({
                         </Text>
 
                         {showPackages ? (
-                            <Icons.ChevronUp size={18} color={colors.black} />
+                            <Icons.ChevronUp size={18} color={colors.primary} />
                         ) : (
-                            <Icons.ChevronDown size={18} color={colors.black} />
+                            <Icons.ChevronDown size={18} color={colors.primary} />
                         )}
                     </TouchableOpacity>
 
@@ -417,7 +417,7 @@ const JourneyCard = ({
                                     borderColor: isSelected ? colors.primary : colors?.gray200,
                                     borderRadius: moderateScale(8),
                                     marginBottom: 8,
-                                    backgroundColor: isSelected ? colors?.black : "#fff"
+                                    backgroundColor: isSelected ? colors?.primary : "#fff"
                                 }}
                             >
                                 <Text style={{ fontWeight: "bold", color: isSelected ? colors?.white : colors?.black }}>

@@ -1318,6 +1318,15 @@ const NewBookingScreen = ({ route }) => {
           return;
         }
 
+        if (bookingMode === "Hourly" && !selectedHourly?._id) {
+          toastUtils.showError(
+            "Hourly Package Required",
+            "Please select an hourly package"
+          );
+
+          return;
+        }
+
         if (!selectedPaymentMethod) {
 
           toastUtils.showError(
