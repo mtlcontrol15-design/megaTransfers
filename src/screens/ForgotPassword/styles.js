@@ -136,18 +136,88 @@ const getStyles = (colors) => StyleSheet.create({
     },
 
     formCard: {
-        // backgroundColor: Theme.colors.white,
         padding: moderateScale(20),
         borderRadius: moderateScale(16),
         height: moderateScale(400),
-        // justifyContent: 'space-between',
-        // shadowColor: '#000',
-        // shadowOpacity: 0.08,
-        // shadowRadius: 10,
-        // shadowOffset: { width: 0, height: 4 },
-        marginVertical:verticalScale(20),
+        marginVertical: verticalScale(20),
+    },
+    companySection: {
+        marginTop: 20,
+    },
 
-        // elevation (Android)
-        // elevation: 4,
+    companyTitle: {
+        fontSize: 17,
+        fontWeight: "700",
+        color: colors.text,
+    },
+
+    companyDescription: {
+        marginTop: 5,
+        marginBottom: 14,
+        fontSize: 13,
+        lineHeight: 19,
+        color: colors.gray600,
+    },
+
+    companyCard: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        paddingHorizontal: 14,
+        paddingVertical: 13,
+        marginBottom: 10,
+        borderWidth: 1,
+        borderColor: colors.gray200,
+        borderRadius: 12,
+        backgroundColor: colors.white,
+    },
+
+    selectedCompanyCard: {
+        borderColor: colors.primary,
+        backgroundColor: colors.gray100,
+    },
+
+    companyInfo: {
+        flex: 1,
+    },
+
+    companyName: {
+        fontSize: 15,
+        fontWeight: "700",
+        color: colors.text,
+    },
+
+    accountName: {
+        marginTop: 4,
+        fontSize: 13,
+        color: colors.gray600,
+    },
+
+    accountRole: {
+        marginTop: 2,
+        fontSize: 12,
+        color: colors.primary,
+        textTransform: "capitalize",
+    },
+
+    radioOuter: {
+        width: 22,
+        height: 22,
+        borderRadius: 11,
+        borderWidth: 2,
+        borderColor: colors.gray400,
+        justifyContent: "center",
+        alignItems: "center",
+    },
+
+    radioOuterSelected: {
+        borderColor: colors.primary,
+    },
+
+    radioInner: {
+        width: 12,
+        height: 12,
+        borderRadius: 6,
+        backgroundColor: colors.primary,
     },
 }); export default getStyles;

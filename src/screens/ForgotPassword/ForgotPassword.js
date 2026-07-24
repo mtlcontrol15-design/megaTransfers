@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity } from 'react-native';
 
 import { Formik } from 'formik';
@@ -19,26 +19,52 @@ const ForgotPassword = () => {
     const navigation = useNavigation();
     const submittedEmailRef = useRef("");
 
+    const [accounts, setAccounts] = useState([]);
+    const [selectedAccount, setSelectedAccount] = useState(null);
+
     const { mutate, isPending, reset } = mutationHandler(
         EndPoints.forgotPassword,
         null,
         res => {
+            console.log("Forgot Password Response:", res);
+
             reset();
+            setAccounts([]);
+            setSelectedAccount(null);
 
             toastUtils.showSuccess(
                 "Success",
-                res?.data?.message || "OTP sent to your email"
+                res?.data?.message ||
+                res?.message ||
+                "OTP sent to your email"
             );
 
             navigation.navigate("NewPassword", {
                 email: submittedEmailRef.current,
+                companyId: selectedAccount?.companyId,
+                userId: selectedAccount?.userId,
             });
         },
         err => {
+            console.log(
+                "Forgot Password Error:",
+                err?.response?.data || err
+            );
+
             reset();
 
             const status = err?.response?.status;
             const responseData = err?.response?.data;
+
+            if (
+                status === 409 &&
+                responseData?.code === "COMPANY_REQUIRED" &&
+                Array.isArray(responseData?.accounts)
+            ) {
+                setAccounts(responseData.accounts);
+                setSelectedAccount(null);
+                return;
+            }
 
             const errorMessage =
                 responseData?.message ||
@@ -54,10 +80,33 @@ const ForgotPassword = () => {
         }
     );
 
+    const handleSelectCompany = account => {
+        setSelectedAccount(account);
+    };
+
     const handleSend = values => {
         const email = values.email.trim().toLowerCase();
 
         submittedEmailRef.current = email;
+
+        if (accounts.length > 0) {
+            if (!selectedAccount) {
+                toastUtils.showError(
+                    "Company Required",
+                    "Please select a company"
+                );
+
+                return;
+            }
+
+            mutate({
+                email,
+                companyId: selectedAccount.companyId,
+                userId: selectedAccount.userId,
+            });
+
+            return;
+        }
 
         mutate({ email });
     };
@@ -142,6 +191,63 @@ const ForgotPassword = () => {
                                             </Text>
                                         </TouchableOpacity>
                                     </View>
+
+                                    {accounts.length > 0 && (
+                                        <View style={styles.companySection}>
+                                            <Text style={styles.companyTitle}>
+                                                Select Company
+                                            </Text>
+
+                                            <Text style={styles.companyDescription}>
+                                                This email belongs to multiple accounts. Select the
+                                                company where you want to reset your password.
+                                            </Text>
+
+                                            {accounts.map(account => {
+                                                const isSelected =
+                                                    selectedAccount?.userId === account.userId;
+
+                                                return (
+                                                    <TouchableOpacity
+                                                        key={`${account.companyId}-${account.userId}`}
+                                                        activeOpacity={0.8}
+                                                        onPress={() => handleSelectCompany(account)}
+                                                        style={[
+                                                            styles.companyCard,
+                                                            isSelected && styles.selectedCompanyCard,
+                                                        ]}
+                                                    >
+                                                        <View style={styles.companyInfo}>
+                                                            <Text style={styles.companyName}>
+                                                                {account.companyName ||
+                                                                    account.label ||
+                                                                    "Company"}
+                                                            </Text>
+
+                                                            <Text style={styles.accountName}>
+                                                                {account.fullName}
+                                                            </Text>
+
+                                                            <Text style={styles.accountRole}>
+                                                                {account.role}
+                                                            </Text>
+                                                        </View>
+
+                                                        <View
+                                                            style={[
+                                                                styles.radioOuter,
+                                                                isSelected && styles.radioOuterSelected,
+                                                            ]}
+                                                        >
+                                                            {isSelected && (
+                                                                <View style={styles.radioInner} />
+                                                            )}
+                                                        </View>
+                                                    </TouchableOpacity>
+                                                );
+                                            })}
+                                        </View>
+                                    )}
                                 </View>
                             </View>
                         </View>

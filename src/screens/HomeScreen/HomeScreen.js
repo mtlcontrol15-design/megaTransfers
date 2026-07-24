@@ -27,9 +27,9 @@ import { mutationHandler } from "../../services/mutations/mutationHandler";
 import NavigationTabs from "../../components/NavigationTabs/NavigationTabs";
 import JobsStatusModal from "../../components/JobsStatusModal/JobsStatusModal";
 import { requestUserPermission } from '../../utils/SaveFCM/NotificationServices';
-import { dispatchDeviceToken, dispatchOnlineStatus } from "../../redux/slices/userSlice";
 import LocationDisclosureModal from "../../components/LocationDisclosureModal/LocationDisclosureModal";
 import { requestLocationPermission, checkLocationPermissionOnly } from "../../utils/permissionsHelper";
+import { dispatchAvailabilityStatus, dispatchDeviceToken, dispatchOnlineStatus } from "../../redux/slices/userSlice";
 
 const HomeScreen = () => {
   const { colors } = useTheme();
@@ -47,6 +47,8 @@ const HomeScreen = () => {
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [pendingOnlineStatus, setPendingOnlineStatus] = useState(null);
   const [pendingStatusJob, setPendingStatusJob] = useState(null);
+  const [isUpdatingAvailability, setIsUpdatingAvailability] =
+    useState(false);
   const isFirstFocus = useRef(true);
 
   const route = useRoute();
@@ -60,7 +62,7 @@ const HomeScreen = () => {
           : route.name === "ProfileTab"
             ? "Profile"
             : route.name;
-  const { user, token, isOnline, reviewedBookings = [] } = useSelector(state => state.userReducer)
+  const { user, token, isOnline, reviewedBookings = [], isAvailable } = useSelector(state => state.userReducer)
   const notificationId =
     user?.role === "driver"
       ? user?.employeeNumber
@@ -75,24 +77,14 @@ const HomeScreen = () => {
   const dispatch = useDispatch();
 
   const isDriver = user?.role === "driver";
-  const driverId = user?.driverId;
   const isCustomer = user?.role === "customer" || user?.role === "corporate";
   const dashBoardCustomer = user?.role === "customer";
 
   const userImage = user?.profileImage;
-  const userName = user?.fullName;
   const companyId = user?.companyId
 
 
-  const {
-    data,
-    refetch,
-    status,
-    isFetching,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-    isLoading,
+  const { data, refetch, fetchNextPage, hasNextPage, isLoading,
   } = useQueryHandler(EndPoints.getJobs, {
     enabled: isDriver && !!user?.companyId,
     queryParams: {
@@ -110,11 +102,8 @@ const HomeScreen = () => {
   const {
     data: bookingsData,
     refetch: bookingsRefetch,
-    status: bookingsStatus,
-    isFetching: bookingsIsFetching,
     fetchNextPage: bookingsFetchNextPage,
     hasNextPage: bookingsHasNextPage,
-    isFetchingNextPage: bookingsIsFetchingNextPage,
     isLoading: bookingsIsLoading,
   } = useQueryHandler(EndPoints.getBookings, {
     enabled: isCustomer && !!user?.companyId,
@@ -133,11 +122,6 @@ const HomeScreen = () => {
   const {
     data: notificationsData,
     refetch: notificationsRefetch,
-    status: notificationsStatus,
-    isFetching: notificationsIsFetching,
-    fetchNextPage: notificationsFetchNextPage,
-    hasNextPage: notificationsHasNextPage,
-    isFetchingNextPage: notificationsIsFetchingNextPage,
   } = useQueryHandler(`${EndPoints?.getNotifications}/${notificationId}`, {
     queryParams: {
       page: 1,
@@ -161,7 +145,6 @@ const HomeScreen = () => {
   // console.log('========companyDataCustomer', companyDataCustomer);
   // console.log('========system settings are here', settingData);
   // console.log('========bid data is here', bidData);
-
   const { mutate: mutateFcmToken } = mutationHandler(
     EndPoints?.registerFcm,
     null,
@@ -178,7 +161,7 @@ const HomeScreen = () => {
     EndPoints?.saveLocation,
     null,
     (res) => {
-      // console.log(' Location saved successfully:', res);
+      console.log(' Location saved successfully:', res);
     },
     (err) => {
       console.log('Location saving error:', err);
@@ -624,7 +607,7 @@ const HomeScreen = () => {
     await notificationsRefetch();
     await chatUsersRefetch();
     await bidDataRefetch();
-  }, [isDriver, refetch, bookingsRefetch, notificationsRefetch, chatUsersRefetch]);
+  }, [isDriver, refetch, bookingsRefetch, notificationsRefetch, chatUsersRefetch, bidDataRefetch]);
 
 
   const handleRefreshAll = async () => {
@@ -667,10 +650,20 @@ const HomeScreen = () => {
               latitude,
               longitude,
               isOnline: isOnlineStatus,
+
+              isAvailable: isOnlineStatus
+                ? isAvailable
+                : false,
             };
+
+            // console.log("======payload for online status is here", payload);
 
             mutateSaveLocation(payload);
             dispatch(dispatchOnlineStatus(isOnlineStatus));
+
+            if (!isOnlineStatus) {
+              dispatch(dispatchAvailabilityStatus(false));
+            }
 
             const socket = getSocket();
 
@@ -709,6 +702,121 @@ const HomeScreen = () => {
     } catch (err) {
       console.log("Swipe error:", err);
       return false;
+    }
+  };
+
+  const handleAvailabilityChange = async nextAvailability => {
+    const availabilityValue =
+      nextAvailability === true;
+
+    console.log(
+      "Availability switch pressed:",
+      availabilityValue
+    );
+
+    if (isUpdatingAvailability) {
+      return;
+    }
+
+    if (!isOnline) {
+      toastUtils.showError(
+        "You Are Offline",
+        "Please go online before changing availability."
+      );
+      return;
+    }
+
+    if (availabilityValue && hasActiveJob) {
+      toastUtils.showError(
+        "Active Job",
+        "You cannot become available while handling a job."
+      );
+      return;
+    }
+
+    setIsUpdatingAvailability(true);
+
+    try {
+      const hasPermission =
+        await requestLocationPermission(true);
+
+      if (!hasPermission) {
+        toastUtils.showError(
+          "Location Permission Required",
+          "Allow location access to update availability."
+        );
+        return;
+      }
+
+      await new Promise(resolve => {
+        Geolocation.getCurrentPosition(
+          position => {
+            const {
+              latitude,
+              longitude,
+              accuracy,
+              heading,
+              speed,
+            } = position.coords;
+
+            const payload = {
+              latitude,
+              longitude,
+              accuracy,
+              heading,
+              speed,
+              isOnline: true,
+              isAvailable: availabilityValue,
+              locationUpdatedAt:
+                new Date().toISOString(),
+            };
+
+            console.log(
+              "FINAL AVAILABILITY PAYLOAD:",
+              JSON.stringify(payload, null, 2)
+            );
+
+            mutateSaveLocation(payload);
+
+            dispatch(
+              dispatchAvailabilityStatus(
+                availabilityValue
+              )
+            );
+
+            const socket = getSocket();
+
+            socket?.emit(
+              "driver:availability:update",
+              {
+                ...payload,
+                userId: user?._id,
+                driverId: user?._id,
+                companyId: user?.companyId,
+                employeeNumber:
+                  user?.employeeNumber,
+              }
+            );
+
+            resolve(true);
+          },
+          error => {
+            console.log(
+              "Availability location error:",
+              error
+            );
+
+            resolve(false);
+          },
+          {
+            enableHighAccuracy: true,
+            timeout: 15000,
+            maximumAge: 10000,
+          }
+        );
+      });
+    } finally {
+      setIsUpdatingAvailability(false);
     }
   };
 
@@ -792,6 +900,55 @@ const HomeScreen = () => {
   }, [sortedUpcomingJobs]);
 
   // console.log('=======filtered job is here', filteredJobs);
+
+  const activeJobStatuses = [
+    "accepted",
+    "on route",
+    "at location",
+    "add waiting",
+    "extra stop",
+    "ride started",
+  ];
+
+  const hasActiveJob = useMemo(() => {
+    return filteredJobs.some(job => {
+      const status =
+        job?.booking?.status?.toLowerCase();
+
+      return activeJobStatuses.includes(status);
+    });
+  }, [filteredJobs]);
+
+  useEffect(() => {
+    if (!hasActiveJob || !isAvailable) {
+      return;
+    }
+
+    dispatch(dispatchAvailabilityStatus(false));
+
+    const socket = getSocket();
+
+    socket?.emit("driver:availability:update", {
+      userId: user?._id,
+      driverId: user?.driverId,
+      companyId: user?.companyId,
+      employeeNumber: user?.employeeNumber,
+      isAvailable: false,
+      reason: "active_job",
+    });
+
+    mutateSaveLocation({
+      isOnline: true,
+      isAvailable: false,
+    });
+  }, [
+    hasActiveJob,
+    isAvailable,
+    user?._id,
+    user?.driverId,
+    user?.companyId,
+    user?.employeeNumber,
+  ]);
 
   useEffect(() => {
     const subscription = AppState.addEventListener("change", async (nextAppState) => {
@@ -1056,8 +1213,12 @@ const HomeScreen = () => {
       <View style={{ flex: 1, backgroundColor: colors.white }}>
         <Header
           colors={colors}
-          onNotificationPress={() => navigation.navigate('Notification')}
-          onImagePress={() => navigation.navigate('Support')}
+          onNotificationPress={() =>
+            navigation.navigate("Notification")
+          }
+          onImagePress={() =>
+            navigation.navigate("Support")
+          }
           companyName={
             isCustomer
               ? companyInfoCustomer?.name || "Company"
@@ -1072,12 +1233,25 @@ const HomeScreen = () => {
           isDriver={isDriver}
           unreadCount={unreadCount}
           onRefreshPress={handleRefreshAll}
-          onToggleOnline={(value) => {
+
+          isAvailable={isAvailable}
+          hasActiveJob={hasActiveJob}
+          onToggleAvailability={
+            handleAvailabilityChange
+          }
+
+          onToggleOnline={async value => {
             if (value) {
-              handleGoOnlineRequest();
-            } else {
-              handleSwipe(false);
+              await handleGoOnlineRequest();
+              return;
             }
+
+            if (isAvailable) {
+              await handleAvailabilityChange(false);
+            }
+
+            await handleSwipe(false);
+            dispatch(dispatchAvailabilityStatus(false));
           }}
         />
         <NavigationTabs
@@ -1192,36 +1366,36 @@ const HomeScreen = () => {
             updateJobStatus("completed", extraData);
           }}
         />
-      </View>
-      <LocationDisclosureModal
-        visible={showLocationModal}
-        colors={colors}
-        onCancel={() => {
-          setShowLocationModal(false);
-          setPendingOnlineStatus(null);
-          setPendingStatusJob(null);
-          setShowStatusModal(false);
-        }}
-        onAgree={async () => {
-          setShowLocationModal(false);
-
-          if (pendingOnlineStatus === true) {
-            const onlineUpdated = await handleSwipe(true, false);
-
-            if (!onlineUpdated) {
-              return;
-            }
-
-            if (pendingStatusJob) {
-              setSelectedJob(pendingStatusJob);
-              setShowStatusModal(true);
-            }
-
+        <LocationDisclosureModal
+          visible={showLocationModal}
+          colors={colors}
+          onCancel={() => {
+            setShowLocationModal(false);
             setPendingOnlineStatus(null);
             setPendingStatusJob(null);
-          }
-        }}
-      />
+            setShowStatusModal(false);
+          }}
+          onAgree={async () => {
+            setShowLocationModal(false);
+
+            if (pendingOnlineStatus === true) {
+              const onlineUpdated = await handleSwipe(true, false);
+
+              if (!onlineUpdated) {
+                return;
+              }
+
+              if (pendingStatusJob) {
+                setSelectedJob(pendingStatusJob);
+                setShowStatusModal(true);
+              }
+
+              setPendingOnlineStatus(null);
+              setPendingStatusJob(null);
+            }
+          }}
+        />
+      </View>
     </View>
 
   );

@@ -3,25 +3,18 @@ import { AppState } from 'react-native';
 import { saveLocationApi } from "../services/apiClient";
 import { store } from '../redux/store';
 
-// ✅ Correct module access (IMPORTANT)
 const RNLocation = RNLocationModule.RNLocation;
 
 let locationSubscription = null;
 let isTrackingActive = false;
 let lastLocationSend = 0;
-const SEND_INTERVAL = 10000; // 10 sec
+const SEND_INTERVAL = 10000;
 
-/**
- * Check if tracking should run
- */
 const shouldTrack = () => {
   const { user, isOnline, token } = store.getState().userReducer;
   return user?.role === 'driver' && isOnline && token;
 };
 
-/**
- * Send location to API
- */
 const sendLocationToServer = async (location) => {
   const now = Date.now();
   if (now - lastLocationSend < SEND_INTERVAL) return;
@@ -50,9 +43,6 @@ const sendLocationToServer = async (location) => {
   }
 };
 
-/**
- * Start tracking
- */
 export const startBackgroundTracking = async () => {
   console.log('🚀 Starting tracking...');
 
@@ -67,13 +57,11 @@ export const startBackgroundTracking = async () => {
   }
 
   try {
-    // Stop previous
     if (locationSubscription) {
       locationSubscription.unsubscribe();
       locationSubscription = null;
     }
 
-    // ✅ Configure
     await RNLocation.configure({
       distanceFilter: 0,
       allowsBackgroundLocationUpdates: true,
@@ -93,7 +81,6 @@ export const startBackgroundTracking = async () => {
       },
     });
 
-    // ✅ Subscribe (CORRECT API)
     const subscription = RNLocation.subscribe();
 
     subscription.onChange(async (locations) => {
@@ -111,7 +98,7 @@ export const startBackgroundTracking = async () => {
     });
 
     subscription.onError((error) => {
-      console.log('❌ Location error:', error);
+      // console.log('❌ Location error:', error);
     });
 
     locationSubscription = subscription;
@@ -127,9 +114,6 @@ export const startBackgroundTracking = async () => {
   }
 };
 
-/**
- * Stop tracking
- */
 export const stopBackgroundTracking = async () => {
   console.log('🛑 Stopping tracking...');
 
@@ -150,9 +134,6 @@ export const stopBackgroundTracking = async () => {
   return true;
 };
 
-/**
- * Get current location once
- */
 export const getCurrentLocation = async () => {
   try {
     const location = await RNLocation.getLatestLocation();
@@ -163,14 +144,8 @@ export const getCurrentLocation = async () => {
   }
 };
 
-/**
- * Check tracking state
- */
 export const isTracking = () => isTrackingActive;
 
-/**
- * Initialize tracking based on Redux state
- */
 export const initTracking = (user, isOnline) => {
   console.log('🔄 Init tracking', { role: user?.role, isOnline });
 
@@ -181,9 +156,6 @@ export const initTracking = (user, isOnline) => {
   }
 };
 
-/**
- * AppState listener (background/foreground)
- */
 export const setupAppStateListener = () => {
   const subscription = AppState.addEventListener('change', async () => {
     const { user, isOnline } = store.getState().userReducer;

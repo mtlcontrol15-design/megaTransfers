@@ -9,6 +9,7 @@ const userSlice = createSlice({
     deviceToken: null,
     hasCompletedOnboarding: false,
     isOnline: false,
+    isAvailable: false,
     reviewedBookings: []
 
   },
@@ -24,6 +25,9 @@ const userSlice = createSlice({
     },
     completeOnboarding: (state) => {
       state.hasCompletedOnboarding = true;
+    },
+    dispatchAvailabilityStatus: (state, action) => {
+      state.isAvailable = action.payload;
     },
     dispatchDeviceToken: (state, action) => {
       state.deviceToken = action.payload;
@@ -41,6 +45,6 @@ const userSlice = createSlice({
   },
 });
 
-export const { dispatchToken, dispatchUser, dispatchIsSignedIn, completeOnboarding, dispatchDeviceToken, dispatchOnlineStatus, dispatchReviewedBooking } = userSlice.actions;
+export const { dispatchToken, dispatchUser, dispatchIsSignedIn, completeOnboarding, dispatchDeviceToken, dispatchOnlineStatus, dispatchReviewedBooking, dispatchAvailabilityStatus } = userSlice.actions;
 
 export default userSlice.reducer;

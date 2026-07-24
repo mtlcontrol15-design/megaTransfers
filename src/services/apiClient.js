@@ -10,7 +10,7 @@ export const saveLocationApi = async (payload, token) => {
             data: payload,
         });
 
-        console.log("✅ Background API SUCCESS:", response?.data);
+        // console.log("✅ Background API SUCCESS:", response?.data);
         return response.data;
 
     } catch (error) {

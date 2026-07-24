@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -6,11 +6,17 @@ import {
   Image,
   StyleSheet,
 } from "react-native";
-import { Switch } from 'react-native-switch';
-import { moderateScale, scale, verticalScale } from "react-native-size-matters";
+
+import { Switch } from "react-native-switch";
+import {
+  moderateScale,
+  scale,
+  verticalScale,
+} from "react-native-size-matters";
+import { useSelector } from "react-redux";
+
 import Icons from "../../assets/icons";
 import { Theme } from "../../libs";
-import { useSelector } from "react-redux";
 
 const Header = ({
   companyName,
@@ -23,66 +29,99 @@ const Header = ({
   isDriver = false,
   onRefreshPress,
   onToggleOnline,
+  onToggleAvailability,
+  isAvailable,
+  hasActiveJob,
 }) => {
+  const { isOnline } = useSelector(
+    state => state.userReducer
+  );
 
-  const [localOnline, setLocalOnline] = useState(false);
-
-  const { isOnline } = useSelector(state => state.userReducer)
-
+  const [showAvailabilitySwitch, setShowAvailabilitySwitch] =
+    useState(false);
 
   const getInitials = (name = "") => {
     if (!name) return "?";
 
-    const words = name.trim().split(" ");
+    const words = name.trim().split(/\s+/);
 
     if (words.length === 1) {
       return words[0][0]?.toUpperCase();
     }
 
     return (
-      (words[0][0] || "") + (words[1][0] || "")
+      (words[0][0] || "") +
+      (words[1][0] || "")
     ).toUpperCase();
   };
 
-  const isValidImage = (img) => {
-    return img && img !== "null" && img !== "undefined";
+  const isValidImage = image => {
+    return (
+      image &&
+      image !== "null" &&
+      image !== "undefined"
+    );
+  };
+
+  const handleAvailabilityChange = value => {
+    onToggleAvailability?.(value);
+
+    // Hide availability switch after enabling or disabling.
+    setShowAvailabilitySwitch(false);
   };
 
   const showImage = isValidImage(companyLogo);
   const initials = getInitials(companyName);
 
-
-  useEffect(() => {
-    setLocalOnline(isOnline);
-  }, [isOnline]);
+  // const availabilityDisabled =
+  //   !isOnline || hasActiveJob;
 
   return (
-    <View style={[styles.container, { backgroundColor: colors?.primary }]}>
-      <View style={styles.leftSection} onPress={onImagePress}>
+    <View
+      style={[
+        styles.container,
+        {
+          backgroundColor: colors?.primary,
+        },
+      ]}
+    >
+      <View style={styles.leftSection}>
         {showImage ? (
-          <TouchableOpacity onPress={onImagePress} activeOpacity={0.7}>
+          <TouchableOpacity
+            onPress={onImagePress}
+            activeOpacity={0.7}
+          >
             <Image
-              resizeMode="cover"
+              resizeMode="contain"
               source={{ uri: companyLogo }}
               style={[
                 styles.logo,
-                isCustomer && { borderRadius: moderateScale(50) }
+                isCustomer && styles.customerLogo,
               ]}
             />
           </TouchableOpacity>
         ) : (
-          <TouchableOpacity onPress={onImagePress} activeOpacity={0.7}
+          <TouchableOpacity
+            onPress={onImagePress}
+            activeOpacity={0.7}
             style={[
               styles.logoPlaceholder,
-              { backgroundColor: colors?.lightBlue },
-              // isCustomer && { borderRadius: moderateScale(50) }
+              {
+                backgroundColor:
+                  colors?.lightBlue,
+              },
             ]}
           >
-            <Text ellipsizeMode="tail" style={styles.logoText}>
+            <Text
+              numberOfLines={1}
+              ellipsizeMode="tail"
+              style={styles.logoText}
+            >
               {initials}
             </Text>
           </TouchableOpacity>
         )}
+
         <View style={styles.infoContainer}>
           <Text
             ellipsizeMode="tail"
@@ -93,59 +132,156 @@ const Header = ({
           </Text>
         </View>
       </View>
+
       <View style={styles.rightSection}>
-        {/* Top Row (icons) */}
-        <View style={styles.iconRow}>
-          <TouchableOpacity activeOpacity={0.7} onPress={onRefreshPress}>
-            <Icons.RefreshCcw size={24} color={colors.white} />
+        <View style={styles.topRow}>
+          {isDriver && (
+            <View style={styles.availabilityArea}>
+              {showAvailabilitySwitch ? (
+                <View
+                  style={[
+                    styles.availabilitySwitchContainer,
+                    // availabilityDisabled &&
+                    //   styles.disabledAvailability,
+                  ]}
+                >
+                  <Switch
+                    value={isAvailable}
+                    onValueChange={
+                      handleAvailabilityChange
+                    }
+                    // disabled={availabilityDisabled}
+                    circleSize={moderateScale(20)}
+                    barHeight={moderateScale(27)}
+                    backgroundActive="#22C55E"
+                    backgroundInactive="#CCCCCC"
+                    circleActiveColor={
+                      colors?.lightBlue
+                    }
+                    circleInActiveColor={
+                      colors?.error
+                    }
+                    renderActiveText
+                    renderInActiveText
+                    activeText="Available"
+                    inActiveText="Unavailable"
+                    activeTextStyle={
+                      styles.availabilityActiveText
+                    }
+                    inactiveTextStyle={
+                      styles.availabilityInactiveText
+                    }
+                    switchWidthMultiplier={5}
+                  />
+                </View>
+              ) : (
+                <TouchableOpacity
+                  activeOpacity={0.7}
+                  // disabled={availabilityDisabled}
+                  onPress={() =>
+                    setShowAvailabilitySwitch(true)
+                  }
+                  style={[
+                    styles.asapButton,
+                    {
+                      borderColor: colors?.white,
+                    },
+                    isAvailable &&
+                    styles.asapButtonAvailable,
+                    // availabilityDisabled &&
+                    //   styles.asapButtonDisabled,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.asapText,
+                      {
+                        color: colors?.white,
+                      },
+                    ]}
+                  >
+                    ASAP
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          )}
+
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={onRefreshPress}
+            style={styles.iconButton}
+          >
+            <Icons.RefreshCcw
+              size={moderateScale(24)}
+              color={colors?.white}
+            />
           </TouchableOpacity>
 
           <TouchableOpacity
             activeOpacity={0.7}
             onPress={onNotificationPress}
-            style={styles.notificationWrapper}
+            style={[
+              styles.iconButton,
+              styles.notificationWrapper,
+            ]}
           >
-            <Icons.Bell size={moderateScale(24)} color={colors?.white} />
+            <Icons.Bell
+              size={moderateScale(24)}
+              color={colors?.white}
+            />
 
             {unreadCount > 0 && (
               <View style={styles.badge}>
                 <Text style={styles.badgeText}>
-                  {unreadCount > 99 ? "99+" : unreadCount}
+                  {unreadCount > 99
+                    ? "99+"
+                    : unreadCount}
                 </Text>
               </View>
             )}
           </TouchableOpacity>
         </View>
 
-        {isDriver && <View style={styles.switchContainer}>
-          <Switch
-            value={isOnline}
-            onValueChange={(val) => {
-              onToggleOnline?.(val);
-            }}
-            circleSize={24}
-            barHeight={30}
-            backgroundActive={colors?.secondary}
-            backgroundInactive={"#ccc"}
-            circleActiveColor={colors?.lightBlue}
-            circleInActiveColor={colors?.error}
-            renderActiveText={true}
-            renderInActiveText={true}
-            activeText={"Online"}
-            activeTextStyle={{ color: 'white', width: moderateScale(42), textAlign: 'center', fontSize: moderateScale(12) }}
-            inActiveText={"Offline"}
-            inactiveTextStyle={{
-              color: colors?.primary,
-              width: moderateScale(42),
-              textAlign: "center",
-              fontSize: moderateScale(10),
-              lineHeight: moderateScale(12),
-              fontWeight: "600",
-              includeFontPadding: false,
-            }}
-            switchWidthMultiplier={3.7}
-          />
-        </View>}
+        {isDriver && (
+          <View style={styles.onlineSwitchContainer}>
+            <Switch
+              value={isOnline}
+              onValueChange={value => {
+                onToggleOnline?.(value);
+              }}
+              circleSize={moderateScale(24)}
+              barHeight={moderateScale(30)}
+              backgroundActive={
+                colors?.secondary
+              }
+              backgroundInactive="#CCCCCC"
+              circleActiveColor={
+                colors?.lightBlue
+              }
+              circleInActiveColor={
+                colors?.error
+              }
+              renderActiveText
+              renderInActiveText
+              activeText="Online"
+              inActiveText="Offline"
+              activeTextStyle={[
+                styles.onlineActiveText,
+                {
+                  color: colors?.white,
+                },
+              ]}
+              inactiveTextStyle={[
+                styles.onlineInactiveText,
+                {
+                  color: colors?.primary,
+                },
+              ]}
+              switchWidthMultiplier={4.2}
+            />
+          </View>
+        )}
       </View>
     </View>
   );
@@ -159,63 +295,140 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: scale(16),
-    paddingTop: verticalScale(30),
-    paddingBottom: verticalScale(5),
+    paddingTop: verticalScale(40),
+    paddingBottom: verticalScale(15),
   },
 
   leftSection: {
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
-    flex: 1,
+    minWidth: 0,
   },
 
   logo: {
     width: moderateScale(70),
     height: moderateScale(70),
-    // borderRadius: moderateScale(10),
     marginRight: scale(12),
+  },
+
+  customerLogo: {
+    borderRadius: moderateScale(50),
   },
 
   logoPlaceholder: {
     width: moderateScale(42),
     height: moderateScale(42),
     borderRadius: moderateScale(10),
-    backgroundColor: "#000",
     alignItems: "center",
     justifyContent: "center",
     marginRight: scale(12),
   },
 
   logoText: {
-    color: "#FFF",
+    color: "#FFFFFF",
     fontSize: moderateScale(18),
     fontWeight: "700",
-    width: moderateScale(100)
   },
 
   infoContainer: {
     flex: 1,
+    minWidth: 0,
   },
 
   companyName: {
+    maxWidth: moderateScale(100),
+    color: Theme.colors.white,
     fontSize: moderateScale(16),
     fontWeight: "700",
-    color: Theme?.colors.white,
-    maxWidth: moderateScale(100)
   },
 
-  website: {
-    fontSize: moderateScale(12),
-    marginTop: verticalScale(2),
+  rightSection: {
+    alignItems: "flex-end",
+    justifyContent: "center",
+  },
+
+  topRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",
+    gap: scale(10),
+  },
+
+  availabilityArea: {
+    minWidth: moderateScale(48),
+    alignItems: "flex-end",
+    justifyContent: "center",
+  },
+
+  asapButton: {
+    minWidth: moderateScale(48),
+    height: moderateScale(28),
+    paddingHorizontal: scale(10),
+    borderWidth: 1,
+    borderRadius: moderateScale(14),
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  asapButtonAvailable: {
+    backgroundColor: "rgba(34, 197, 94, 0.35)",
+  },
+
+  asapButtonDisabled: {
+    opacity: 0.5,
+  },
+
+  asapText: {
+    fontSize: moderateScale(11),
+    fontWeight: "700",
+    includeFontPadding: false,
+    lineHeight: moderateScale(13),
+    textAlign: "center",
+  },
+
+  availabilitySwitchContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  disabledAvailability: {
+    opacity: 0.55,
+  },
+
+  availabilityActiveText: {
+    width: moderateScale(60),
+    color: "#FFFFFF",
+    textAlign: "center",
+    fontSize: moderateScale(9),
+    fontWeight: "600",
+    includeFontPadding: false,
+  },
+
+  availabilityInactiveText: {
+    width: moderateScale(60),
+    color: "#FFFFFF",
+    textAlign: "center",
+    fontSize: moderateScale(8),
+    lineHeight: moderateScale(10),
+    fontWeight: "600",
+    includeFontPadding: false,
+  },
+
+  iconButton: {
+    width: moderateScale(28),
+    height: moderateScale(30),
+    alignItems: "center",
+    justifyContent: "center",
   },
 
   notificationWrapper: {
-    marginLeft: scale(10),
+    position: "relative",
   },
 
   badge: {
     position: "absolute",
-    top: -verticalScale(6),
+    top: -verticalScale(5),
     right: -scale(4),
     minWidth: moderateScale(18),
     height: moderateScale(18),
@@ -227,32 +440,31 @@ const styles = StyleSheet.create({
   },
 
   badgeText: {
-    color: "#FFF",
+    color: "#FFFFFF",
     fontSize: moderateScale(8),
     fontWeight: "700",
   },
-  rightSection: {
+
+  onlineSwitchContainer: {
+    marginTop: verticalScale(7),
     alignItems: "center",
     justifyContent: "center",
   },
 
-  iconRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    width: moderateScale(70), // 👈 controls width of both icons
-  },
-
-  switchContainer: {
-    marginTop: verticalScale(4),
-    alignItems: "center",
-    justifyContent: "center",
-    width: moderateScale(70),
-  },
-
-  switchText: {
-    color: "#FFF",
-    fontSize: moderateScale(10),
+  onlineActiveText: {
+    width: moderateScale(60),
+    textAlign: "center",
+    fontSize: moderateScale(11),
     fontWeight: "600",
+    includeFontPadding: false,
+  },
+
+  onlineInactiveText: {
+    width: moderateScale(60),
+    textAlign: "center",
+    fontSize: moderateScale(10),
+    lineHeight: moderateScale(12),
+    fontWeight: "600",
+    includeFontPadding: false,
   },
 });
