@@ -1,26 +1,28 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity } from 'react-native';
+
 import { Formik } from 'formik';
+import { Lock, Eye, EyeOff } from 'lucide-react-native';
+import { useNavigation, useTheme } from '@react-navigation/native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import { Lock, Eye, EyeOff, ArrowLeft } from 'lucide-react-native';
-import { useNavigation, useRoute, useTheme } from '@react-navigation/native';
 
 import getStyles from './styles';
+import Icons from '../../assets/icons';
 import toastUtils from '../../utils/Toast/toast';
 import LoaderModal from '../../utils/loaderModal';
 import { EndPoints } from '../../services/EndPoints';
+import { validationNewPasswordSchema } from '../../utils/validationUtils';
 import { mutationHandler } from '../../services/mutations/mutationHandler';
-import { validation, validationNewPasswordSchema } from '../../utils/validationUtils';
-import Icons from '../../assets/icons';
 
 const NewPassword = ({ route }) => {
     const { colors } = useTheme();
     const styles = getStyles(colors);
     const navigation = useNavigation();
-    const { email = '' } = route.params || {};
+    const { email = '', companyId } = route.params || {};
     const [showPassword, setShowPassword] = useState(false);
 
-    console.log('========email', email);
+    // console.log('========email', email);
+    // console.log('========companyId', companyId);
 
 
     const { mutate, isPending, reset } = mutationHandler(
@@ -28,14 +30,14 @@ const NewPassword = ({ route }) => {
         null,
         (res) => {
             reset();
+            console.log('========res', res);
 
             toastUtils.showSuccess('Success', 'Password successfully updated');
 
             navigation.navigate('Login');
-            console.log('========res', res);
         },
         (err) => {
-            console.error("error:", err);
+            console.error("error:", err.response?.data?.message || err.message);
             reset();
 
             toastUtils.showError(
@@ -49,10 +51,12 @@ const NewPassword = ({ route }) => {
         const body = {
             email: email,
             otp: values?.otp,
-            newPassword: values?.newPassword
+            newPassword: values?.newPassword,
+            companyId: companyId,
         };
 
         mutate(body);
+        console.log('========body', body);
     };
 
     return (
@@ -144,7 +148,7 @@ const NewPassword = ({ route }) => {
                                         {showPassword ? (
                                             <EyeOff size={20} color={colors?.primary} />
                                         ) : (
-                                            <Eye size={20} color={colors?.primary}/>
+                                            <Eye size={20} color={colors?.primary} />
                                         )}
                                     </TouchableOpacity>
                                 </View>
