@@ -14,6 +14,8 @@ import {
   verticalScale,
 } from "react-native-size-matters";
 import { useSelector } from "react-redux";
+import LoaderKit from 'react-native-loader-kit';
+
 
 import Icons from "../../assets/icons";
 import { Theme } from "../../libs";
@@ -31,6 +33,7 @@ const Header = ({
   onToggleOnline,
   onToggleAvailability,
   isAvailable,
+  isUpdatingAvailability = false,
   hasActiveJob,
 }) => {
   const { isOnline } = useSelector(
@@ -63,11 +66,17 @@ const Header = ({
     );
   };
 
-  const handleAvailabilityChange = value => {
-    onToggleAvailability?.(value);
+  const handleAvailabilityChange = async value => {
+    if (isUpdatingAvailability) {
+      return;
+    }
 
-    // Hide availability switch after enabling or disabling.
-    setShowAvailabilitySwitch(false);
+    const wasSuccessful =
+      await onToggleAvailability?.(value);
+
+    if (wasSuccessful) {
+      setShowAvailabilitySwitch(false);
+    }
   };
 
   const showImage = isValidImage(companyLogo);
@@ -137,20 +146,27 @@ const Header = ({
         <View style={styles.topRow}>
           {isDriver && (
             <View style={styles.availabilityArea}>
-              {showAvailabilitySwitch ? (
+              {isUpdatingAvailability ? (
+                <View style={styles.availabilityLoader}>
+                  <LoaderKit
+                    style={{ width: moderateScale(24), height: moderateScale(24) }}
+                    name="BallSpinFadeLoader"
+                    color="#fff"
+                    size={50}
+                  />
+                </View>
+              ) : showAvailabilitySwitch ? (
                 <View
-                  style={[
-                    styles.availabilitySwitchContainer,
-                    // availabilityDisabled &&
-                    //   styles.disabledAvailability,
-                  ]}
+                  style={
+                    styles.availabilitySwitchContainer
+                  }
                 >
                   <Switch
                     value={isAvailable}
                     onValueChange={
                       handleAvailabilityChange
                     }
-                    // disabled={availabilityDisabled}
+                    disabled={isUpdatingAvailability}
                     circleSize={moderateScale(20)}
                     barHeight={moderateScale(27)}
                     backgroundActive="#22C55E"
@@ -177,7 +193,7 @@ const Header = ({
               ) : (
                 <TouchableOpacity
                   activeOpacity={0.7}
-                  // disabled={availabilityDisabled}
+                  disabled={isUpdatingAvailability}
                   onPress={() =>
                     setShowAvailabilitySwitch(true)
                   }
@@ -188,8 +204,6 @@ const Header = ({
                     },
                     isAvailable &&
                     styles.asapButtonAvailable,
-                    // availabilityDisabled &&
-                    //   styles.asapButtonDisabled,
                   ]}
                 >
                   <Text

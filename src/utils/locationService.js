@@ -11,8 +11,8 @@ let lastLocationSend = 0;
 const SEND_INTERVAL = 10000;
 
 const shouldTrack = () => {
-  const { user, isOnline, token } = store.getState().userReducer;
-  return user?.role === 'driver' && isOnline && token;
+  const { user, isOnline, token, isAvailable } = store.getState().userReducer;
+  return user?.role === 'driver' && isOnline && token && isAvailable;
 };
 
 const sendLocationToServer = async (location) => {
@@ -34,6 +34,7 @@ const sendLocationToServer = async (location) => {
       accuracy: accuracy || 0,
       speed: speed || 0,
       isOnline: true,
+      isAvailable,
       timestamp: new Date().toISOString(),
       source: 'background',
     }, token);

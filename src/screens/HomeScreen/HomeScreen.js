@@ -706,16 +706,10 @@ const HomeScreen = () => {
   };
 
   const handleAvailabilityChange = async nextAvailability => {
-    const availabilityValue =
-      nextAvailability === true;
-
-    console.log(
-      "Availability switch pressed:",
-      availabilityValue
-    );
+    const availabilityValue = nextAvailability === true;
 
     if (isUpdatingAvailability) {
-      return;
+      return false;
     }
 
     if (!isOnline) {
@@ -723,7 +717,8 @@ const HomeScreen = () => {
         "You Are Offline",
         "Please go online before changing availability."
       );
-      return;
+
+      return false;
     }
 
     if (availabilityValue && hasActiveJob) {
@@ -731,7 +726,8 @@ const HomeScreen = () => {
         "Active Job",
         "You cannot become available while handling a job."
       );
-      return;
+
+      return false;
     }
 
     setIsUpdatingAvailability(true);
@@ -745,76 +741,117 @@ const HomeScreen = () => {
           "Location Permission Required",
           "Allow location access to update availability."
         );
-        return;
+
+        return false;
       }
 
-      await new Promise(resolve => {
-        Geolocation.getCurrentPosition(
-          position => {
-            const {
-              latitude,
-              longitude,
-              accuracy,
-              heading,
-              speed,
-            } = position.coords;
+      const position = await new Promise(
+        (resolve, reject) => {
+          Geolocation.getCurrentPosition(
+            resolve,
+            reject,
+            {
+              enableHighAccuracy: true,
+              timeout: 15000,
+              maximumAge: 10000,
+            }
+          );
+        }
+      );
 
-            const payload = {
-              latitude,
-              longitude,
-              accuracy,
-              heading,
-              speed,
-              isOnline: true,
-              isAvailable: availabilityValue,
-              locationUpdatedAt:
-                new Date().toISOString(),
-            };
+      const {
+        latitude,
+        longitude,
+        accuracy,
+        heading,
+        speed,
+      } = position.coords;
 
-            console.log(
-              "FINAL AVAILABILITY PAYLOAD:",
-              JSON.stringify(payload, null, 2)
-            );
+      const payload = {
+        latitude,
+        longitude,
+        accuracy,
+        heading,
+        speed,
+        isOnline: true,
+        isAvailable: availabilityValue,
+        locationUpdatedAt: new Date().toISOString(),
+      };
 
-            mutateSaveLocation(payload);
-
-            dispatch(
-              dispatchAvailabilityStatus(
-                availabilityValue
-              )
-            );
-
-            const socket = getSocket();
-
-            socket?.emit(
-              "driver:availability:update",
-              {
-                ...payload,
-                userId: user?._id,
-                driverId: user?._id,
-                companyId: user?.companyId,
-                employeeNumber:
-                  user?.employeeNumber,
-              }
-            );
-
+      const apiUpdated = await new Promise(resolve => {
+        mutateSaveLocation(payload, {
+          onSuccess: () => {
             resolve(true);
           },
-          error => {
+          onError: error => {
             console.log(
-              "Availability location error:",
+              "Availability API error:",
               error
             );
 
             resolve(false);
           },
-          {
-            enableHighAccuracy: true,
-            timeout: 15000,
-            maximumAge: 10000,
-          }
-        );
+        });
       });
+
+      if (!apiUpdated) {
+        toastUtils.showError(
+          "Availability Update Failed",
+          "We could not update your availability. Please try again."
+        );
+
+        return false;
+      }
+
+      dispatch(
+        dispatchAvailabilityStatus(
+          availabilityValue
+        )
+      );
+
+      const socket = getSocket();
+
+      socket?.emit(
+        "driver:availability:update",
+        {
+          ...payload,
+          userId: user?._id,
+          driverId: user?._id,
+          companyId: user?.companyId,
+          employeeNumber:
+            user?.employeeNumber,
+        }
+      );
+
+      toastUtils.showSuccess(
+        availabilityValue
+          ? "You Are Available"
+          : "You Are Unavailable",
+        availabilityValue
+          ? "You can now receive ASAP jobs."
+          : "Your availability has been turned off."
+      );
+
+      return true;
+    } catch (error) {
+      console.log(
+        "Availability update error:",
+        error
+      );
+
+      const isTimeout =
+        error?.code === 3;
+
+      toastUtils.showError(
+        isTimeout
+          ? "Location Timed Out"
+          : "Availability Update Failed",
+        isTimeout
+          ? "Your location took too long. Please check GPS and try again."
+          : "Unable to update availability. Please try again."
+      );
+
+      return false;
     } finally {
       setIsUpdatingAvailability(false);
     }
@@ -1233,13 +1270,10 @@ const HomeScreen = () => {
           isDriver={isDriver}
           unreadCount={unreadCount}
           onRefreshPress={handleRefreshAll}
-
           isAvailable={isAvailable}
           hasActiveJob={hasActiveJob}
-          onToggleAvailability={
-            handleAvailabilityChange
-          }
-
+          isUpdatingAvailability={isUpdatingAvailability}
+          onToggleAvailability={handleAvailabilityChange}
           onToggleOnline={async value => {
             if (value) {
               await handleGoOnlineRequest();
