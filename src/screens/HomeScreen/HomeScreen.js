@@ -83,22 +83,6 @@ const HomeScreen = () => {
   const userImage = user?.profileImage;
   const companyId = user?.companyId
 
-
-  const { data, refetch, fetchNextPage, hasNextPage, isLoading,
-  } = useQueryHandler(EndPoints.getJobs, {
-    enabled: isDriver && !!user?.companyId,
-    queryParams: {
-      companyId: user?.companyId,
-      driverId: user?._id,
-      page: 1,
-      limit: 5,
-    },
-    useInfiniteQueryFlag: true,
-  });
-
-
-  // console.log('======== jobs data is here', data);
-
   const {
     data: bookingsData,
     refetch: bookingsRefetch,
@@ -134,6 +118,7 @@ const HomeScreen = () => {
 
 
   const { data: chatUsersData, error: chatUsersError, status: chatUsersStatus, isFetching: chatUsersIsFetching, refetch: chatUsersRefetch } = queryHandler(EndPoints.getChatUsersCount);
+  const { data: scheduledJobsData, error: scheduledJobsError, status: scheduledJobsStatus, isFetching: scheduledJobsIsFetching, refetch: scheduledJobsRefetch, isLoading: scheduledJobsIsLoading } = queryHandler(EndPoints.getScheduledJobs);
   const { data: companyData, error: companyDataError, status: companyStatus, isFetching: companyDataFetching, refetch: companyDataRefetch } = queryHandler(EndPoints.getCompanyDetails);
   const { data: companyDataCustomer, error: companyDataerror, status: companyDataCustomerStatus, isFetching: companyDataCustomerIsFetching, refetch: companyDataCustomerRefetch } = queryHandler(EndPoints.getCompanyDetailsCustomer);
   const { data: reviewLinkData, error: reviewLinkError, status: reviewLinkStatus, isFetching: reviewLinkIsFetching, refetch: reviewLinkRefetch } = queryHandler(EndPoints.getReviewLink);
@@ -145,6 +130,7 @@ const HomeScreen = () => {
   // console.log('========companyDataCustomer', companyDataCustomer);
   // console.log('========system settings are here', settingData);
   // console.log('========bid data is here', bidData);
+  // console.log('========scheduled jobs data is here', scheduledJobsData);
   const { mutate: mutateFcmToken } = mutationHandler(
     EndPoints?.registerFcm,
     null,
@@ -178,7 +164,7 @@ const HomeScreen = () => {
       setShowExtrasModal(false);
       setShowStatusModal(false);
 
-      await refetch();
+      await scheduledJobsRefetch();
 
     },
     (err) => {
@@ -195,7 +181,7 @@ const HomeScreen = () => {
       setShowExtrasModal(false);
       setShowStatusModal(false);
 
-      await refetch();
+      await scheduledJobsRefetch();
 
     },
     (err) => {
@@ -471,83 +457,48 @@ const HomeScreen = () => {
     }
   };
 
+  const scheduledJobs = useMemo(() => {
+    const jobs = scheduledJobsData?.jobs ?? [];
 
+    const getJobDateTime = job => {
+      const journey =
+        job?.returnJourney?.date
+          ? job.returnJourney
+          : job?.primaryJourney?.date
+            ? job.primaryJourney
+            : job?.booking?.returnJourney?.date
+              ? job.booking.returnJourney
+              : job?.booking?.primaryJourney;
 
-  const sortedUpcomingJobs = useMemo(() => {
-    if (!data?.pages) return [];
+      if (!journey?.date) {
+        return 0;
+      }
 
-    const jobs = data.pages.flatMap(page => page?.jobs || []);
-    const now = new Date();
+      const date = new Date(journey.date);
 
-    return jobs
-      .filter(job => {
-        const journey =
-          job?.returnJourney?.date
-            ? job?.returnJourney
-            : job?.primaryJourney?.date
-              ? job?.primaryJourney
-              : job?.booking?.returnJourney?.date
-                ? job?.booking?.returnJourney
-                : job?.booking?.primaryJourney;
-        const status = job?.booking?.status?.toLowerCase();
+      if (Number.isNaN(date.getTime())) {
+        return 0;
+      }
 
-        if (!journey?.date) return false;
+      date.setHours(
+        Number(journey?.hour || 0),
+        Number(journey?.minute || 0),
+        0,
+        0,
+      );
 
-        const baseDate = new Date(journey.date);
+      return date.getTime();
+    };
 
-        const jobDateTime = new Date(
-          baseDate.getFullYear(),
-          baseDate.getMonth(),
-          baseDate.getDate(),
-          journey?.hour || 0,
-          journey?.minute || 0
-        );
+    return [...jobs].sort((a, b) => {
+      const firstDate = getJobDateTime(a);
+      const secondDate = getJobDateTime(b);
 
-        const isFuture = jobDateTime > now;
-
-        const inProgressStatuses = [
-          "new",
-          "accepted",
-          "on route",
-          "at location",
-          "add waiting",
-          "extra stop",
-          "ride started",
-          "no show request",
-          "late cancel request",
-        ];
-
-        const isInProgress = inProgressStatuses.includes(status);
-
-        return isFuture || isInProgress;
-      })
-      .sort((a, b) => {
-        const getDateTime = (job) => {
-          const journey =
-            job?.returnJourney?.date
-              ? job?.returnJourney
-              : job?.primaryJourney?.date
-                ? job?.primaryJourney
-                : job?.booking?.returnJourney?.date
-                  ? job?.booking?.returnJourney
-                  : job?.booking?.primaryJourney;
-          const baseDate = new Date(journey?.date);
-
-          return new Date(
-            baseDate.getFullYear(),
-            baseDate.getMonth(),
-            baseDate.getDate(),
-            journey?.hour || 0,
-            journey?.minute || 0
-          ).getTime();
-        };
-
-        return sortBy === "earliest"
-          ? getDateTime(a) - getDateTime(b)
-          : getDateTime(b) - getDateTime(a);
-      });
-
-  }, [data, sortBy]);
+      return sortBy === "earliest"
+        ? firstDate - secondDate
+        : secondDate - firstDate;
+    });
+  }, [scheduledJobsData, sortBy]);
 
   // console.log('=======sorted upcoming jobs are here', sortedUpcomingJobs);
 
@@ -600,14 +551,14 @@ const HomeScreen = () => {
 
   const refreshAllData = useCallback(async () => {
     if (isDriver) {
-      await refetch();
+      await scheduledJobsRefetch();
     } else {
       await bookingsRefetch();
     }
     await notificationsRefetch();
     await chatUsersRefetch();
     await bidDataRefetch();
-  }, [isDriver, refetch, bookingsRefetch, notificationsRefetch, chatUsersRefetch, bidDataRefetch]);
+  }, [isDriver, scheduledJobsRefetch, bookingsRefetch, notificationsRefetch, chatUsersRefetch, bidDataRefetch]);
 
 
   const handleRefreshAll = async () => {
@@ -928,15 +879,7 @@ const HomeScreen = () => {
     setSelectedJob(job);
     setShowStatusModal(true);
   };
-  const filteredJobs = useMemo(() => {
-    return sortedUpcomingJobs.filter(job => {
-      const status = job?.booking?.status?.toLowerCase();
 
-      return !["late cancel", "no show", "completed", "cancelled"].includes(status);
-    });
-  }, [sortedUpcomingJobs]);
-
-  // console.log('=======filtered job is here', filteredJobs);
 
   const activeJobStatuses = [
     "accepted",
@@ -948,13 +891,16 @@ const HomeScreen = () => {
   ];
 
   const hasActiveJob = useMemo(() => {
-    return filteredJobs.some(job => {
-      const status =
-        job?.booking?.status?.toLowerCase();
+    return scheduledJobs.some(job => {
+      const status = (
+        job?.jobStatus ||
+        job?.booking?.status ||
+        ""
+      ).toLowerCase();
 
       return activeJobStatuses.includes(status);
     });
-  }, [filteredJobs]);
+  }, [scheduledJobs]);
 
   useEffect(() => {
     if (!hasActiveJob || !isAvailable) {
@@ -1076,13 +1022,14 @@ const HomeScreen = () => {
     let intervalId = null;
 
     const handleJobUpdated = () => {
-      refetch();
+      if (isDriver) {
+        scheduledJobsRefetch();
+      }
     };
 
     const handleBookingUpdated = () => {
-
       if (isDriver) {
-        refetch();
+        scheduledJobsRefetch();
       } else {
         bookingsRefetch();
       }
@@ -1137,7 +1084,10 @@ const HomeScreen = () => {
       }
     };
 
-  }, [user]);
+  }, [isDriver,
+    scheduledJobsRefetch,
+    bookingsRefetch,
+  ]);
 
 
   const onPullRefresh = async () => {
@@ -1297,7 +1247,7 @@ const HomeScreen = () => {
           bidCount={bidCount}
         />
         <FlatList
-          data={isDriver ? filteredJobs : sortedBookings}
+          data={isDriver ? scheduledJobs : sortedBookings}
           contentContainerStyle={{ flexGrow: 1 }}
           alwaysBounceVertical={true}
           overScrollMode="always"
@@ -1344,10 +1294,11 @@ const HomeScreen = () => {
           }
 
           onEndReached={() => {
-            if (isDriver) {
-              if (hasNextPage) fetchNextPage();
-            } else {
-              if (bookingsHasNextPage) bookingsFetchNextPage();
+            if (
+              !isDriver &&
+              bookingsHasNextPage
+            ) {
+              bookingsFetchNextPage();
             }
           }}
           onEndReachedThreshold={0.5}
@@ -1387,7 +1338,7 @@ const HomeScreen = () => {
           visible={
             shouldShowFetchLoader &&
             !refreshing &&
-            (isDriver ? isLoading : bookingsIsLoading)
+            (isDriver ? scheduledJobsIsFetching : bookingsIsLoading)
           }
         />
         <ExtrasModal

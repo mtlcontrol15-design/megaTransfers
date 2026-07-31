@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { AppState, StatusBar, StyleSheet } from 'react-native';
 import { Provider, useSelector } from 'react-redux';
 import Toast from 'react-native-toast-message';
@@ -8,6 +8,7 @@ import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/reac
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 import messaging from '@react-native-firebase/messaging';
+import { checkForUpdate } from './src/utils/updateService';
 import InternetConnectionHandler from './src/utils/InternetConnectionHandler';
 import { registerBackgroundHandler, registerForegroundHandler } from './src/utils/notificationHandler/notificationHandler';
 
@@ -24,6 +25,7 @@ import {
 
 
 const AppContent = () => {
+  const [ready, setReady] = useState(false);
   const { user, isOnline, token } = useSelector(state => state.userReducer);
 
   const handleNotificationNavigation = (
@@ -100,7 +102,15 @@ const AppContent = () => {
     }
   };
 
-  // Initialize tracking when user state changes
+  useEffect(() => {
+    const initialize = async () => {
+      await checkForUpdate();
+      setReady(true);
+    };
+
+    initialize();
+  }, []);
+
   useEffect(() => {
     initTracking(user, isOnline, token);
   }, [user, isOnline, token]);
@@ -167,22 +177,46 @@ const AppContent = () => {
   }, []);
 
   const queryClient = useQueryClient();
+
   useEffect(() => {
+    if (!ready) {
+      return;
+    }
+
     let appState = AppState.currentState;
 
-    const subscription = AppState.addEventListener('change', (nextState) => {
-      if (appState.match(/inactive|background/) && nextState === 'active') {
-        console.log('App resumed → refetching all queries');
-        queryClient.invalidateQueries();
-      }
+    const subscription = AppState.addEventListener(
+      'change',
+      async nextState => {
+        const resumedFromBackground =
+          /inactive|background/.test(appState) &&
+          nextState === 'active';
 
-      appState = nextState;
-    });
+        appState = nextState;
+
+        if (!resumedFromBackground) {
+          return;
+        }
+
+        try {
+          await checkForUpdate();
+
+          console.log('App resumed');
+
+          await queryClient.invalidateQueries();
+        } catch (error) {
+          console.error(
+            'Failed to check updates after resume:',
+            error,
+          );
+        }
+      },
+    );
 
     return () => {
       subscription.remove();
     };
-  }, [queryClient]);
+  }, [ready, queryClient]);
 
   return (
     <>

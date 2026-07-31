@@ -14,6 +14,7 @@ export const EndPoints = {
   updateBooking: '/api/booking/update-booking',
   getBookings: '/api/booking/get-booking',
   getJobs: '/api/jobs/driver-jobs?',
+  getScheduledJobs: '/api/jobs/schedule-jobs',
   getChatUsers: '/api/settings/chats/users',
   getDrivers: '/api/driver/getDriverById',
   updateDrivers: '/api/driver/update-driver',

@@ -70,6 +70,7 @@
     "react-redux": "^9.2.0",
     "reduxjs-toolkit-persist": "^7.2.1",
     "socket.io-client": "^4.8.3",
+    "sp-react-native-in-app-updates": "^2.0.0",
     "yup": "^1.7.1"
   },
   "devDependencies": {
