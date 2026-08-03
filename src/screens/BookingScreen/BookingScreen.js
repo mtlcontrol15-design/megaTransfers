@@ -12,6 +12,7 @@ import toastUtils from "../../utils/Toast/toast";
 import { getSocket } from "../../services/socket";
 import { EndPoints } from "../../services/EndPoints";
 import { moderateScale } from "react-native-size-matters";
+import queryHandler from "../../services/queries/queryHandler";
 import ExtrasModal from "../../components/ExtrasModal/ExtrasModal";
 import { dispatchOnlineStatus } from "../../redux/slices/userSlice";
 import useQueryHandler from "../../services/queries/useQueryHandler";
@@ -68,7 +69,10 @@ const BookingScreen = ({ navigation }) => {
     useInfiniteQueryFlag: true,
   });
   // console.log('=======job data is here',data);
+  // console.log('=======hasNextPage data is here', hasNextPage);
 
+  const { data: scheduledJobsData, error: scheduledJobsError, status: scheduledJobsStatus, isFetching: scheduledJobsIsFetching, refetch: scheduledJobsRefetch, isLoading: scheduledJobsIsLoading } = queryHandler(EndPoints.getScheduledJobs);
+  // console.log('=======scheduled jobs data is here', scheduledJobsData);
 
   const { mutate: updateJobMutate } = mutationHandler(
     `${EndPoints.updateJob}/${selectedJob?._id}`,
@@ -244,48 +248,112 @@ const BookingScreen = ({ navigation }) => {
       setIsUpdatingStatus(false);
     }
   };
-  const jobs = React.useMemo(
-    () => data?.pages?.flatMap(page => page.jobs) || [],
-    [data]
-  );
+  const jobs = React.useMemo(() => {
+    return data?.pages?.flatMap(page => page?.jobs || []) || [];
+  }, [data]);
 
-  const finalJobs = filteredJobs !== null ? filteredJobs : jobs;
+  const scheduledJobs = React.useMemo(() => {
+    return scheduledJobsData?.jobs || [];
+  }, [scheduledJobsData]);
 
-  // console.log('====== final jobs are here', finalJobs);
+  const previousApiJobs =
+    filteredJobs !== null ? filteredJobs : jobs;
 
-  const getFilteredByTab = () => {
+  const newJobs = React.useMemo(() => {
+    return previousApiJobs.filter(job => {
+      const status =
+        job?.booking?.status?.toLowerCase() ||
+        job?.jobStatus?.toLowerCase();
+
+      return status === "new";
+    });
+  }, [previousApiJobs]);
+
+  const inProgressSource =
+    selectedFilter === "accepted" && filteredJobs !== null
+      ? filteredJobs
+      : scheduledJobs;
+
+  const inProgressJobs = React.useMemo(() => {
+    const allowedStatuses = [
+      "accepted",
+      "on route",
+      "ride started",
+      "at location",
+      "add waiting",
+      "extra stop",
+    ];
+
+    return inProgressSource.filter(job => {
+      const status =
+        job?.jobStatus?.toLowerCase() ||
+        job?.booking?.status?.toLowerCase();
+
+      return allowedStatuses.includes(status);
+    });
+  }, [inProgressSource]);
+
+  const displayJobs = React.useMemo(() => {
     if (selectedFilter === "accepted") {
-      return finalJobs.filter(job => {
-        const status = job?.booking?.status?.toLowerCase();
-
-        return ["accepted", "on route", "ride started", "at location", "add waiting", "extra stop"].includes(status);
-      });
+      return inProgressJobs;
     }
 
     if (selectedFilter === "new") {
-      return finalJobs.filter(job => job?.booking?.status?.toLowerCase() === "new");
+      return newJobs;
     }
-
-    return finalJobs;
-  };
-
-  const displayJobs = getFilteredByTab();
+    return previousApiJobs;
+  }, [
+    selectedFilter,
+    inProgressJobs,
+    newJobs,
+    previousApiJobs,
+  ]);
 
   const dynamicCounts = {
-    accepted: jobs.filter(j => {
-      const status = j?.booking?.status?.toLowerCase();
-      return ["accepted", "on route", "ride started", "at location", "add waiting", "extra stop"].includes(status);
+    accepted: scheduledJobs.filter(job => {
+      const status =
+        job?.jobStatus?.toLowerCase() ||
+        job?.booking?.status?.toLowerCase();
+
+      return [
+        "accepted",
+        "on route",
+        "ride started",
+        "at location",
+        "add waiting",
+        "extra stop",
+      ].includes(status);
     }).length,
 
-    new: jobs.filter(j => j?.booking?.status?.toLowerCase() === "new").length,
+    new: jobs.filter(job => {
+      const status =
+        job?.booking?.status?.toLowerCase() ||
+        job?.jobStatus?.toLowerCase();
+
+      return status === "new";
+    }).length,
 
     all: jobs.length,
   };
 
+  const handleTabChange = tab => {
+    setSelectedFilter(tab);
+    setFilteredJobs(null);
+  };
+
+  const handleRefresh = useCallback(() => {
+    if (selectedFilter === "accepted") {
+      scheduledJobsRefetch();
+    } else {
+      refetch();
+    }
+  }, [selectedFilter, scheduledJobsRefetch, refetch]);
+
   useFocusEffect(
     useCallback(() => {
       refetch();
-    }, [refetch])
+      scheduledJobsRefetch();
+    }, [refetch, scheduledJobsRefetch])
   );
 
   return (
@@ -320,7 +388,10 @@ const BookingScreen = ({ navigation }) => {
             <Icons.Filter size={24} color={colors.white} />
           </TouchableOpacity>
 
-          <TouchableOpacity activeOpacity={0.7} onPress={refetch}>
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={handleRefresh}
+          >
             <Icons.RefreshCcw size={24} color={colors.white} />
           </TouchableOpacity>
         </View>
@@ -332,7 +403,7 @@ const BookingScreen = ({ navigation }) => {
               styles.tabButton,
               selectedFilter === "accepted" && styles.activeTab,
             ]}
-            onPress={() => setSelectedFilter("accepted")}
+            onPress={() => handleTabChange("accepted")}
           >
             <Text
               style={[
@@ -349,7 +420,7 @@ const BookingScreen = ({ navigation }) => {
               styles.tabButton,
               selectedFilter === "new" && styles.activeTab,
             ]}
-            onPress={() => setSelectedFilter("new")}
+            onPress={() => handleTabChange("new")}
           >
             <Text
               style={[
@@ -366,7 +437,7 @@ const BookingScreen = ({ navigation }) => {
               styles.tabButton,
               selectedFilter === "all" && styles.activeTab,
             ]}
-            onPress={() => setSelectedFilter("all")}
+            onPress={() => handleTabChange("all")}
           >
             <Text
               style={[
@@ -381,7 +452,11 @@ const BookingScreen = ({ navigation }) => {
         <View style={{ paddingHorizontal: moderateScale(16) }}>
           {showFilters && (
             <BookingFilters
-              jobs={jobs}
+              jobs={
+                selectedFilter === "accepted"
+                  ? scheduledJobs
+                  : jobs
+              }
               setFilteredJobs={setFilteredJobs}
             />
           )}
@@ -403,15 +478,24 @@ const BookingScreen = ({ navigation }) => {
               <Text style={styles.emptyText}>No Jobs Found</Text>
             </View>
           )}
-          refreshing={isFetching}
-          onRefresh={refetch}
+          refreshing={
+            selectedFilter === "accepted"
+              ? scheduledJobsIsFetching
+              : isFetching
+          }
+
+          onRefresh={handleRefresh}
 
           onEndReached={() => {
-            if (hasNextPage && !isFetchingNextPage) {
+            if (
+              selectedFilter !== "accepted" &&
+              hasNextPage &&
+              !isFetchingNextPage
+            ) {
               fetchNextPage();
             }
           }}
-          onEndReachedThreshold={0.5}
+          onEndReachedThreshold={0.3}
         />
       </View>
       <JobsStatusModal
