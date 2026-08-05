@@ -265,6 +265,32 @@ const getStyles = (colors) =>
       borderRadius: moderateScale(4),
       backgroundColor: colors?.primary + "20",
     },
+    reviewButton: {
+      backgroundColor: colors.primary,
+      paddingVertical: 12,
+      borderRadius: 10,
+      marginTop: 14,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    reviewButtonText: {
+      color: colors.white,
+      fontSize: 14,
+      fontWeight: "700",
+    },
+    reviewExpiredBox: {
+      marginTop: 14,
+      paddingVertical: 12,
+      borderRadius: 10,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: colors.gray200,
+    },
+    reviewExpiredText: {
+      color: colors.gray600,
+      fontSize: 14,
+      fontWeight: "700",
+    },
   });
 
 export default getStyles;

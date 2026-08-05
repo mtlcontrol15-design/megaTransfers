@@ -11,36 +11,69 @@ let lastLocationSend = 0;
 const SEND_INTERVAL = 10000;
 
 const shouldTrack = () => {
-  const { user, isOnline, token, isAvailable } = store.getState().userReducer;
-  return user?.role === 'driver' && isOnline && token && isAvailable;
+  const {
+    user,
+    isOnline,
+    token,
+  } = store.getState().userReducer;
+
+  return (
+    user?.role === 'driver' &&
+    Boolean(isOnline) &&
+    Boolean(token)
+  );
 };
 
-const sendLocationToServer = async (location) => {
+const sendLocationToServer = async location => {
   const now = Date.now();
-  if (now - lastLocationSend < SEND_INTERVAL) return;
 
-  lastLocationSend = now;
+  if (now - lastLocationSend < SEND_INTERVAL) {
+    return;
+  }
 
-  const { latitude, longitude, accuracy, speed } = location;
+  const {
+    latitude,
+    longitude,
+    accuracy,
+    speed,
+  } = location;
 
-  if (!latitude || !longitude) return;
+  if (
+    typeof latitude !== 'number' ||
+    typeof longitude !== 'number'
+  ) {
+    return;
+  }
 
   try {
-    const { token } = store.getState().userReducer;
-
-    await saveLocationApi({
-      latitude,
-      longitude,
-      accuracy: accuracy || 0,
-      speed: speed || 0,
-      isOnline: true,
+    const {
+      token,
+      isOnline,
       isAvailable,
-      timestamp: new Date().toISOString(),
-      source: 'background',
-    }, token);
+    } = store.getState().userReducer;
 
+    await saveLocationApi(
+      {
+        latitude,
+        longitude,
+        accuracy: accuracy ?? 0,
+        speed: speed ?? 0,
+        isOnline: Boolean(isOnline),
+        isAvailable: Boolean(isAvailable),
+        timestamp: new Date().toISOString(),
+        source: 'background',
+      },
+      token,
+    );
+
+    lastLocationSend = now;
   } catch (error) {
-    console.log('❌ Location API error:', error?.message);
+    console.log(
+      '❌ Location API error:',
+      error?.response?.data ||
+      error?.message ||
+      error,
+    );
   }
 };
 

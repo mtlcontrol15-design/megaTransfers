@@ -9,6 +9,7 @@ import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 import messaging from '@react-native-firebase/messaging';
 import { checkForUpdate } from './src/utils/updateService';
+import { toastConfig } from './src/utils/Toast/toastConfig';
 import InternetConnectionHandler from './src/utils/InternetConnectionHandler';
 import { registerBackgroundHandler, registerForegroundHandler } from './src/utils/notificationHandler/notificationHandler';
 
@@ -223,7 +224,7 @@ const AppContent = () => {
       <StatusBar backgroundColor="#000000" barStyle="light-content" />
       <AppNavigation />
       <InternetConnectionHandler />
-      <Toast />
+      <Toast config={toastConfig} />
     </>
   );
 };

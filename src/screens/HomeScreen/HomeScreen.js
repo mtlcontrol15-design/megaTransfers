@@ -26,6 +26,7 @@ import useQueryHandler from '../../services/queries/useQueryHandler';
 import { mutationHandler } from "../../services/mutations/mutationHandler";
 import NavigationTabs from "../../components/NavigationTabs/NavigationTabs";
 import JobsStatusModal from "../../components/JobsStatusModal/JobsStatusModal";
+import { isBookingReviewed, isReviewWindowOpen } from "../../utils/reviewUtils";
 import { requestUserPermission } from '../../utils/SaveFCM/NotificationServices';
 import LocationDisclosureModal from "../../components/LocationDisclosureModal/LocationDisclosureModal";
 import { requestLocationPermission, checkLocationPermissionOnly } from "../../utils/permissionsHelper";
@@ -503,51 +504,82 @@ const HomeScreen = () => {
   // console.log('=======sorted upcoming jobs are here', sortedUpcomingJobs);
 
   const sortedBookings = useMemo(() => {
+    const excludedStatuses = [
+      "late cancel",
+      "no show",
+      "rejected",
+      "cancelled",
+    ];
 
-    const filteredBookings = allBookings.filter(booking => {
+    const filteredBookings =
+      allBookings.filter(booking => {
+        const status =
+          booking?.status
+            ?.trim()
+            ?.toLowerCase() || "";
 
-      const status =
-        booking?.status?.toLowerCase();
+        if (
+          excludedStatuses.includes(status)
+        ) {
+          return false;
+        }
 
-      const isReviewedCompleted =
-        status === "completed" && booking?.reviewed ||
-        reviewedBookings.includes(booking?._id);
+        if (status !== "completed") {
+          return true;
+        }
 
-      return ![
-        "late cancel",
-        "no show",
-        "rejected",
-        "cancelled"
-      ].includes(status) && !isReviewedCompleted;
+        const hasReview =
+          isBookingReviewed(
+            booking,
+            reviewedBookings,
+          );
 
-    });
+        if (hasReview) {
+          return false;
+        }
+        return isReviewWindowOpen(
+          booking,
+          reviewedBookings,
+        );
+      });
 
-    return [...filteredBookings].sort((a, b) => {
+    const getDateTime = booking => {
+      const journey =
+        booking?.primaryJourney ||
+        booking?.returnJourney;
 
-      const getDateTime = (booking) => {
+      if (!journey?.date) {
+        return 0;
+      }
 
-        const journey =
-          booking?.primaryJourney ||
-          booking?.returnJourney;
+      const date =
+        new Date(journey.date);
 
-        const baseDate = new Date(journey?.date);
+      if (Number.isNaN(date.getTime())) {
+        return 0;
+      }
 
-        return new Date(
-          baseDate.getFullYear(),
-          baseDate.getMonth(),
-          baseDate.getDate(),
-          journey?.hour || 0,
-          journey?.minute || 0
-        ).getTime();
-      };
+      date.setHours(
+        Number(journey?.hour || 0),
+        Number(journey?.minute || 0),
+        0,
+        0,
+      );
 
-      return sortBy === "earliest"
-        ? getDateTime(a) - getDateTime(b)
-        : getDateTime(b) - getDateTime(a);
+      return date.getTime();
+    };
 
-    });
-
-  }, [allBookings, sortBy]);
+    return [...filteredBookings].sort(
+      (a, b) =>
+        sortBy === "earliest"
+          ? getDateTime(a) - getDateTime(b)
+          : getDateTime(b) - getDateTime(a),
+    );
+  }, [
+    allBookings,
+    sortBy,
+    reviewedBookings,
+  ]);
 
   const refreshAllData = useCallback(async () => {
     if (isDriver) {

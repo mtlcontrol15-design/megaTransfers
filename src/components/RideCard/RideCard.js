@@ -1,40 +1,61 @@
 import React, { useMemo, useState } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
-import Icons from "../../assets/icons";
+
 import getStyles from "./style";
+import Icons from "../../assets/icons";
 import { useTheme } from "@react-navigation/native";
 import { mutationHandler } from "../../services/mutations/mutationHandler";
 import { EndPoints } from "../../services/EndPoints";
 import toastUtils from "../../utils/Toast/toast";
 import ReviewModal from '../../components/ReviewModal/ReviewModal'
-import queryHandler from "../../services/queries/queryHandler";
 import { Theme } from "../../libs";
 import { useDispatch, useSelector } from "react-redux";
 import { dispatchReviewedBooking } from "../../redux/slices/userSlice";
+import { isBookingReviewed, isReviewWindowOpen } from "../../utils/reviewUtils";
 
-const RideCard = ({ ride, onViewDetails, onEditBooking, onCancelBooking, reviewLink, navigation, showActionMenu, setShowActionMenu }) => {
-  const isReviewWindowOpen = useMemo(() => {
-    if (!ride?.status || ride?.status.toLowerCase() !== "completed" || hasReview) return false;
-    let completedAt = null;
-    if (Array.isArray(ride?.statusAudit)) {
-      const completedAudit = [...ride.statusAudit].reverse().find(audit => audit.status?.toLowerCase() === "completed");
-      completedAt = completedAudit?.date;
-    }
-    if (!completedAt) completedAt = ride?.completedAt || journey?.date;
-    if (!completedAt) return false;
-    const completedTime = new Date(completedAt).getTime();
-    const now = Date.now();
-    const FORTY_EIGHT_HOURS = 48 * 60 * 60 * 1000;
-    return now - completedTime < FORTY_EIGHT_HOURS;
-  }, [ride, hasReview, journey]);
+
+const RideCard = ({
+  ride,
+  onViewDetails,
+  onEditBooking,
+  onCancelBooking,
+  reviewLink,
+  navigation,
+  showActionMenu,
+  setShowActionMenu,
+}) => {
   const { colors } = useTheme();
   const styles = getStyles(colors);
-  const [showReviewModal, setShowReviewModal] = useState(false);
-
-  // console.log('========ride data is here',ride)
-  const { reviewedBookings } = useSelector(state => state?.userReducer)
 
   const dispatch = useDispatch();
+
+  const [showReviewModal, setShowReviewModal] =
+    useState(false);
+
+  // console.log("=======ride is here", ride);
+
+  const journey = useMemo(() => {
+    return ride?.returnJourneyToggle
+      ? ride?.returnJourney
+      : ride?.primaryJourney;
+  }, [ride]);
+
+  const reviewedBookings = useSelector(
+    state =>
+      state?.userReducer?.reviewedBookings ?? [],
+  );
+
+  const hasReview =
+    isBookingReviewed(
+      ride,
+      reviewedBookings,
+    );
+
+  const canLeaveReview =
+    isReviewWindowOpen(
+      ride,
+      reviewedBookings,
+    );
 
   const { mutate: postReviewMutate, isPending: isPostingReview } = mutationHandler(
     EndPoints.postReview,
@@ -60,14 +81,6 @@ const RideCard = ({ ride, onViewDetails, onEditBooking, onCancelBooking, reviewL
 
     postReviewMutate(payload);
   };
-
-
-
-  const journey = useMemo(() => {
-    return ride?.returnJourneyToggle
-      ? ride?.returnJourney
-      : ride?.primaryJourney;
-  }, [ride]);
 
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
@@ -117,8 +130,6 @@ const RideCard = ({ ride, onViewDetails, onEditBooking, onCancelBooking, reviewL
       )
       .join(" ");
   };
-
-  const hasReview = ride?.reviewed || reviewedBookings?.includes(ride?._id);
 
   return (
     <View style={styles.container}>
@@ -266,82 +277,75 @@ const RideCard = ({ ride, onViewDetails, onEditBooking, onCancelBooking, reviewL
             </View>
           </View>
 
-          {
-            ride?.status?.toLowerCase() === "completed" ? (
-              hasReview ? (
-                <View
+          {ride?.status
+            ?.trim()
+            ?.toLowerCase() === "completed" ? (
+            hasReview ? (
+              <View
+                style={{
+                  backgroundColor:
+                    Theme?.colors?.gray200,
+                  paddingVertical: 12,
+                  borderRadius: 10,
+                  marginTop: 14,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  borderWidth: 0.5,
+                  borderColor:
+                    Theme?.colors?.black,
+                }}
+              >
+                <Text
                   style={{
-                    backgroundColor: Theme?.colors?.gray200,
-                    paddingVertical: 12,
-                    borderRadius: 10,
-                    marginTop: 14,
-                    alignItems: "center",
-                    justifyContent: "center",
-                    borderWidth: 0.5,
-                    borderColor: Theme?.colors?.black,
+                    color: Theme?.colors?.black,
+                    fontSize: 14,
+                    fontWeight: "700",
                   }}
                 >
-                  <Text
-                    style={{
-                      color: Theme?.colors?.black,
-                      fontSize: 14,
-                      fontWeight: "700",
-                    }}
-                  >
-                    Review Submitted
-                  </Text>
-                </View>
-              ) : (
-                isReviewWindowOpen ? (
-                  <TouchableOpacity
-                    activeOpacity={0.7}
-                    onPress={() => setShowReviewModal(true)}
-                    style={{
-                      backgroundColor: colors.bttonColor,
-                      paddingVertical: 12,
-                      borderRadius: 10,
-                      marginTop: 14,
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <Text
-                      style={{
-                        color: colors.white,
-                        fontSize: 14,
-                        fontWeight: "700",
-                      }}
-                    >
-                      Leave Review
-                    </Text>
-                  </TouchableOpacity>
-                ) : null
-              )
+                  Review Submitted
+                </Text>
+              </View>
+            ) : canLeaveReview ? (
+              <TouchableOpacity
+                onPress={() => setShowReviewModal(true)}
+                style={styles.reviewButton}
+              >
+                <Text style={styles.reviewButtonText}>
+                  Leave Review
+                </Text>
+              </TouchableOpacity>
             ) : (
-              <View style={styles.bottomRow}>
-                <View style={{ flexDirection: "row", alignItems: "center" }}>
-                  <Icons.Car size={16} color={colors?.gray600} />
-                  <View style={{ marginLeft: 8 }}>
-                    <Text style={{ fontSize: 11, color: colors?.gray600 }}>
-                      Vehicle
-                    </Text>
-                    <Text style={styles.vehicleText}>
-                      {ride?.vehicle?.vehicleName || "Standard"}
-                    </Text>
-                  </View>
-                </View>
-                <View style={styles.fareBox}>
-                  <Text style={styles.fareText}>
-                    {ride?.currency?.symbol || "£"}
-                    {Number(
-                      ride?.primaryJourney?.fare ||
-                      ride?.returnJourney?.fare ||
-                      0
-                    ).toFixed(2)}
+              <View style={styles.reviewExpiredBox}>
+                <Text style={styles.reviewExpiredText}>
+                  Review period expired
+                </Text>
+              </View>
+            )
+          ) : (
+            <View style={styles.bottomRow}>
+              <View style={{ flexDirection: "row", alignItems: "center" }}>
+                <Icons.Car size={16} color={colors?.gray600} />
+                <View style={{ marginLeft: 8 }}>
+                  <Text style={{ fontSize: 11, color: colors?.gray600 }}>
+                    Vehicle
+                  </Text>
+                  <Text style={styles.vehicleText}>
+                    {ride?.vehicle?.vehicleName || "Standard"}
                   </Text>
                 </View>
               </View>
-            )}
+              <View style={styles.fareBox}>
+                <Text style={styles.fareText}>
+                  {ride?.currency?.symbol || "£"}
+                  {Number(
+                    ride?.primaryJourney?.fare ||
+                    ride?.returnJourney?.fare ||
+                    0
+                  ).toFixed(2)}
+                </Text>
+              </View>
+            </View>
+          )}
 
           {/* {ride?.driver?.name && (
             <View style={styles.driverBox}>

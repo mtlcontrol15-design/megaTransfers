@@ -126,7 +126,7 @@ const Footer = ({ colors, navigation, chatCount, dashBoardCustomer }) => {
                                         />
                                     </TouchableOpacity>
                                 ) : (
-                                    <TouchableOpacity activeOpacity={0.7} onPress={() => navigation.navigate('ProfileTab')}
+                                    <TouchableOpacity activeOpacity={0.7} onPress={() => navigation.navigate('Profile')}
                                         style={[
                                             styles.avatar,
                                             { backgroundColor: colors.secondary },

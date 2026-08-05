@@ -15,6 +15,8 @@ import BookingList from "../../components/BookingList/BookingList";
 import useQueryHandler from "../../services/queries/useQueryHandler";
 import { moderateScale, verticalScale } from "react-native-size-matters";
 import { mutationHandler } from "../../services/mutations/mutationHandler";
+import { isBookingReviewed, isReviewWindowOpen } from "../../utils/reviewUtils";
+
 
 const MyRidesScreen = ({ navigation }) => {
   const { colors } = useTheme();
@@ -27,7 +29,12 @@ const MyRidesScreen = ({ navigation }) => {
 
 
 
-  const { user } = useSelector(state => state.userReducer)
+  const {
+    user,
+    reviewedBookings = [],
+  } = useSelector(
+    state => state?.userReducer || {},
+  );
 
   const companyId = user?.companyId
 
@@ -90,63 +97,107 @@ const MyRidesScreen = ({ navigation }) => {
 
 
   const filteredBookings = useMemo(() => {
+    const normaliseStatus = booking =>
+      booking?.status
+        ?.trim()
+        ?.toLowerCase() || "";
 
-    let bookings;
+    const shouldShowCompletedBooking = booking => {
+      const reviewed = isBookingReviewed(
+        booking,
+        reviewedBookings,
+      );
 
-    if (selectedStatus === "All") {
+      const reviewOpen = isReviewWindowOpen(
+        booking,
+        reviewedBookings,
+      );
 
-      bookings = allBookings;
+      /*
+       * Keep reviewed completed bookings so users can see
+       * their booking history and "Review Submitted".
+       *
+       * Keep unreviewed completed bookings only while the
+       * review window is open.
+       */
+      return reviewed || reviewOpen;
+    };
 
-    } else if (selectedStatus === "Scheduled") {
+    let bookings = allBookings.filter(booking => {
+      const status = normaliseStatus(booking);
 
-      bookings = allBookings.filter((ride) => {
+      if (selectedStatus === "All") {
+        return true;
+      }
 
-        const status = ride?.status?.toLowerCase();
-
+      if (selectedStatus === "Scheduled") {
         return ![
           "completed",
           "late cancel",
+          "late cancel request",
           "no show",
+          "no show request",
+          "rejected",
+          "cancelled",
         ].includes(status);
+      }
 
-      });
+      if (
+        selectedStatus
+          .trim()
+          .toLowerCase() === "completed"
+      ) {
+        return (
+          status === "completed" &&
+          shouldShowCompletedBooking(booking)
+        );
+      }
 
-    } else {
-
-      bookings = allBookings.filter(
-        (ride) =>
-          ride?.status?.toLowerCase() ===
-          selectedStatus.toLowerCase()
+      return (
+        status ===
+        selectedStatus.trim().toLowerCase()
       );
-
-    }
-
-    return [...bookings].sort((a, b) => {
-
-      const getDateTime = (booking) => {
-
-        const journey =
-          booking?.primaryJourney ||
-          booking?.returnJourney;
-
-        const baseDate = new Date(journey?.date);
-
-        return new Date(
-          baseDate.getFullYear(),
-          baseDate.getMonth(),
-          baseDate.getDate(),
-          journey?.hour || 0,
-          journey?.minute || 0
-        ).getTime();
-      };
-
-      return sortBy === "earliest"
-        ? getDateTime(a) - getDateTime(b)
-        : getDateTime(b) - getDateTime(a);
-
     });
 
-  }, [selectedStatus, allBookings, sortBy]);
+    const getDateTime = booking => {
+      const journey =
+        booking?.primaryJourney ||
+        booking?.returnJourney;
+
+      if (!journey?.date) {
+        return 0;
+      }
+
+      const date = new Date(journey.date);
+
+      if (Number.isNaN(date.getTime())) {
+        return 0;
+      }
+
+      date.setHours(
+        Number(journey?.hour || 0),
+        Number(journey?.minute || 0),
+        0,
+        0,
+      );
+
+      return date.getTime();
+    };
+
+    return [...bookings].sort((a, b) => {
+      const firstDate = getDateTime(a);
+      const secondDate = getDateTime(b);
+
+      return sortBy === "earliest"
+        ? firstDate - secondDate
+        : secondDate - firstDate;
+    });
+  }, [
+    selectedStatus,
+    allBookings,
+    sortBy,
+    reviewedBookings,
+  ]);
 
   const totalBookings = filteredBookings.length;
 

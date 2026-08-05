@@ -440,26 +440,38 @@ const Login = ({ navigation }) => {
 
 
 
-    const handleLogin = async (values) => {
-        const body = {
-            email: values?.email,
-            password: values?.password,
-        };
-
-        if (remember) {
-            await AsyncStorage.setItem(
-                'rememberUser',
-                JSON.stringify({
-                    email: values.email,
-                    password: values.password,
-                    remember: true,
-                })
-            );
-        } else {
-            await AsyncStorage.removeItem('rememberUser');
+    const handleLogin = async values => {
+        if (isPending) {
+            return;
         }
 
-        mutate(body);
+        const body = {
+            email: values.email.trim().toLowerCase(),
+            password: values.password,
+        };
+
+        try {
+            if (remember) {
+                await AsyncStorage.setItem(
+                    'rememberUser',
+                    JSON.stringify({
+                        email: body.email,
+                        password: body.password,
+                        remember: true,
+                    }),
+                );
+            } else {
+                await AsyncStorage.removeItem('rememberUser');
+            }
+
+            mutate(body);
+        } catch (error) {
+            console.error('Login storage error:', error);
+            toastUtils.showError(
+                'Login Failed',
+                'Could not prepare the login request.',
+            );
+        }
     };
 
     const continueSocialLogin = selectedCompany => {
@@ -664,13 +676,19 @@ const Login = ({ navigation }) => {
                                 </View>
 
                                 <TouchableOpacity
-                                    style={styles.loginButton}
+                                    style={[
+                                        styles.loginButton,
+                                        isPending && { opacity: 0.6 },
+                                    ]}
                                     activeOpacity={0.8}
                                     onPress={handleSubmit}
+                                    disabled={isPending || isPendingGoogle || companiesIsPending}
                                 >
                                     <View style={styles.buttonContent}>
                                         <Icons.LogIn size={24} color="#FFFFFF" />
-                                        <Text style={styles.buttonText}>Sign In</Text>
+                                        <Text style={styles.buttonText}>
+                                            {isPending ? 'Signing In...' : 'Sign In'}
+                                        </Text>
                                     </View>
                                 </TouchableOpacity>
 

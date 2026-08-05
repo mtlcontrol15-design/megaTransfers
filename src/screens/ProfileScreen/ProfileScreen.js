@@ -33,12 +33,14 @@ const ProfileScreen = ({ navigation }) => {
   const styles = getStyles(colors);
   const dispatch = useDispatch();
   const [errors, setErrors] = useState({});
+  const [profileError, setProfileError] = useState("");
 
   const { user } = useSelector(state => state.userReducer);
 
   // console.log('=======user====', user);
 
   const driverId = user?.driverId;
+  const hasValidDriverId = !!driverId;
   const loginProvider =
     user?.provider?.toLowerCase();
 
@@ -140,13 +142,20 @@ const ProfileScreen = ({ navigation }) => {
 
 
   const { data, error, status, refetch } = useQueryHandler(
-    `${EndPoints.getDrivers}/${driverId}`
+    `${EndPoints.getDrivers}/${driverId}`,
+    {
+      enabled: hasValidDriverId,
+    }
   );
 
   // console.log('=======data is here', data);
 
   const mapDriverApiToForm = (apiData) => {
     const driver = apiData?.pages?.[0]?.driver;
+
+    if (!driver || typeof driver !== "object") {
+      return null;
+    }
 
     const d = driver?.DriverData || {};
     const v = driver?.VehicleData || {};
@@ -157,7 +166,7 @@ const ProfileScreen = ({ navigation }) => {
 
     return {
       firstName: d.firstName || "",
-      surname: d.lastName || "",
+      lastName: d.lastName || "",
       phone: formatPhoneWithPlus(d.phoneNumber) || "",
       email: d.email || "",
       dob: d.dateOfBirth ? formatDisplayDate(d.dateOfBirth) : "",
@@ -199,18 +208,18 @@ const ProfileScreen = ({ navigation }) => {
   const [form, setForm] = useState({
     fullName: "",
     email: "",
-    firstName: "John",
-    surname: "Doe",
-    phone: "+44 7123 456789",
-    dob: "12 Feb 1990",
-    niNumber: "QQ123456C",
-    phid: "PH-982341",
-    address: "221B Baker Street",
-    reg: "AB12 CDE",
-    color: "White",
-    make: "Toyota",
-    model: "Prius 2022",
-    category: "Hybrid Taxi",
+    firstName: "",
+    lastName: "",
+    phone: "",
+    dob: "",
+    niNumber: "",
+    phid: "",
+    address: "",
+    reg: "",
+    color: "",
+    make: "",
+    model: "",
+    category: [],
     profileImage: null,
     documents: {
       driverPicture: { url: "", expiry: null },
@@ -560,7 +569,7 @@ const ProfileScreen = ({ navigation }) => {
 
       const driverBody = {
         firstName: form.firstName,
-        surName: form.surname,
+        lastName: form.lastName,
         email: form.email,
         contact: form.phone || "+441234567890",
 
@@ -644,8 +653,10 @@ const ProfileScreen = ({ navigation }) => {
   useFocusEffect(
     useCallback(() => {
       setIsEditing(false);
-      refetch();
-    }, [refetch])
+      if (hasValidDriverId) {
+        refetch();
+      }
+    }, [hasValidDriverId, refetch])
   );
 
   useEffect(() => {
@@ -659,10 +670,29 @@ const ProfileScreen = ({ navigation }) => {
   }, [user]);
 
   useEffect(() => {
-    if (data) {
+    if (!hasValidDriverId) {
+      setProfileError("");
+      return;
+    }
 
+    if (error) {
+      setProfileError(
+        error?.response?.data?.message ||
+        error?.message ||
+        "Failed to load driver profile."
+      );
+      return;
+    }
+
+    if (data) {
       const mappedData = mapDriverApiToForm(data);
 
+      if (!mappedData) {
+        setProfileError("Driver profile not found.");
+        return;
+      }
+
+      setProfileError("");
       setForm(prev => ({
         ...prev,
         ...mappedData,
@@ -671,7 +701,9 @@ const ProfileScreen = ({ navigation }) => {
         email: user?.email || prev.email,
       }));
     }
-  }, [data, user]);
+  }, [data, error, hasValidDriverId, user]);
+
+  const isProfileLoading = isDriver && (!hasValidDriverId || status === "pending");
 
   const imageUri =
     form?.profileImage?.uri || user?.profileImage || null;
@@ -844,6 +876,12 @@ const ProfileScreen = ({ navigation }) => {
           </View>
         </View>
 
+        {profileError ? (
+          <View style={{ marginHorizontal: moderateScale(16), marginTop: moderateScale(12), padding: moderateScale(12), borderRadius: moderateScale(8), backgroundColor: `${colors.error}18`, borderWidth: 1, borderColor: `${colors.error}40` }}>
+            <Text style={{ color: colors.error, fontWeight: "600" }}>{profileError}</Text>
+          </View>
+        ) : null}
+
         <ScrollView
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
@@ -928,7 +966,7 @@ const ProfileScreen = ({ navigation }) => {
 
                 <View style={styles.row}>
                   {renderField("First Name", "firstName", true)}
-                  {renderField("Surname", "surname", true)}
+                  {renderField("Last Name", "lastName", true)}
                 </View>
 
                 {renderField("Contact Number", "phone")}
@@ -1030,7 +1068,7 @@ const ProfileScreen = ({ navigation }) => {
             </View>)}
 
         </ScrollView>
-        <LoaderModal visible={isPending} />
+        <LoaderModal visible={isPending || isProfileLoading} />
 
         <DeleteAccountModal
           visible={deleteModalVisible}
