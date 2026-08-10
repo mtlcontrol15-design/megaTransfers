@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, TouchableOpacity, FlatList } from "react-native";
 
 import { useSelector, useDispatch } from "react-redux";
@@ -355,6 +355,73 @@ const BookingScreen = ({ navigation }) => {
       scheduledJobsRefetch();
     }, [refetch, scheduledJobsRefetch])
   );
+
+
+  useEffect(() => {
+    let socket = getSocket();
+    let intervalId = null;
+
+    const refreshBookingScreen = () => {
+
+      refetch();
+      scheduledJobsRefetch();
+    };
+
+    const handleJobAssigned = (payload) => {
+      refreshBookingScreen();
+    };
+
+    const handleJobUpdated = (payload) => {
+      refreshBookingScreen();
+    };
+
+    const handleBookingUpdated = (payload) => {
+      refreshBookingScreen();
+    };
+
+    const attachSocketListeners = (socketInstance) => {
+      socketInstance.off("job:assigned", handleJobAssigned);
+      socketInstance.off("job:updated", handleJobUpdated);
+      socketInstance.off("booking:updated", handleBookingUpdated);
+
+      socketInstance.on("job:assigned", handleJobAssigned);
+      socketInstance.on("job:updated", handleJobUpdated);
+      socketInstance.on(
+        "booking:updated",
+        handleBookingUpdated
+      );
+    };
+
+    if (socket) {
+      attachSocketListeners(socket);
+    } else {
+      intervalId = setInterval(() => {
+        socket = getSocket();
+
+        if (socket) {
+          clearInterval(intervalId);
+          intervalId = null;
+
+          attachSocketListeners(socket);
+        }
+      }, 500);
+    }
+
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+
+      if (socket) {
+        socket.off("job:assigned", handleJobAssigned);
+        socket.off("job:updated", handleJobUpdated);
+        socket.off(
+          "booking:updated",
+          handleBookingUpdated
+        );
+      }
+    };
+  }, [refetch, scheduledJobsRefetch]);
 
   return (
     <View style={styles.container}>

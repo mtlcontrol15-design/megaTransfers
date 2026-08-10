@@ -1069,11 +1069,13 @@ const HomeScreen = () => {
 
     const attachSocketListeners = (s) => {
 
+      s.off("job:assigned", handleJobUpdated);
       s.off("job:updated", handleJobUpdated);
       s.off("booking:updated", handleBookingUpdated);
 
       s.on("job:updated", handleJobUpdated);
       s.on("booking:updated", handleBookingUpdated);
+      s.on("job:assigned", handleJobUpdated);
     };
 
     if (socket) {
@@ -1104,6 +1106,10 @@ const HomeScreen = () => {
 
       if (socket) {
 
+        socket.off(
+          "job:assigned",
+          handleJobUpdated
+        );
         socket.off(
           "job:updated",
           handleJobUpdated

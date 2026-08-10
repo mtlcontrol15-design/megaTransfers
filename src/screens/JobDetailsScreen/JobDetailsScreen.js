@@ -131,10 +131,12 @@ const JobDetailsScreen = () => {
 
             // Remove previous listeners first
             s.off("job:updated", handleJobUpdated);
+            s.off("job:assigned", handleJobUpdated);
             s.off("booking:updated", handleBookingUpdated);
 
             // Add listeners
             s.on("job:updated", handleJobUpdated);
+            s.on("job:assigned", handleJobUpdated);
             s.on("booking:updated", handleBookingUpdated);
         };
 
@@ -159,6 +161,7 @@ const JobDetailsScreen = () => {
             if (socket) {
                 // Remove ONLY this screen listeners
                 socket.off("job:updated", handleJobUpdated);
+                socket.off("job:assigned", handleJobUpdated);
                 socket.off("booking:updated", handleBookingUpdated);
             }
         };
