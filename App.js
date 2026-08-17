@@ -1,29 +1,22 @@
-import React, { useEffect, useState } from 'react';
-import { AppState, StatusBar, StyleSheet } from 'react-native';
-import { Provider, useSelector } from 'react-redux';
 import Toast from 'react-native-toast-message';
+import React, { useEffect, useState } from 'react';
+import { Provider, useSelector } from 'react-redux';
+import NetInfo from '@react-native-community/netinfo';
+import { AppState, StatusBar, StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { PersistGate } from 'reduxjs-toolkit-persist/integration/react';
-import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/react-query';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
-
-import messaging from '@react-native-firebase/messaging';
-import { checkForUpdate } from './src/utils/updateService';
-import { toastConfig } from './src/utils/Toast/toastConfig';
-import InternetConnectionHandler from './src/utils/InternetConnectionHandler';
-import { registerBackgroundHandler, registerForegroundHandler } from './src/utils/notificationHandler/notificationHandler';
+import { QueryClient, QueryClientProvider, useQueryClient, onlineManager } from '@tanstack/react-query';
 
 import AppNavigation from './src/navigation';
+import messaging from '@react-native-firebase/messaging';
 import { store, persistedStore } from './src/redux/store';
+import { checkForUpdate } from './src/utils/updateService';
 import { navigate } from './src/navigation/RootNavigation';
-
-// Import our new location service
-import {
-  initTracking,
-  setupAppStateListener,
-  stopBackgroundTracking
-} from './src/utils/locationService';
-
+import { toastConfig } from './src/utils/Toast/toastConfig';
+import InternetConnectionHandler from './src/utils/InternetConnectionHandler';
+import { initTracking, setupAppStateListener, stopBackgroundTracking } from './src/utils/locationService';
+import { registerBackgroundHandler, registerForegroundHandler } from './src/utils/notificationHandler/notificationHandler';
 
 const AppContent = () => {
   const [ready, setReady] = useState(false);
@@ -229,10 +222,23 @@ const AppContent = () => {
   );
 };
 
+onlineManager.setEventListener(setOnline => {
+  return NetInfo.addEventListener(state => {
+    const connected = state.isConnected === true;
+
+    console.log(
+      'Network changed:',
+      connected ? 'ONLINE' : 'OFFLINE'
+    );
+
+    setOnline(connected);
+  });
+});
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      refetchOnReconnect: true,
+      refetchOnReconnect: 'always',
       refetchOnWindowFocus: true,
     },
   },
