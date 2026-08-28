@@ -23,7 +23,7 @@ import { pickAndUploadDriverDocument } from '../../utils/pdfUpload.utils';
 import { mutationHandler } from "../../services/mutations/mutationHandler";
 import { checkExpiry, viewDocumentInApp } from "../../utils/document.utils";
 import { setFormValue, mapUserToForm } from "../../utils/profileForm.utils";
-import { dispatchUser, dispatchIsSignedIn } from "../../redux/slices/userSlice";
+import { dispatchUser, dispatchIsSignedIn, dispatchRefreshToken } from "../../redux/slices/userSlice";
 import { googleConfig, signInWithGoogle, signInWithApple } from '../../utils/SocialLogin/GoogleSignIn'
 import DeleteAccountModal from "../../components/DeleteAccountModal/DeleteAccountModal";
 
@@ -742,6 +742,7 @@ const ProfileScreen = ({ navigation }) => {
     setShowDeletePassword(false);
 
     dispatch(dispatchIsSignedIn(false));
+    dispatch(dispatchRefreshToken(null));
     dispatch(dispatchUser(null));
 
     toastUtils.showSuccess(

@@ -6,7 +6,7 @@ import { useTheme } from "@react-navigation/native";
 import { useDispatch } from "react-redux";
 
 import getStyles from "./style";
-import { dispatchIsSignedIn, dispatchToken, dispatchUser } from "../../redux/slices/userSlice";
+import { dispatchIsSignedIn, dispatchRefreshToken, dispatchToken, dispatchUser } from "../../redux/slices/userSlice";
 
 const TITLE_BY_CODE = {
   ACCOUNT_REJECTED: "Account Rejected",
@@ -28,6 +28,7 @@ const BlockedScreen = ({ navigation, route }) => {
   const handleGoToLogin = () => {
     dispatch(dispatchIsSignedIn(false));
     dispatch(dispatchToken(null));
+    dispatch(dispatchRefreshToken(null));
     dispatch(dispatchUser(null));
     navigation.reset({
       index: 0,

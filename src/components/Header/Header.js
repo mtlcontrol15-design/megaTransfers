@@ -101,7 +101,7 @@ const Header = ({
             activeOpacity={0.7}
           >
             <Image
-              resizeMode="contain"
+              resizeMode='cover'
               source={{ uri: companyLogo }}
               style={[
                 styles.logo,
@@ -322,8 +322,9 @@ const styles = StyleSheet.create({
 
   logo: {
     width: moderateScale(70),
-    height: moderateScale(70),
+    height: moderateScale(60),
     marginRight: scale(12),
+    borderRadius: moderateScale(10),
   },
 
   customerLogo: {

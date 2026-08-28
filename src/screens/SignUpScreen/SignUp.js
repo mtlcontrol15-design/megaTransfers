@@ -16,7 +16,7 @@ import { validationSignUpSchema } from '../../utils/validationUtils';
 import { mutationHandler } from '../../services/mutations/mutationHandler';
 import CustomPhoneInput from '../../components/CustomerInfo/CustomPhoneInput';
 import LocationSearchModal from "../../components/JourneyCard/components/LocationSearchModal";
-import { dispatchIsSignedIn, dispatchToken, dispatchUser } from '../../redux/slices/userSlice';
+import { dispatchIsSignedIn, dispatchRefreshToken, dispatchToken, dispatchUser } from '../../redux/slices/userSlice';
 
 
 
@@ -40,7 +40,6 @@ const SignUp = ({ navigation, route }) => {
     // console.log('=======selected role is here', selectedRole);s
     // console.log('========sign up colors are here',colors);
     // console.log('=======socialAuth is here', socialAuth);
-    // console.log('=======socialProfile is here', socialProfile);
     const dispatch = useDispatch();
 
 
@@ -84,7 +83,7 @@ const SignUp = ({ navigation, route }) => {
 
             toastUtils.showError(
                 'Sign Up Failed',
-                err?.message || err || 'Failed to create account. Please try again.'
+                err?.response?.data || err || 'Failed to create account. Please try again.'
             );
         },
         'post'
@@ -118,7 +117,8 @@ const SignUp = ({ navigation, route }) => {
             }
 
             dispatch(dispatchUser(user));
-            dispatch(dispatchToken(res?.token));
+            dispatch(dispatchToken(res?.token || res?.access_token));
+            dispatch(dispatchRefreshToken(res?.refresh_token));
             dispatch(dispatchIsSignedIn(true));
 
             toastUtils.showSuccess(

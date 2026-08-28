@@ -1,5 +1,5 @@
 import { Alert } from "react-native";
-import { dispatchIsSignedIn, dispatchUser } from "../redux/slices/userSlice";
+import { dispatchIsSignedIn, dispatchRefreshToken, dispatchUser } from "../redux/slices/userSlice";
 
 export const handleLogout = (dispatch, mutateLogout) => {
     Alert.alert("Logout", "Are you sure?", [
@@ -9,6 +9,7 @@ export const handleLogout = (dispatch, mutateLogout) => {
             onPress: () => {
                 mutateLogout();
                 dispatch(dispatchIsSignedIn(false));
+                dispatch(dispatchRefreshToken(null));
                 dispatch(dispatchUser(null));
             },
         },

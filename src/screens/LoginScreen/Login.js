@@ -15,9 +15,9 @@ import toastUtils from '../../utils/Toast/toast';
 import LoaderModal from '../../utils/loaderModal';
 import { EndPoints } from '../../services/EndPoints';
 import { validationLoginSchema } from '../../utils/validationUtils';
-import CompanySelectionModal from '../../components/CompanySelectionModal/CompanySelectionModal';
 import { mutationHandler } from '../../services/mutations/mutationHandler';
-import { dispatchIsSignedIn, dispatchToken, dispatchUser } from '../../redux/slices/userSlice';
+import { dispatchIsSignedIn, dispatchRefreshToken, dispatchToken, dispatchUser } from '../../redux/slices/userSlice';
+import CompanySelectionModal from '../../components/CompanySelectionModal/CompanySelectionModal';
 import { googleConfig, signInWithGoogle, signInWithApple } from '../../utils/SocialLogin/GoogleSignIn'
 
 
@@ -35,9 +35,8 @@ const Login = ({ navigation }) => {
     const [showCompanyModal, setShowCompanyModal] = useState(false);
 
     const pendingSocialResponseRef = useRef(null);
-
-
     const dispatch = useDispatch();
+
 
     const { mutate, isPending, reset } = mutationHandler(
         EndPoints.login,
@@ -83,7 +82,8 @@ const Login = ({ navigation }) => {
             }
 
             dispatch(dispatchUser(user));
-            dispatch(dispatchToken(res.token));
+            dispatch(dispatchToken(res?.token || res?.access_token));
+            dispatch(dispatchRefreshToken(res?.refresh_token));
             dispatch(dispatchIsSignedIn(true));
 
             toastUtils.showSuccess(
@@ -92,14 +92,13 @@ const Login = ({ navigation }) => {
             );
         },
         (err) => {
-            console.error("Login error:", err?.response?.data || err);
+            console.error("Login error:", err);
             reset();
 
             const data = err?.response?.data || err;
             const user = data?.user;
             const driver = data?.driver;
             const status = user?.status || driver?.DriverData?.status;
-
             const message =
                 data?.message ||
                 err?.message ||
@@ -305,6 +304,7 @@ const Login = ({ navigation }) => {
                 res?.access_token,
             ),
         );
+        dispatch(dispatchRefreshToken(res?.refresh_token));
         dispatch(dispatchIsSignedIn(true));
 
         pendingSocialResponseRef.current = null;

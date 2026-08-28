@@ -17,8 +17,28 @@ import themeSlice from './slices/themeSlice';
 
 const persistConfig = {
   key: 'root',
+  version: 2,
   storage: EncryptedStorage,
   stateReconciler: autoMergeLevel1,
+  migrate: async state => {
+    if (
+      state?.userReducer?.token &&
+      !state?.userReducer?.refreshToken
+    ) {
+      return {
+        ...state,
+        userReducer: {
+          ...state.userReducer,
+          token: null,
+          refreshToken: null,
+          user: null,
+          isSignedIn: false,
+        },
+      };
+    }
+
+    return state;
+  },
 };
 
 const reducers = combineReducers({

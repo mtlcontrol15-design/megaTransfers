@@ -4,6 +4,7 @@ const userSlice = createSlice({
   name: 'user',
   initialState: {
     token: null,
+    refreshToken: null,
     user: null,
     isSignedIn: false,
     deviceToken: null,
@@ -16,6 +17,9 @@ const userSlice = createSlice({
   reducers: {
     dispatchToken: (state, action) => {
       state.token = action.payload;
+    },
+    dispatchRefreshToken: (state, action) => {
+      state.refreshToken = action.payload;
     },
     dispatchUser: (state, action) => {
       state.user = action.payload;
@@ -45,6 +49,6 @@ const userSlice = createSlice({
   },
 });
 
-export const { dispatchToken, dispatchUser, dispatchIsSignedIn, completeOnboarding, dispatchDeviceToken, dispatchOnlineStatus, dispatchReviewedBooking, dispatchAvailabilityStatus } = userSlice.actions;
+export const { dispatchToken, dispatchRefreshToken, dispatchUser, dispatchIsSignedIn, completeOnboarding, dispatchDeviceToken, dispatchOnlineStatus, dispatchReviewedBooking, dispatchAvailabilityStatus } = userSlice.actions;
 
 export default userSlice.reducer;

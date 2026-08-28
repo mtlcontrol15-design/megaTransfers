@@ -1,6 +1,6 @@
 import { navigate } from '../navigation/RootNavigation';
 import { store } from '../redux/store';
-import { dispatchIsSignedIn, dispatchToken, dispatchUser } from '../redux/slices/userSlice';
+import { dispatchIsSignedIn, dispatchRefreshToken, dispatchToken, dispatchUser } from '../redux/slices/userSlice';
 
 const ACCOUNT_STATUS_MESSAGES = {
   ACCOUNT_REJECTED: 'Your account has been rejected by admin',
@@ -45,6 +45,7 @@ export const handleBlockedAccountError = (error) => {
 
   dispatch(dispatchIsSignedIn(false));
   dispatch(dispatchToken(null));
+  dispatch(dispatchRefreshToken(null));
   dispatch(dispatchUser(null));
 
   navigate('BlockedScreen', payload);

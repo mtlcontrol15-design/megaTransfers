@@ -63,7 +63,7 @@ const HomeScreen = () => {
           : route.name === "ProfileTab"
             ? "Profile"
             : route.name;
-  const { user, token, isOnline, reviewedBookings = [], isAvailable } = useSelector(state => state.userReducer)
+  const { user, token, isOnline, reviewedBookings = [], isAvailable, refreshToken } = useSelector(state => state.userReducer)
   const notificationId =
     user?.role === "driver"
       ? user?.employeeNumber
@@ -73,6 +73,7 @@ const HomeScreen = () => {
   // console.log('=======user token is here',token);
   // console.log('========selected job is here', selectedJob);
   // console.log('home colors are here',colors);
+  // console.log('=======user refreshToken is here', refreshToken);
 
 
   const dispatch = useDispatch();
