@@ -7,6 +7,8 @@ const userSlice = createSlice({
     refreshToken: null,
     user: null,
     isSignedIn: false,
+    sessionExpired: false,
+    openLoginAfterSessionExpired: false,
     deviceToken: null,
     hasCompletedOnboarding: false,
     isOnline: false,
@@ -26,6 +28,12 @@ const userSlice = createSlice({
     },
     dispatchIsSignedIn: (state, action) => {
       state.isSignedIn = action.payload;
+    },
+    dispatchSessionExpired: (state, action) => {
+      state.sessionExpired = action.payload;
+    },
+    dispatchOpenLoginAfterSessionExpired: (state, action) => {
+      state.openLoginAfterSessionExpired = action.payload;
     },
     completeOnboarding: (state) => {
       state.hasCompletedOnboarding = true;
@@ -49,6 +57,6 @@ const userSlice = createSlice({
   },
 });
 
-export const { dispatchToken, dispatchRefreshToken, dispatchUser, dispatchIsSignedIn, completeOnboarding, dispatchDeviceToken, dispatchOnlineStatus, dispatchReviewedBooking, dispatchAvailabilityStatus } = userSlice.actions;
+export const { dispatchToken, dispatchRefreshToken, dispatchUser, dispatchIsSignedIn, dispatchSessionExpired, dispatchOpenLoginAfterSessionExpired, completeOnboarding, dispatchDeviceToken, dispatchOnlineStatus, dispatchReviewedBooking, dispatchAvailabilityStatus } = userSlice.actions;
 
 export default userSlice.reducer;

@@ -16,9 +16,16 @@ import LoaderModal from '../../utils/loaderModal';
 import { EndPoints } from '../../services/EndPoints';
 import { validationLoginSchema } from '../../utils/validationUtils';
 import { mutationHandler } from '../../services/mutations/mutationHandler';
-import { dispatchIsSignedIn, dispatchRefreshToken, dispatchToken, dispatchUser } from '../../redux/slices/userSlice';
+import { resetSessionExpiration } from '../../services/accountStatusHandler';
 import CompanySelectionModal from '../../components/CompanySelectionModal/CompanySelectionModal';
 import { googleConfig, signInWithGoogle, signInWithApple } from '../../utils/SocialLogin/GoogleSignIn'
+import {
+    dispatchIsSignedIn,
+    dispatchOpenLoginAfterSessionExpired,
+    dispatchRefreshToken,
+    dispatchToken,
+    dispatchUser,
+} from '../../redux/slices/userSlice';
 
 
 const Login = ({ navigation }) => {
@@ -85,6 +92,8 @@ const Login = ({ navigation }) => {
             dispatch(dispatchToken(res?.token || res?.access_token));
             dispatch(dispatchRefreshToken(res?.refresh_token));
             dispatch(dispatchIsSignedIn(true));
+            dispatch(dispatchOpenLoginAfterSessionExpired(false));
+            resetSessionExpiration();
 
             toastUtils.showSuccess(
                 "Login Success",
@@ -306,6 +315,8 @@ const Login = ({ navigation }) => {
         );
         dispatch(dispatchRefreshToken(res?.refresh_token));
         dispatch(dispatchIsSignedIn(true));
+        dispatch(dispatchOpenLoginAfterSessionExpired(false));
+        resetSessionExpiration();
 
         pendingSocialResponseRef.current = null;
 

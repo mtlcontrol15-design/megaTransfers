@@ -4,15 +4,61 @@ import { useDispatch, useSelector } from 'react-redux';
 
 import { API_CONFIG } from '../../config/config';
 import { EndPoints } from '../EndPoints';
-import { handleBlockedAccountError } from '../accountStatusHandler';
+import {
+  handleBlockedAccountError,
+  handleSessionExpired,
+} from '../accountStatusHandler';
 
 import { dispatchRefreshToken, dispatchToken } from '../../redux/slices/userSlice';
 
 
 let refreshTokenPromise = null;
 
+const findTokenValue = (value, names) => {
+  if (!value || typeof value !== 'object') {
+    return null;
+  }
 
-const refreshAccessToken = async refreshToken => {
+  for (const name of names) {
+    if (typeof value[name] === 'string' && value[name]) {
+      return value[name];
+    }
+  }
+
+  for (const nestedValue of Object.values(value)) {
+    const token = findTokenValue(nestedValue, names);
+    if (token) {
+      return token;
+    }
+  }
+
+  return null;
+};
+
+const describeResponseShape = (value, path = '', result = []) => {
+  if (!value || typeof value !== 'object' || result.length >= 30) {
+    return result;
+  }
+
+  Object.entries(value).forEach(([key, nestedValue]) => {
+    if (result.length >= 30) {
+      return;
+    }
+
+    const nestedPath = path ? `${path}.${key}` : key;
+
+    if (nestedValue && typeof nestedValue === 'object') {
+      describeResponseShape(nestedValue, nestedPath, result);
+    } else {
+      result.push(`${nestedPath}: ${typeof nestedValue}`);
+    }
+  });
+
+  return result;
+};
+
+
+export const refreshAccessToken = async refreshToken => {
   if (refreshTokenPromise) {
     return refreshTokenPromise;
   }
@@ -45,17 +91,22 @@ const refreshAccessToken = async refreshToken => {
       });
 
       console.log(
-        'Refresh response:',
-        response?.data,
+        'Refresh response received:',
+        response?.status,
+        describeResponseShape(response?.data),
       );
 
-      const newAccessToken =
-        response?.data?.access_token ||
-        response?.data?.token ||
-        response?.data?.data?.access_token ||
-        response?.data?.data?.token;
+      const newAccessToken = findTokenValue(response?.data, [
+        'access_token',
+        'accessToken',
+        'token',
+      ]);
 
       if (!newAccessToken) {
+        console.log(
+          'Refresh succeeded but access token is missing. Response keys:',
+          describeResponseShape(response?.data),
+        );
         throw new Error(
           'Refresh API did not return an access token',
         );
@@ -66,14 +117,15 @@ const refreshAccessToken = async refreshToken => {
           newAccessToken,
 
         refreshToken:
-          response?.data?.refresh_token ||
-          response?.data?.data?.refresh_token ||
-          refreshToken,
+          findTokenValue(response?.data, [
+            'refresh_token',
+            'refreshToken',
+          ]) || refreshToken,
       };
     } catch (error) {
       console.log(
         'Token refresh failed:',
-        error?.response?.data ||
+        error?.response?.status ||
         error?.message,
       );
 
@@ -98,13 +150,7 @@ const useApi = (
 
   const dispatch = useDispatch();
 
-  const token = useSelector(
-    state => state.userReducer.token,
-  );
-
-  const refreshToken = useSelector(
-    state => state.userReducer.refreshToken,
-  );
+  const { token, refreshToken } = useSelector(state => state.userReducer);
 
   const defaultConfig = {
     method,
@@ -204,7 +250,7 @@ const useApi = (
         error?.response?.status;
 
 
-      if (status !== 401) {
+      if (status !== 401 || actualEndpoint === EndPoints.login) {
         throw error;
       }
 
@@ -216,6 +262,10 @@ const useApi = (
           'Refresh endpoint returned 401.',
         );
 
+        throw error;
+      }
+
+      if (!refreshToken) {
         throw error;
       }
 
@@ -262,14 +312,27 @@ const useApi = (
             },
           });
 
+        console.log('Request retry succeeded:', actualEndpoint);
+
         return retryResponse.data;
 
       } catch (refreshError) {
 
+        const refreshErrorStatus = refreshError?.response?.status;
+
+        console.log(
+          'Request retry failed:',
+          actualEndpoint,
+          refreshErrorStatus || refreshError?.message,
+        );
+
+        if (refreshErrorStatus === 401) {
+          handleSessionExpired();
+        }
+
         console.log(
           'Session refresh/retry failed:',
-          refreshError?.response?.data ||
-          refreshError?.message,
+          refreshErrorStatus || refreshError?.message,
         );
 
         throw refreshError;

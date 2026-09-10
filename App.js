@@ -1,6 +1,6 @@
 import Toast from 'react-native-toast-message';
 import React, { useEffect, useState } from 'react';
-import { Provider, useSelector } from 'react-redux';
+import { Provider, useDispatch, useSelector } from 'react-redux';
 import NetInfo from '@react-native-community/netinfo';
 import { AppState, StatusBar, StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -14,13 +14,20 @@ import { store, persistedStore } from './src/redux/store';
 import { checkForUpdate } from './src/utils/updateService';
 import { navigate } from './src/navigation/RootNavigation';
 import { toastConfig } from './src/utils/Toast/toastConfig';
+import {
+  dispatchIsSignedIn,
+  dispatchOpenLoginAfterSessionExpired,
+  dispatchSessionExpired,
+} from './src/redux/slices/userSlice';
 import InternetConnectionHandler from './src/utils/InternetConnectionHandler';
+import SessionExpiredModal from './src/components/SessionExpiredModal/SessionExpiredModal';
 import { initTracking, setupAppStateListener, stopBackgroundTracking } from './src/utils/locationService';
 import { registerBackgroundHandler, registerForegroundHandler } from './src/utils/notificationHandler/notificationHandler';
 
 const AppContent = () => {
   const [ready, setReady] = useState(false);
-  const { user, isOnline, token } = useSelector(state => state.userReducer);
+  const dispatch = useDispatch();
+  const { user, isOnline, token, sessionExpired } = useSelector(state => state.userReducer);
 
   const handleNotificationNavigation = (
     data = {}
@@ -218,6 +225,14 @@ const AppContent = () => {
       <AppNavigation />
       <InternetConnectionHandler />
       <Toast config={toastConfig} />
+      <SessionExpiredModal
+        visible={sessionExpired}
+        onDismiss={() => {
+          dispatch(dispatchOpenLoginAfterSessionExpired(true));
+          dispatch(dispatchSessionExpired(false));
+          dispatch(dispatchIsSignedIn(false));
+        }}
+      />
     </>
   );
 };

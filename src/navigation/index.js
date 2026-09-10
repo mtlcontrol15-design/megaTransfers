@@ -14,7 +14,12 @@ import { connectSocket, getSocket } from "../services/socket";
 
 export default function AppNavigation() {
   const { themeMode } = useSelector(state => state.themeReducer);
-  const { isSignedIn, user } = useSelector(state => state.userReducer);
+  const {
+    isSignedIn,
+    openLoginAfterSessionExpired,
+    sessionExpired,
+    user,
+  } = useSelector(state => state.userReducer);
   const systemColorScheme = useColorScheme();
   const isDarkMode = themeMode === 'system'
     ? systemColorScheme === 'dark'
@@ -63,7 +68,13 @@ export default function AppNavigation() {
 
   return (
     <NavigationContainer theme={MyTheme} ref={navigationRef} onReady={handlePendingNavigation}>
-      {isSignedIn ? <AuthStack /> : <UnAuthStack />}
+      {isSignedIn || sessionExpired ? (
+        <AuthStack />
+      ) : (
+        <UnAuthStack
+          initialRouteName={openLoginAfterSessionExpired ? 'Login' : 'SplashScreen'}
+        />
+      )}
     </NavigationContainer>
   );
 }

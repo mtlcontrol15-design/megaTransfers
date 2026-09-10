@@ -4,8 +4,14 @@ import {
   keepPreviousData,
   useInfiniteQuery,
 } from '@tanstack/react-query';
+import { useDispatch, useSelector } from 'react-redux';
 import { API_CONFIG } from '../../config/config';
-import { handleBlockedAccountError } from '../accountStatusHandler';
+import {
+  handleBlockedAccountError,
+  handleSessionExpired,
+} from '../accountStatusHandler';
+import { refreshAccessToken } from '../mutations';
+import { dispatchRefreshToken, dispatchToken } from '../../redux/slices/userSlice';
 
 const useQueryApi = (
   queryKey,
@@ -17,13 +23,17 @@ const useQueryApi = (
   queryParams = {},
   useInfiniteQueryFlag = false,
 ) => {
+  const dispatch = useDispatch();
+  const { refreshToken, token } = useSelector(state => state.userReducer);
+  // console.log('Refresh Token from useQueryApi:', refreshToken);
+  // console.log('Access Token from useQueryApi:', token);
   const defaultConfig = {
     method: 'get',
     baseURL: API_CONFIG.BASE_URL,
     params: queryParams,
     headers: {
       'Content-Type': 'application/json',
-      Authorization: userToken ? `Bearer ${userToken}` : '',
+      Authorization: token ? `Bearer ${token}` : '',
       // Add any other common headers here
     },
   };
@@ -33,17 +43,68 @@ const useQueryApi = (
     ...customConfig,
   };
 
-  const queryFn = async ({ pageParam }) => {
+  const queryFn = async ({ pageParam = 1 }) => {
     try {
-      config.params.page = pageParam;
       const response = await axios.request({
         url: urlWithOutBase,
         ...config,
+        params: {
+          ...config.params,
+          page: pageParam,
+        },
       });
 
       return response.data;
     } catch (error) {
       handleBlockedAccountError(error);
+
+      if (error?.response?.status === 401 && refreshToken) {
+        try {
+          const {
+            accessToken: newToken,
+            refreshToken: newRefreshToken,
+          } = await refreshAccessToken(refreshToken);
+
+          dispatch(dispatchToken(newToken));
+          dispatch(dispatchRefreshToken(newRefreshToken));
+
+          const retryResponse = await axios.request({
+            url: urlWithOutBase,
+            ...config,
+            params: {
+              ...config.params,
+              page: pageParam,
+            },
+            headers: {
+              ...config.headers,
+              Authorization: `Bearer ${newToken}`,
+            },
+          });
+
+          return retryResponse.data;
+        } catch (refreshError) {
+          const refreshErrorStatus = refreshError?.response?.status;
+
+          console.log(
+            'Query retry failed:',
+            urlWithOutBase,
+            refreshErrorStatus || refreshError?.message,
+          );
+
+          if (refreshErrorStatus === 401) {
+            handleSessionExpired();
+          }
+
+          throw refreshError;
+        }
+      }
+
+      if (error?.response?.status === 401) {
+        console.log(
+          'Request returned 401 without a refresh token; modal not shown.',
+        );
+      }
+
       throw error;
     }
   };

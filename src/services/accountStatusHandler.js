@@ -1,6 +1,8 @@
 import { navigate } from '../navigation/RootNavigation';
 import { store } from '../redux/store';
-import { dispatchIsSignedIn, dispatchRefreshToken, dispatchToken, dispatchUser } from '../redux/slices/userSlice';
+import { dispatchIsSignedIn, dispatchRefreshToken, dispatchSessionExpired, dispatchToken, dispatchUser } from '../redux/slices/userSlice';
+
+let sessionExpirationHandled = false;
 
 const ACCOUNT_STATUS_MESSAGES = {
   ACCOUNT_REJECTED: 'Your account has been rejected by admin',
@@ -50,4 +52,26 @@ export const handleBlockedAccountError = (error) => {
 
   navigate('BlockedScreen', payload);
   return true;
+};
+
+export const handleSessionExpired = () => {
+  if (sessionExpirationHandled) {
+    return false;
+  }
+
+  sessionExpirationHandled = true;
+
+  const { dispatch } = store;
+
+  dispatch(dispatchSessionExpired(true));
+  dispatch(dispatchToken(null));
+  dispatch(dispatchRefreshToken(null));
+  dispatch(dispatchUser(null));
+
+  return true;
+};
+
+export const resetSessionExpiration = () => {
+  sessionExpirationHandled = false;
+  store.dispatch(dispatchSessionExpired(false));
 };

@@ -11,7 +11,7 @@ import RegisterDriverScreen from '../screens/RegisterDriverScreen/RegisterDriver
 import PdfView from '../screens/PdfView/PdfView';
 import BlockedScreen from '../screens/BlockedScreen/BlockedScreen';
 
-function UnAuthStack() {
+function UnAuthStack({ initialRouteName = 'SplashScreen' }) {
   const Stack = createNativeStackNavigator();
 
   const screens = {
@@ -28,7 +28,7 @@ function UnAuthStack() {
 
   return (
     <Stack.Navigator
-      initialRouteName="SplashScreen"
+      initialRouteName={initialRouteName}
       screenOptions={{
         headerShown: false,
         animation: 'none',
