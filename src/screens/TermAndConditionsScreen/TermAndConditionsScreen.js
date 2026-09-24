@@ -4,9 +4,9 @@ import { useTheme, useNavigation } from "@react-navigation/native";
 
 import getStyles from "./style";
 import Icons from "../../assets/icons";
+import LoaderModal from "../../utils/loaderModal";
 import { EndPoints } from "../../services/EndPoints";
 import queryHandler from "../../services/queries/queryHandler";
-import LoaderModal from "../../utils/loaderModal";
 
 const TermAndConditionsScreen = () => {
   const { colors } = useTheme();
@@ -14,6 +14,8 @@ const TermAndConditionsScreen = () => {
   const navigation = useNavigation();
 
   const { data, isFetching } = queryHandler(EndPoints.getTerms);
+
+  // console.log("Terms Data:", data);
 
   const displayTerms = data?.data || [];
 
@@ -88,28 +90,93 @@ const TermAndConditionsScreen = () => {
             marginBottom: 16,
           }}
         >
-          <Text style={{ color: "#374151", fontSize: 16, lineHeight: 22 }}>
+          {/* Title */}
+          {!!displayTerms[0]?.title && (
+            <Text
+              style={{
+                color: "#111827",
+                fontSize: 18,
+                fontWeight: "700",
+                marginBottom: 12,
+              }}
+            >
+              {displayTerms[0]?.title}
+            </Text>
+          )}
+
+          {/* Content */}
+          <Text
+            style={{
+              color: "#374151",
+              fontSize: 16,
+              lineHeight: 22,
+            }}
+          >
             {displayTerms[0]?.content || "No terms available."}
           </Text>
 
           {/* Details */}
-          <View style={{ marginTop: 16, paddingTop: 16, borderTopWidth: 1, borderTopColor: "#E5E7EB" }}>
+          <View
+            style={{
+              marginTop: 16,
+              paddingTop: 16,
+              borderTopWidth: 1,
+              borderTopColor: "#E5E7EB",
+            }}
+          >
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                marginBottom: 12,
+              }}
+            >
+              <Icons.Calendar
+                size={16}
+                color="#6B7280"
+              />
 
-            {/* Created Date */}
-            <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}>
-              <Icons.Calendar size={16} color="#6B7280" />
-              <Text style={{ fontSize: 13, color: "#6B7280", marginLeft: 8 }}>
-                Created: {formatDate(displayTerms[0]?.createdAt)}
+              <Text
+                style={{
+                  fontSize: 13,
+                  color: "#6B7280",
+                  marginLeft: 8,
+                }}
+              >
+                Created:{" "}
+                {formatDate(
+                  displayTerms[0]?.createdAt
+                )}
               </Text>
             </View>
 
-            {/* Target Audience */}
             {displayTerms[0]?.targetAudience?.length > 0 && (
-              <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}>
-                <Icons.Users size={16} color="#6B7280" />
-                <Text style={{ fontSize: 13, color: "#6B7280", marginLeft: 8 }}>
-                  For: {displayTerms[0].targetAudience
-                    .map(r => r.charAt(0).toUpperCase() + r.slice(1))
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  marginBottom: 12,
+                }}
+              >
+                <Icons.Users
+                  size={16}
+                  color="#6B7280"
+                />
+
+                <Text
+                  style={{
+                    fontSize: 13,
+                    color: "#6B7280",
+                    marginLeft: 8,
+                  }}
+                >
+                  For:{" "}
+                  {displayTerms[0].targetAudience
+                    .map(
+                      r =>
+                        r.charAt(0).toUpperCase() +
+                        r.slice(1)
+                    )
                     .join(", ")}
                 </Text>
               </View>

@@ -20,6 +20,7 @@ const SupportScreen = ({ navigation }) => {
   const { data, error, status, isFetching, refetch } = queryHandler(EndPoints.getCompanyDetails);
 
   // console.log('========companyData', companyData);
+  // console.log('========data', data);
 
   const companyInfo = isCustomer
     ? companyData?.data || {}
@@ -40,7 +41,7 @@ const SupportScreen = ({ navigation }) => {
 
   const handleWhatsApp = () => {
     if (companyInfo?.contact) {
-      const phone = formatPhoneWithPlus(companyInfo.contact);
+      const phone = formatPhoneWithPlus(companyInfo.whatsappContact || companyInfo.contact);
       Linking.openURL(`https://wa.me/${phone}`);
     }
   };
@@ -166,7 +167,7 @@ const SupportScreen = ({ navigation }) => {
                 {companyInfo.email && (
                   <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
                     <Icons.Mail size={18} color={colors.gray600} />
-                    <Text ellipsizeMode="tail" numberOfLines={2} style={{ color: colors.text ,width:'75%'}}>
+                    <Text ellipsizeMode="tail" numberOfLines={2} style={{ color: colors.text, width: '75%' }}>
                       {companyInfo.email}
                     </Text>
                   </View>

@@ -41,7 +41,7 @@ export const EndPoints = {
   getAllInvoices: '/api/invoice/get-all-invoices?',
   getCompanyDetails: '/api/companies/driver/current',
   getCompanyDetailsCustomer: '/api/companies/customer/current',
-  getTerms: '/api/terms-and-conditions/get',
+  getTerms: '/api/settings/terms-and-conditions/get',
   saveLocation: '/api/booking/map/save-location',
   getDriverCurrentLocation: '/api/booking/map/driver/my-current-location',
   getCustomerAssignedDriverLocation: '/api/booking/map/customer/my-driver-location',
