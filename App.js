@@ -113,8 +113,8 @@ const AppContent = () => {
   }, []);
 
   useEffect(() => {
-    initTracking(user, isOnline, token);
-  }, [user, isOnline, token]);
+    initTracking(user, isOnline);
+  }, [user?.role, isOnline]);
 
   // Setup app state listener for resume/background
   useEffect(() => {

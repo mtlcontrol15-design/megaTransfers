@@ -4,139 +4,13 @@ import { useDispatch, useSelector } from 'react-redux';
 
 import { API_CONFIG } from '../../config/config';
 import { EndPoints } from '../EndPoints';
+import {refreshAccessToken} from '../tokenService';
 import {
   handleBlockedAccountError,
   handleSessionExpired,
 } from '../accountStatusHandler';
 
 import { dispatchRefreshToken, dispatchToken } from '../../redux/slices/userSlice';
-
-
-let refreshTokenPromise = null;
-
-const findTokenValue = (value, names) => {
-  if (!value || typeof value !== 'object') {
-    return null;
-  }
-
-  for (const name of names) {
-    if (typeof value[name] === 'string' && value[name]) {
-      return value[name];
-    }
-  }
-
-  for (const nestedValue of Object.values(value)) {
-    const token = findTokenValue(nestedValue, names);
-    if (token) {
-      return token;
-    }
-  }
-
-  return null;
-};
-
-const describeResponseShape = (value, path = '', result = []) => {
-  if (!value || typeof value !== 'object' || result.length >= 30) {
-    return result;
-  }
-
-  Object.entries(value).forEach(([key, nestedValue]) => {
-    if (result.length >= 30) {
-      return;
-    }
-
-    const nestedPath = path ? `${path}.${key}` : key;
-
-    if (nestedValue && typeof nestedValue === 'object') {
-      describeResponseShape(nestedValue, nestedPath, result);
-    } else {
-      result.push(`${nestedPath}: ${typeof nestedValue}`);
-    }
-  });
-
-  return result;
-};
-
-
-export const refreshAccessToken = async refreshToken => {
-  if (refreshTokenPromise) {
-    return refreshTokenPromise;
-  }
-
-  refreshTokenPromise = (async () => {
-    try {
-      console.log(
-        'Access token expired. Refreshing token...',
-      );
-
-      if (!refreshToken) {
-        throw new Error(
-          'Refresh token is missing',
-        );
-      }
-
-      const response = await axios.request({
-        method: 'post',
-        baseURL: API_CONFIG.BASE_URL,
-        url: EndPoints.tokenRefresh,
-
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-        },
-
-        data: {
-          refresh_token: refreshToken,
-        },
-      });
-
-      console.log(
-        'Refresh response received:',
-        response?.status,
-        describeResponseShape(response?.data),
-      );
-
-      const newAccessToken = findTokenValue(response?.data, [
-        'access_token',
-        'accessToken',
-        'token',
-      ]);
-
-      if (!newAccessToken) {
-        console.log(
-          'Refresh succeeded but access token is missing. Response keys:',
-          describeResponseShape(response?.data),
-        );
-        throw new Error(
-          'Refresh API did not return an access token',
-        );
-      }
-
-      return {
-        accessToken:
-          newAccessToken,
-
-        refreshToken:
-          findTokenValue(response?.data, [
-            'refresh_token',
-            'refreshToken',
-          ]) || refreshToken,
-      };
-    } catch (error) {
-      console.log(
-        'Token refresh failed:',
-        error?.response?.status ||
-        error?.message,
-      );
-
-      throw error;
-    } finally {
-      refreshTokenPromise = null;
-    }
-  })();
-
-  return refreshTokenPromise;
-};
 
 const useApi = (
   urlWithOutBase,
@@ -319,12 +193,6 @@ const useApi = (
       } catch (refreshError) {
 
         const refreshErrorStatus = refreshError?.response?.status;
-
-        console.log(
-          'Request retry failed:',
-          actualEndpoint,
-          refreshErrorStatus || refreshError?.message,
-        );
 
         if (refreshErrorStatus === 401) {
           handleSessionExpired();
