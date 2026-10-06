@@ -42,7 +42,7 @@ const NotificationScreen = ({ navigation }) => {
   // console.log("hasNextPage:", hasNextPage);
 
   const notificationsData =
-    data?.pages?.flatMap(page => page) ?? [];
+    data?.pages?.flatMap(page => page?.data ?? []) ?? [];
 
   const notificationList = notificationsData;
 
