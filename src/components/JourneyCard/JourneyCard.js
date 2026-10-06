@@ -29,6 +29,7 @@ const JourneyCard = ({
     setSelectedHourly,
     hourlyData,
     hourlyWarning,
+    companyId,
     isReturnJourney = false,
     setIsReturnJourney = () => { },
     onOpenReturnModal = () => { },
@@ -708,6 +709,7 @@ const JourneyCard = ({
                     field={activeField}
                     colors={colors}
                     apiKey={googleApiKey}
+                    selectedCompanyId={companyId}
                     oldAddresses={oldAddresses}
                     oldAddressesOnly={activeField?.field === 'oldAddress' || activeField?.field === 'dropoffOldAddress'}
                 />

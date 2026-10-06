@@ -633,6 +633,7 @@ const SignUp = ({ navigation, route }) => {
                         onClose={() => setShowLocationModal(false)}
                         searchText={searchText}
                         setSearchText={setSearchText}
+                        selectedCompanyId={selectedCompanyId}
                         colors={colors}
                         onSelect={(location) => {
                             const selectedAddress = location.description;

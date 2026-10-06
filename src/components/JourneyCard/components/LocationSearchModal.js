@@ -5,11 +5,13 @@ import { EndPoints } from "../../../services/EndPoints";
 import { API_CONFIG } from '../../../config/config';
 
 
-const LocationSearchModal = ({ visible, onClose, searchText, setSearchText, onSelect, field, colors, apiKey, oldAddresses = [], oldAddressesOnly = false }) => {
+const LocationSearchModal = ({ visible, onClose, searchText, setSearchText, onSelect, field, colors, apiKey, oldAddresses = [], oldAddressesOnly = false, selectedCompanyId }) => {
 
     const [suggestions, setSuggestions] = useState([]);
     const [loading, setLoading] = useState(false);
     const timer = useRef(null);
+
+    // console.log('Selected Company ID in LocationSearchModal:', selectedCompanyId);
 
     const oldAddressItems = (oldAddresses || [])
         .filter((addr) => {
@@ -45,7 +47,8 @@ const LocationSearchModal = ({ visible, onClose, searchText, setSearchText, onSe
         try {
             setLoading(true);
 
-            const url = `${API_CONFIG.BASE_URL}${EndPoints.suggetionsAPI}input=${encodeURIComponent(query)}`;
+            const url = `${API_CONFIG.BASE_URL}${EndPoints.suggetionsAPI}input=${encodeURIComponent(query)}&&companyId=${selectedCompanyId}`;
+            // console.log('Fetching suggestions from URL:', url);
 
             const res = await fetch(url);
 

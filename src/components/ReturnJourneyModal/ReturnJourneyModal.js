@@ -16,6 +16,7 @@ const ReturnJourneyModal = ({
     colors,
     symbol,
     returnFare,
+    selectedCompanyId,
     primaryJourneyData = {}
 }) => {
     // console.log('=======return fare is here', returnFare);
@@ -453,6 +454,7 @@ const ReturnJourneyModal = ({
                         onClose={() => setShowSearchModal(false)}
                         searchText={searchText}
                         setSearchText={setSearchText}
+                        selectedCompanyId={selectedCompanyId}
                         onSelect={handleSelectLocation}
                         field={activeField}
                         colors={colors}

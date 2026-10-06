@@ -1613,6 +1613,7 @@ const NewBookingScreen = ({ route }) => {
                 symbol={symbol}
                 errors={errors}
                 touched={touched}
+                companyId={companyId}
                 setFieldValue={setFieldValue}
                 setFieldTouched={setFieldTouched}
                 values={values}
@@ -1767,6 +1768,7 @@ const NewBookingScreen = ({ route }) => {
             colors={colors}
             symbol={symbol}
             returnFare={returnFare}
+            selectedCompanyId={companyId}
             primaryJourneyData={journeyData}
           />
 

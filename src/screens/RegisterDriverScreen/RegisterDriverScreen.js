@@ -69,6 +69,10 @@ const RegisterDriverScreen = ({ navigation, route }) => {
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [addressSearchText, setAddressSearchText] = useState("");
 
+  const selectedCompanyId = driverInfo?.companyId;
+
+  // console.log('Selected Company ID:', selectedCompanyId);
+
   const [form, setForm] = useState({
     fullName: `${driverData.firstName || ""} ${driverData.lastName || ""}`.trim(),
     email: driverData.emailAddress || "",
@@ -913,6 +917,7 @@ const RegisterDriverScreen = ({ navigation, route }) => {
               onClose={() => setShowLocationModal(false)}
               searchText={addressSearchText}
               setSearchText={setAddressSearchText}
+              selectedCompanyId={selectedCompanyId}
               colors={colors}
               field={{ field: "address" }}
               oldAddresses={form.address ? [form.address] : []}
