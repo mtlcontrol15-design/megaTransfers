@@ -1,6 +1,6 @@
 
 import { useEffect, useState, useRef } from "react";
-import { View, Text, TouchableOpacity, ScrollView, RefreshControl, Modal } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, ScrollView, RefreshControl, Modal } from "react-native";
 
 import { useSelector } from "react-redux";
 import { WebView } from "react-native-webview";
@@ -20,7 +20,14 @@ import { validationNewBookingSchema } from "../../utils/validationUtils";
 import { mutationHandler } from "../../services/mutations/mutationHandler";
 import ReturnJourneyModal from "../../components/ReturnJourneyModal/ReturnJourneyModal";
 import VehicleSelection from "../../components/JourneyCard/components/VehicleSelection/VehicleSelection";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 
+
+const formatCoordinates = coordinates => {
+  const lat = coordinates?.latitude ?? coordinates?.lat;
+  const lng = coordinates?.longitude ?? coordinates?.lng;
+  return lat != null && lng != null ? `${lat},${lng}` : "";
+};
 
 
 const NewBookingScreen = ({ route }) => {
@@ -41,6 +48,9 @@ const NewBookingScreen = ({ route }) => {
   const [showReturnJourneyModal, setShowReturnJourneyModal] = useState(false);
   const [hourlyWarning, setHourlyWarning] = useState("");
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("");
+  const [driverTip, setDriverTip] = useState("");
+  const [selectedVoucherCode, setSelectedVoucherCode] = useState("");
+  const [isVoucherApplied, setIsVoucherApplied] = useState(false);
   const [showPaymentMethods, setShowPaymentMethods] = useState(false);
   const [distanceText, setDistanceText] = useState("");
   const [durationText, setDurationText] = useState("");
@@ -87,6 +97,11 @@ const NewBookingScreen = ({ route }) => {
 
   // console.log('=====journey data is here', journeyData);
 
+  // console.log('route distance is here', tripDistance);
+
+  // console.log('selected payment method is here', selectedPaymentMethod);
+
+
 
   const [returnJourneyData, setReturnJourneyData] = useState({
     pickup: "",
@@ -119,6 +134,7 @@ const NewBookingScreen = ({ route }) => {
   const [selectedHourly, setSelectedHourly] = useState(null);
   const [fare, setFare] = useState(0);
   const [returnFare, setReturnFare] = useState(0);
+  const appliedVoucher = useRef(null);
 
   const { user } = useSelector(state => state?.userReducer)
 
@@ -130,6 +146,7 @@ const NewBookingScreen = ({ route }) => {
   // console.log('======selected vehicle is here', selectedVehicle);
   // console.log('=======fare is here', fare);
   // console.log('=======route booking is here', booking);
+  // console.log('voucher applied is here', isVoucherApplied);
 
 
   const companyId = user?.companyId;
@@ -148,22 +165,9 @@ const NewBookingScreen = ({ route }) => {
   const { mutate: getDistance } = mutationHandler(
     EndPoints.getDistance,
     null,
-    (res) => {
-
-      const meters = res?.distanceValue || res?.totalDistanceValue || 0;
-
-      const km = meters / 1000;
-      const miles = km * 0.621371;
-
-      setTripDistance(miles);
-
-      // ✅ convert km → miles text
-      setDistanceText(`${miles.toFixed(2)} miles`);
-
-      // ✅ send API duration text directly
-      setDurationText(res?.durationText || "");
-
-      setRouteLegs(res?.legs || []);
+    () => {
+      // Each segment response is handled by calculateMultiStopDistance().
+      // Combined distance, duration, and route legs are set in useEffect.
     },
     (err) => {
       console.log("Distance API error:", err);
@@ -174,22 +178,9 @@ const NewBookingScreen = ({ route }) => {
   const { mutate: getReturnDistance } = mutationHandler(
     EndPoints.getDistance,
     null,
-    (res) => {
-
-      const meters = res?.distanceValue || res?.totalDistanceValue || 0;
-
-      const km = meters / 1000;
-      const miles = km * 0.621371;
-
-      setReturnTripDistance(miles);
-
-      // ✅ convert km → miles text
-      setReturnDistanceText(`${miles.toFixed(2)} miles`);
-
-      // ✅ duration from API
-      setReturnDurationText(res?.durationText || "");
-
-      setReturnRouteLegs(res?.legs || []);
+    () => {
+      // Each segment response is handled by calculateMultiStopDistance().
+      // Combined return distance, duration, and route legs are set in useEffect.
     },
     (err) => {
       console.log("Return Distance API error:", err);
@@ -261,17 +252,62 @@ const NewBookingScreen = ({ route }) => {
   // console.log('======== vehicle data is here', data);
   const { data: postCodePriceData, error: postCodePriceError, status: postCodePriceStatus, isFetching: postCodePriceIsFetching, refetch: postCodePriceRefetch } = queryHandler(`${EndPoints.pricePostCode}?companyId=${companyId}`);
   // console.log('======== post code price data is here', postCodePriceData);
-  const { data: hourlyData, error: hourlyError, status: hourlyStatus, isFetching: hourlyIsFetching, refetch: hourlyRefetch } = queryHandler(`${EndPoints.priceHourly}?companyId=${companyId}`);
+  const { data: hourlyResponse, error: hourlyError, status: hourlyStatus, isFetching: hourlyIsFetching, refetch: hourlyRefetch } = queryHandler(`${EndPoints.priceHourly}?companyId=${companyId}`);
   // console.log('======== hourly price data is here', hourlyData);
-  const { data: generalData, error: generalError, status: generalStatus, isFetching: generalIsFetching, refetch: generalRefetch } = queryHandler(`${EndPoints.priceGeneral}?companyId=${companyId}`);
+  const { data: generalResponse, error: generalError, status: generalStatus, isFetching: generalIsFetching, refetch: generalRefetch } = queryHandler(`${EndPoints.priceGeneral}?companyId=${companyId}`);
   // console.log('======== general price data is here', generalData);
-  const { data: fixedData, error: fixedError, status: fixedStatus, isFetching: fixedIsFetching, refetch: fixedRefetch } = queryHandler(`${EndPoints.fixedPrice}?companyId=${companyId}`);
+  const { data: fixedResponse, error: fixedError, status: fixedStatus, isFetching: fixedIsFetching, refetch: fixedRefetch } = queryHandler(`${EndPoints.fixedPrice}?companyId=${companyId}`);
   // console.log('========fixed price data is here', fixedData);
   const { data: paymentMethodsData, error: paymentMethodsError, status: paymentMethodsStatus, isFetching: paymentMethodsIsFetching, refetch: paymentMethodsRefetch } = queryHandler(`${EndPoints.getPaymentMthods}/${companyId}`);
+  const { data: vouchersResponse, refetch: vouchersRefetch } = queryHandler(
+    EndPoints.getVouchers
+  );
+
+  // console.log('========vouchers data is here', vouchersResponse);
+
+  const { data: discountSurchargeResponse, refetch: discountSurchargeRefetch } = queryHandler(
+    `${EndPoints.getDiscountSurcharge}?companyId=${companyId}`
+  );
   // console.log('========payment methods data is here', paymentMethodsData);
   const { data: suggestionsData } = queryHandler(
-    `${EndPoints.getSuggestions}?companyId=${user?.companyId}&createdBy=${user?._id}`
+    `${EndPoints.getSuggestions}?companyId=${user?.companyId}&createdBy=${user?.companyId}`
   );
+
+  // console.log('========suggestions data is here', suggestionsData);
+
+  const savedAddressSuggestions = [
+    suggestionsData,
+    suggestionsData?.suggestions,
+    suggestionsData?.data?.suggestions,
+    suggestionsData?.data?.data,
+    suggestionsData?.data,
+  ].find(Array.isArray) || [];
+
+  const vouchers = Array.isArray(vouchersResponse)
+    ? vouchersResponse
+    : vouchersResponse?.data || [];
+
+  const discountSurchargeData = Array.isArray(discountSurchargeResponse)
+    ? discountSurchargeResponse
+    : discountSurchargeResponse?.data || [];
+
+  const generalData =
+    generalResponse?.data &&
+      typeof generalResponse.data === "object"
+      ? generalResponse.data
+      : generalResponse || {};
+
+  const postcodePrices = Array.isArray(postCodePriceData)
+    ? postCodePriceData
+    : postCodePriceData?.data || [];
+
+  const hourlyData = Array.isArray(hourlyResponse)
+    ? hourlyResponse
+    : hourlyResponse?.data || [];
+
+  const fixedData = Array.isArray(fixedResponse)
+    ? fixedResponse
+    : fixedResponse?.data || [];
 
   // console.log('======== suggestions data is here', suggestionsData);
 
@@ -285,7 +321,9 @@ const NewBookingScreen = ({ route }) => {
         postCodePriceRefetch(),
         hourlyRefetch(),
         generalRefetch(),
-        fixedRefetch()
+        fixedRefetch(),
+        vouchersRefetch(),
+        discountSurchargeRefetch()
       ]);
 
     } catch (error) {
@@ -295,14 +333,14 @@ const NewBookingScreen = ({ route }) => {
     }
   };
 
-  const extractPostcode = (address, postCodePriceData = []) => {
+  const extractPostcode = (address, prices = postcodePrices) => {
     if (!address) return "";
 
     const upperAddress = address.toUpperCase();
 
     const availableCodes = [];
 
-    postCodePriceData?.forEach((item) => {
+    prices?.forEach((item) => {
       if (item?.pickup) availableCodes.push(item.pickup.toUpperCase());
       if (item?.dropoff) availableCodes.push(item.dropoff.toUpperCase());
     });
@@ -323,6 +361,34 @@ const NewBookingScreen = ({ route }) => {
     paymentMethodsData?.data?.paymentOptions?.filter(
       item => item?.isEnabled
     ) || [];
+
+  const isVoucherAvailable = voucher => {
+    const now = new Date();
+    return (
+      voucher?.status?.toLowerCase() === "active" &&
+      now >= new Date(voucher.validFrom) &&
+      now <= new Date(voucher.validTo) &&
+      Number(voucher.used || 0) < Number(voucher.quantity || 0)
+    );
+  };
+
+  const calculateExtrasFare = () =>
+    (generalData?.extrasPricing || []).reduce(
+      (total, item) => total + Number(item?.value || 0),
+      0
+    );
+
+  const applyVoucherDiscount = total => {
+    const voucher = appliedVoucher.current;
+    if (!voucher || !isVoucherAvailable(voucher)) return total;
+
+    const discount =
+      String(voucher.discountType || "").toLowerCase() === "percentage"
+        ? total * (Number(voucher.discountValue || 0) / 100)
+        : Number(voucher.discountValue || 0);
+    return Math.max(total - discount, 0);
+  };
+
   const formatDate = (isoDate) => {
     if (!isoDate) return "";
 
@@ -418,6 +484,78 @@ const NewBookingScreen = ({ route }) => {
     };
   };
 
+  const calculateMultiStopDistance = async (
+    journey,
+    distanceMutation
+  ) => {
+    const pickupCoords = formatCoordinates(journey.pickupCoords);
+
+    const dropoffCoords = (journey.dropoffs || [])
+      .map((address, index) =>
+        address?.trim()
+          ? formatCoordinates(journey.dropoffCoords?.[index])
+          : null
+      )
+      .filter(Boolean);
+
+    if (
+      !pickupCoords ||
+      !dropoffCoords.length ||
+      dropoffCoords.length !==
+      journey.dropoffs.filter(address => address?.trim()).length
+    ) {
+      return null;
+    }
+
+    const stops = [pickupCoords, ...dropoffCoords];
+
+    let totalMeters = 0;
+    const durations = [];
+    const legs = [];
+
+    for (let i = 0; i < stops.length - 1; i++) {
+      const origin = stops[i];
+      const destination = stops[i + 1];
+
+      const response = await new Promise((resolve, reject) => {
+        distanceMutation(
+          {
+            __endpoint__:
+              `${EndPoints.getDistance}` +
+              `?origin=${encodeURIComponent(origin)}` +
+              `&destinations=${encodeURIComponent(destination)}` +
+              `&companyId=${companyId}`,
+          },
+          {
+            onSuccess: resolve,
+            onError: reject,
+          }
+        );
+      });
+
+      totalMeters += Number(
+        response?.distanceValue ??
+        response?.totalDistanceValue ??
+        0
+      );
+
+      if (response?.durationText) {
+        durations.push(response.durationText);
+      }
+
+      legs.push(...(response?.legs || []));
+    }
+
+    const totalMiles = (totalMeters / 1000) * 0.621371;
+
+    return {
+      miles: totalMiles,
+      distanceText: `${totalMiles.toFixed(2)} miles`,
+      durationText: durations.join(" + "),
+      legs,
+    };
+  };
+
   useEffect(() => {
     if ((isCorporate || isSocialProvider) && user?.email) {
       setPassengerDetails(prev => ({
@@ -443,6 +581,18 @@ const NewBookingScreen = ({ route }) => {
 
       if (booking?.paymentMethod) {
         setSelectedPaymentMethod(booking.paymentMethod);
+      }
+      if (booking?.driverTip != null) {
+        setDriverTip(String(booking.driverTip));
+      }
+      if (booking?.voucher && booking?.voucherApplied !== false) {
+        setSelectedVoucherCode(booking.voucher);
+        setIsVoucherApplied(true);
+        appliedVoucher.current = vouchers.find(
+          item =>
+            item?.voucher?.toLowerCase() ===
+            booking.voucher.toLowerCase()
+        ) || null;
       }
 
       formikRef.current?.setFieldValue(
@@ -500,7 +650,7 @@ const NewBookingScreen = ({ route }) => {
 
     }
 
-  }, [booking]);
+  }, [booking, vouchersResponse]);
 
 
   useEffect(() => {
@@ -579,50 +729,79 @@ const NewBookingScreen = ({ route }) => {
   }, [bookingMode, mode, booking?.mode, hourlyData, selectedVehicle]);
 
   useEffect(() => {
-    const origin = journeyData.pickup?.trim();
-    const dropoffs = journeyData.dropoffs?.filter(d => d?.trim());
+    let cancelled = false;
 
-    if (!origin || !dropoffs?.length || !companyId) return;
+    const calculateDistance = async () => {
+      try {
+        const result = await calculateMultiStopDistance(
+          journeyData,
+          getDistance
+        );
 
-    const destinations = dropoffs.join("|");
+        if (cancelled || !result) return;
 
-    const timer = setTimeout(() => {
-      getDistance({
-        __endpoint__: `${EndPoints.getDistance}?origin=${encodeURIComponent(origin)}
-      &destinations=${encodeURIComponent(destinations)}
-      &companyId=${encodeURIComponent(companyId)}`
-      });
-    }, 800);
+        setTripDistance(result.miles);
+        setDistanceText(result.distanceText);
+        setDurationText(result.durationText);
+        setRouteLegs(result.legs);
+      } catch (error) {
+        console.log("Multi-stop distance error:", error);
+      }
+    };
 
-    return () => clearTimeout(timer);
-  }, [journeyData.pickup, journeyData.dropoffs, companyId]);
+    calculateDistance();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    journeyData.pickupCoords,
+    journeyData.dropoffCoords,
+    journeyData.dropoffs,
+    companyId,
+    getDistance,
+  ]);
 
   useEffect(() => {
-    const origin = returnJourneyData.pickup?.trim();
-    const dropoffs = returnJourneyData.dropoffs?.filter(d => d?.trim());
+    let cancelled = false;
 
-    if (!origin || !dropoffs?.length || !companyId) return;
+    const calculateReturnDistance = async () => {
+      try {
+        const result = await calculateMultiStopDistance(
+          returnJourneyData,
+          getReturnDistance
+        );
 
-    const destinations = dropoffs.join("|");
+        if (cancelled || !result) return;
 
-    const timer = setTimeout(() => {
-      getReturnDistance({
-        __endpoint__: `${EndPoints.getDistance}?origin=${encodeURIComponent(origin)}
-      &destinations=${encodeURIComponent(destinations)}
-      &companyId=${encodeURIComponent(companyId)}`
-      });
-    }, 800);
+        setReturnTripDistance(result.miles);
+        setReturnDistanceText(result.distanceText);
+        setReturnDurationText(result.durationText);
+        setReturnRouteLegs(result.legs);
+      } catch (error) {
+        console.log("Return multi-stop distance error:", error);
+      }
+    };
 
-    return () => clearTimeout(timer);
-  }, [returnJourneyData.pickup, returnJourneyData.dropoffs, companyId]);
+    calculateReturnDistance();
 
-  const applyGeneralCharges = (baseFare, journeyDataParam = journeyData) => {
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    returnJourneyData.pickupCoords,
+    returnJourneyData.dropoffCoords,
+    returnJourneyData.dropoffs,
+    companyId,
+    getReturnDistance,
+  ]);
+
+  const applyGeneralCharges = (
+    baseFare,
+    journeyDataParam = journeyData,
+    includeVoucher = true
+  ) => {
     let total = Number(baseFare || 0);
-
-    const vehiclePercent =
-      Number(selectedVehicle?.percentageIncrease || 0);
-
-    total += (total * vehiclePercent) / 100;
 
     const currentExtras = vehicleExtras[selectedVehicle?._id] || {
       passenger: 0,
@@ -660,17 +839,18 @@ const NewBookingScreen = ({ route }) => {
       extraStops *
       Number(generalData?.minAdditionalDropOff || 0);
 
-    // tax
-    // const tax =
-    //   Number(generalData?.invoiceTaxPercent || 0);
+    total += calculateExtrasFare();
 
-    // total += (total * tax) / 100;
-
-    return Number(total.toFixed(2));
+    total = Math.max(total, 0);
+    return Number(
+      (includeVoucher ? applyVoucherDiscount(total) : total).toFixed(2)
+    );
   };
 
   const calculateSlabFare = (distance, slabs = []) => {
-    let remainingDistance = Number(distance);
+    const fareDistance =
+      Math.floor(Number(distance || 0) * 10) / 10;
+    let remainingDistance = fareDistance;
     let totalFare = 0;
 
     for (let i = 0; i < slabs.length; i++) {
@@ -718,8 +898,6 @@ const NewBookingScreen = ({ route }) => {
       const allowedDistance = Number(selectedHourly.distance || 0);
       const actualDistance = Number(tripDistance || 0);
 
-      let hourlyWarning = "";
-
       if (actualDistance > allowedDistance) {
         const allowedDistance = Number(selectedHourly.distance || 0);
         const allowedHours = Number(selectedHourly.hours || 0);
@@ -761,14 +939,13 @@ const NewBookingScreen = ({ route }) => {
     const dropoffAddress =
       journeyData.dropoffs.find(d => d?.trim())?.toLowerCase() || "";
 
-    const pickupPostcode = extractPostcode(journeyData.pickup, postCodePriceData);
+    const pickupPostcode = extractPostcode(journeyData.pickup);
     const dropoffPostcode = extractPostcode(
-      journeyData.dropoffs.find(d => d?.trim()),
-      postCodePriceData
+      journeyData.dropoffs.find(d => d?.trim())
     );
 
     if (pickupPostcode && dropoffPostcode) {
-      const matchedRoute = postCodePriceData?.find(item =>
+      const matchedRoute = postcodePrices.find(item =>
         (item.pickup === pickupPostcode && item.dropoff === dropoffPostcode) ||
         (item.pickup === dropoffPostcode && item.dropoff === pickupPostcode)
       );
@@ -805,12 +982,7 @@ const NewBookingScreen = ({ route }) => {
       }
     }
 
-    let totalMiles = routeLegs?.length > 0
-      ? routeLegs.reduce((sum, leg) => {
-        const km = leg.distanceValue / 1000;
-        return sum + (km * 0.621371);
-      }, 0)
-      : tripDistance;
+    const totalMiles = tripDistance;
 
     // console.log("TOTAL MILES:", totalMiles);
     // console.log("SLABS:", selectedVehicle?.slabs);
@@ -866,14 +1038,13 @@ const NewBookingScreen = ({ route }) => {
     const dropoffAddress =
       returnJourneyData.dropoffs.find(d => d?.trim())?.toLowerCase() || "";
 
-    const pickupPostcode = extractPostcode(returnJourneyData.pickup, postCodePriceData);
+    const pickupPostcode = extractPostcode(returnJourneyData.pickup);
     const dropoffPostcode = extractPostcode(
-      returnJourneyData.dropoffs.find(d => d?.trim()),
-      postCodePriceData
+      returnJourneyData.dropoffs.find(d => d?.trim())
     );
 
     if (pickupPostcode && dropoffPostcode) {
-      const matchedRoute = postCodePriceData?.find(item => {
+      const matchedRoute = postcodePrices.find(item => {
         const isForward =
           item.pickup === pickupPostcode &&
           item.dropoff === dropoffPostcode;
@@ -923,12 +1094,7 @@ const NewBookingScreen = ({ route }) => {
       }
     }
 
-    let totalMiles = returnRouteLegs?.length > 0
-      ? returnRouteLegs.reduce((sum, leg) => {
-        const km = leg.distanceValue / 1000;
-        return sum + (km * 0.621371);
-      }, 0)
-      : returnTripDistance;
+    const totalMiles = returnTripDistance;
 
     // console.log("RETURN TOTAL MILES:", totalMiles);
     // console.log("RETURN SLABS:", selectedVehicle?.slabs);
@@ -955,6 +1121,30 @@ const NewBookingScreen = ({ route }) => {
     if (!fareCalculated) {
       setReturnFare(0);
     }
+  };
+
+  const handleVoucherSelect = voucher => {
+    if (!isVoucherAvailable(voucher)) {
+      toastUtils.showError(
+        "Voucher unavailable",
+        "This voucher is expired or unavailable."
+      );
+      return;
+    }
+
+    appliedVoucher.current = voucher;
+    setSelectedVoucherCode(voucher.voucher);
+    setIsVoucherApplied(true);
+    calculateFare();
+    if (isReturnJourney) calculateReturnFare();
+  };
+
+  const handleVoucherRemove = () => {
+    appliedVoucher.current = null;
+    setSelectedVoucherCode("");
+    setIsVoucherApplied(false);
+    calculateFare();
+    if (isReturnJourney) calculateReturnFare();
   };
 
   const mapDropoffsToPrimaryJourney = (journeyData, fare, distanceText = "",
@@ -1038,9 +1228,14 @@ const NewBookingScreen = ({ route }) => {
     setShowReturnJourneyModal(false);
   };
 
-  const totalFare = isReturnJourney
-    ? Number(fare || 0) + Number(returnFare || 0)
-    : Number(fare || 0);
+  const totalFare =
+    (isReturnJourney
+      ? Number(fare || 0) + Number(returnFare || 0)
+      : Number(fare || 0)) +
+    (generalData?.driverTipEnabled ? Number(driverTip || 0) : 0);
+  const displayedFare =
+    Number(fare || 0) +
+    (generalData?.driverTipEnabled ? Number(driverTip || 0) : 0);
 
   const openStripePaymentSheet = async () => {
     try {
@@ -1063,7 +1258,7 @@ const NewBookingScreen = ({ route }) => {
         );
       });
 
-      console.log("PAYMENT API RESPONSE:", response);
+      // console.log("PAYMENT API RESPONSE:", response);
 
       const clientSecret = response?.clientSecret;
       const customerId = response?.customerId;
@@ -1131,7 +1326,7 @@ const NewBookingScreen = ({ route }) => {
         );
       });
 
-      console.log("PAYPAL CREATE ORDER RESPONSE:", createOrderResponse);
+      // console.log("PAYPAL CREATE ORDER RESPONSE:", createOrderResponse);
 
       const orderID =
         createOrderResponse?.orderID ||
@@ -1171,10 +1366,18 @@ const NewBookingScreen = ({ route }) => {
     }
   };
 
+  const getPaymentMethodLabel = (method) => {
+    if (String(method || "").toLowerCase() === "stripe") {
+      return "Pay Via Debit/Credit Card";
+    }
+
+    return method || "";
+  };
+
   const handlePaypalNavigation = async (navState) => {
     const url = navState?.url || "";
 
-    console.log("PAYPAL WEBVIEW URL:", url);
+    // console.log("PAYPAL WEBVIEW URL:", url);
 
     if (url.includes("paypal-success")) {
       try {
@@ -1194,7 +1397,7 @@ const NewBookingScreen = ({ route }) => {
           );
         });
 
-        console.log("PAYPAL CAPTURE RESPONSE:", captureResponse);
+        // console.log("PAYPAL CAPTURE RESPONSE:", captureResponse)
 
         const isPaid =
           captureResponse?.status === "COMPLETED" ||
@@ -1258,10 +1461,14 @@ const NewBookingScreen = ({ route }) => {
     selectedVehicle,
     vehicleExtras,
     postCodePriceData,
-    fixedData,
+    fixedResponse,
     selectedHourly,
-    hourlyData,
-    tripDistance
+    hourlyResponse,
+    tripDistance,
+    selectedVoucherCode,
+    selectedPaymentMethod,
+    generalResponse,
+    discountSurchargeResponse
   ]);
 
   useEffect(() => {
@@ -1273,12 +1480,17 @@ const NewBookingScreen = ({ route }) => {
     selectedVehicle,
     vehicleExtras,
     postCodePriceData,
-    fixedData,
+    fixedResponse,
     selectedHourly,
-    hourlyData,
+    hourlyResponse,
     isReturnJourney,
-    returnTripDistance
+    returnTripDistance,
+    selectedVoucherCode,
+    selectedPaymentMethod,
+    generalResponse,
+    discountSurchargeResponse
   ]);
+
 
   return (
     <Formik
@@ -1348,6 +1560,12 @@ const NewBookingScreen = ({ route }) => {
 
         const basePayload = {
           companyId: user?.companyId,
+          voucher: appliedVoucher.current ? selectedVoucherCode : "",
+          voucherApplied: Boolean(appliedVoucher.current),
+          driverTip: generalData?.driverTipEnabled
+            ? Number(driverTip || 0)
+            : 0,
+          totalBookingFare: Number(totalFare || 0),
           mode: bookingMode,
           hourlyWarning: hourlyWarning || "",
           ...(bookingMode === "Hourly" && selectedHourly?._id && { hourlyOption: selectedHourly._id }),
@@ -1370,7 +1588,7 @@ const NewBookingScreen = ({ route }) => {
           },
 
           paymentMethod:
-            selectedPaymentMethod === "Pay Via Debit/Credit Card"
+            selectedPaymentMethod === "Stripe"
               ? "stripe"
               : selectedPaymentMethod === "PayPal" ||
                 selectedPaymentMethod === "Pay Via PayPal"
@@ -1382,7 +1600,7 @@ const NewBookingScreen = ({ route }) => {
 
           if (
             selectedPaymentMethod ===
-            "Pay Via Debit/Credit Card"
+            "Stripe"
           ) {
 
             const paymentSuccess =
@@ -1420,7 +1638,7 @@ const NewBookingScreen = ({ route }) => {
               journeyFare: 0,
             };
 
-            console.log("Return Journey Edit Payload:", returnBody);
+            // console.log("Return Journey Edit Payload:", returnBody);
 
             await new Promise((resolve, reject) => {
               updateBookingMutate(
@@ -1558,217 +1776,308 @@ const NewBookingScreen = ({ route }) => {
             </TouchableOpacity>
           </View>
 
-          <View style={styles.midContainer}>
-            <ScrollView
-              showsVerticalScrollIndicator={false}
-              contentContainerStyle={{ paddingBottom: 30 }}
-              refreshControl={
-                <RefreshControl
-                  refreshing={refreshing}
-                  onRefresh={handleRefresh}
-                />
-              }
-            >
-              <View style={styles.tabsContainer}>
-                {TABS.map((tab) => {
-                  const isSelected = bookingMode === tab;
+          <KeyboardAwareScrollView
+            style={styles.midContainer}
+            contentContainerStyle={{
+              flexGrow: 1,
+              paddingBottom: 30,
+            }}
+            enableOnAndroid={true}
+            extraScrollHeight={190}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={handleRefresh}
+              />
+            }
+          >
+            <View style={styles.tabsContainer}>
+              {TABS.map((tab) => {
+                const isSelected = bookingMode === tab;
 
-                  return (
-                    <TouchableOpacity
-                      key={tab}
-                      style={[styles.tabButton, isSelected && styles.activeTab]}
-                      onPress={() => {
-                        setBookingMode(tab);
+                return (
+                  <TouchableOpacity
+                    key={tab}
+                    style={[styles.tabButton, isSelected && styles.activeTab]}
+                    onPress={() => {
+                      setBookingMode(tab);
 
-                        if (tab === "Transfer") {
-                          setSelectedHourly(null);
-                          setHourlyWarning("");
-                        }
+                      if (tab === "Transfer") {
+                        setSelectedHourly(null);
+                        setHourlyWarning("");
+                      }
 
-                        if (tab === "Hourly") {
-                          setFare(0);
-                        }
-                      }}
+                      if (tab === "Hourly") {
+                        setFare(0);
+                      }
+                    }}
+                  >
+                    <Text
+                      style={[styles.tabText, isSelected && styles.activeTabText]}
                     >
-                      <Text
-                        style={[styles.tabText, isSelected && styles.activeTabText]}
-                      >
-                        {tab}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-              <JourneyCard
-                journeyData={journeyData}
-                setJourneyData={setJourneyData}
-                fare={fare}
-                mode={bookingMode}
-                screenMode={mode}
-                booking={booking}
-                selectedHourly={selectedHourly}
-                setSelectedHourly={setSelectedHourly}
-                hourlyData={hourlyData}
-                colors={colors}
-                symbol={symbol}
-                errors={errors}
-                touched={touched}
-                companyId={companyId}
-                setFieldValue={setFieldValue}
-                setFieldTouched={setFieldTouched}
-                values={values}
-                validateForm={validateForm}
-                isReturnJourney={isReturnJourney}
-                setIsReturnJourney={setIsReturnJourney}
-                onOpenReturnModal={() => setShowReturnJourneyModal(true)}
-                hourlyWarning={hourlyWarning}
-                oldAddresses={suggestionsData?.suggestions || []}
-              />
+                      {tab}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+            <JourneyCard
+              journeyData={journeyData}
+              setJourneyData={setJourneyData}
+              fare={displayedFare}
+              mode={bookingMode}
+              screenMode={mode}
+              booking={booking}
+              selectedHourly={selectedHourly}
+              setSelectedHourly={setSelectedHourly}
+              hourlyData={hourlyData}
+              colors={colors}
+              symbol={symbol}
+              errors={errors}
+              touched={touched}
+              companyId={companyId}
+              setFieldValue={setFieldValue}
+              setFieldTouched={setFieldTouched}
+              values={values}
+              validateForm={validateForm}
+              isReturnJourney={isReturnJourney}
+              setIsReturnJourney={setIsReturnJourney}
+              onOpenReturnModal={() => setShowReturnJourneyModal(true)}
+              hourlyWarning={hourlyWarning}
+              oldAddresses={savedAddressSuggestions}
+            />
 
-              <VehicleSelection
-                vehicles={data || []}
-                selectedVehicle={selectedVehicle}
-                setSelectedVehicle={setSelectedVehicle}
-                vehicleExtras={vehicleExtras}
-                setVehicleExtras={setVehicleExtras}
-                colors={colors}
-                errors={errors}
-                touched={touched}
-                setFieldValue={setFieldValue}
-                setFieldTouched={setFieldTouched}
-              />
-              <CustomerInfo
-                passengerDetails={passengerDetails}
-                setPassengerDetails={(data) => {
-                  setPassengerDetails(data);
-                }}
-                colors={colors}
-                errors={errors}
-                touched={touched}
-                setFieldTouched={setFieldTouched}
-                setFieldValue={setFieldValue}
-                values={values}
-                validateForm={validateForm}
-                isCorporate={isCorporate}
-                isEmailLocked={isCorporate || isSocialProvider}
-              />
-            </ScrollView>
-          </View>
-          <View style={styles.paymentContainer}>
+            <VehicleSelection
+              vehicles={data || []}
+              selectedVehicle={selectedVehicle}
+              setSelectedVehicle={setSelectedVehicle}
+              vehicleExtras={vehicleExtras}
+              setVehicleExtras={setVehicleExtras}
+              colors={colors}
+              errors={errors}
+              touched={touched}
+              setFieldValue={setFieldValue}
+              setFieldTouched={setFieldTouched}
+            />
+            <CustomerInfo
+              passengerDetails={passengerDetails}
+              setPassengerDetails={(data) => {
+                setPassengerDetails(data);
+              }}
+              colors={colors}
+              errors={errors}
+              touched={touched}
+              setFieldTouched={setFieldTouched}
+              setFieldValue={setFieldValue}
+              values={values}
+              validateForm={validateForm}
+              isCorporate={isCorporate}
+              isEmailLocked={isCorporate || isSocialProvider}
+            />
+            <View style={styles.paymentContainer}>
 
-            <TouchableOpacity
-              activeOpacity={0.8}
-              onPress={() =>
-                setShowPaymentMethods(!showPaymentMethods)
-              }
-              style={styles.paymentHeader}
-            >
-              <View style={{ flex: 1 }}>
-                <Text style={styles.paymentTitle}>
-                  Select Payment Method
-                </Text>
-                {selectedPaymentMethod && (
-                  <Text style={[styles.paymentTitle, { marginTop: 4, fontSize: 14, fontWeight: "500", color: colors.gray600 || colors.gray }]}>
-                    {selectedPaymentMethod}
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={() =>
+                  setShowPaymentMethods(!showPaymentMethods)
+                }
+                style={styles.paymentHeader}
+              >
+                <View style={styles.paymentHeaderContent}>
+                  <Text style={styles.paymentTitle}>
+                    Select Payment Method
                   </Text>
-                )}
+                  {selectedPaymentMethod && (
+                    <Text style={styles.selectedPaymentMethod}>
+                      {getPaymentMethodLabel(selectedPaymentMethod)}
+                    </Text>
+                  )}
 
-                {isReturnJourney && (
-                  <Text style={{ marginTop: 6, fontSize: 12, color: colors.gray600 || colors.gray }}>
-                    Return included in primary payment
-                  </Text>
-                )}
-              </View>
+                  {isReturnJourney && (
+                    <Text style={styles.returnPaymentText}>
+                      Return included in primary payment
+                    </Text>
+                  )}
+                </View>
 
-              <View style={styles.paymentHeaderRight}>
+                <View style={styles.paymentHeaderRight}>
 
-                {showPaymentMethods ? (
-                  <Icons.ChevronUp
-                    size={20}
-                    color={colors.black}
-                  />
-                ) : (
-                  <Icons.ChevronDown
-                    size={20}
-                    color={colors.black}
-                  />
-                )}
-              </View>
-            </TouchableOpacity>
+                  {showPaymentMethods ? (
+                    <Icons.ChevronUp
+                      size={20}
+                      color={colors.black}
+                    />
+                  ) : (
+                    <Icons.ChevronDown
+                      size={20}
+                      color={colors.black}
+                    />
+                  )}
+                </View>
+              </TouchableOpacity>
 
-            {showPaymentMethods && (
-              <View style={styles.paymentCard}>
+              {showPaymentMethods && (
+                <View style={styles.paymentCard}>
 
-                {enabledPaymentMethods.map((item, index) => {
+                  {enabledPaymentMethods.map((item, index) => {
 
-                  const isSelected =
-                    selectedPaymentMethod === item.customName;
+                    const isSelected =
+                      getPaymentMethodLabel(selectedPaymentMethod) === getPaymentMethodLabel(item.customName);
 
-                  return (
-                    <TouchableOpacity
-                      key={item.paymentMethod}
-                      activeOpacity={0.8}
-                      onPress={() => {
-                        setSelectedPaymentMethod(
-                          item.customName
-                        );
+                    return (
+                      <TouchableOpacity
+                        key={item.paymentMethod}
+                        activeOpacity={0.8}
+                        onPress={() => {
+                          setSelectedPaymentMethod(
+                            String(item.paymentMethod || "").toLowerCase() === "stripe"
+                              ? "Stripe"
+                              : item.customName
+                          );
 
-                        setShowPaymentMethods(false);
-                      }}
-                      style={[
-                        styles.paymentItem,
-
-                        isSelected &&
-                        styles.paymentItemSelected,
-
-                        index === enabledPaymentMethods.length - 1 &&
-                        styles.paymentItemLast,
-                      ]}
-                    >
-                      <Text
+                          setShowPaymentMethods(false);
+                        }}
                         style={[
-                          styles.paymentText,
+                          styles.paymentItem,
 
                           isSelected &&
-                          styles.paymentTextSelected,
+                          styles.paymentItemSelected,
+
+                          index === enabledPaymentMethods.length - 1 &&
+                          styles.paymentItemLast,
                         ]}
                       >
-                        {item.customName}
-                      </Text>
+                        <Text
+                          style={[
+                            styles.paymentText,
+                            isSelected && styles.paymentTextSelected,
+                          ]}
+                        >
+                          {String(item.paymentMethod || "").toLowerCase() === "stripe"
+                            ? "Pay Via Debit/Credit Card"
+                            : item.customName}
+                        </Text>
 
-                      {isSelected ? (
-                        <Icons.CheckSquare
-                          size={22}
-                          color={colors.primary}
-                        />
-                      ) : (
-                        <Icons.Square
-                          size={22}
-                          color={colors.gray400}
-                        />
-                      )}
-                    </TouchableOpacity>
-                  );
-                })}
+                        {isSelected ? (
+                          <Icons.CheckSquare
+                            size={22}
+                            color={colors.primary}
+                          />
+                        ) : (
+                          <Icons.Square
+                            size={22}
+                            color={colors.gray400}
+                          />
+                        )}
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              )}
+
+              {generalData?.driverTipEnabled && (
+                <View style={styles.adjustmentSection}>
+                  <Text style={styles.adjustmentLabel}>Driver Tip</Text>
+                  <View style={styles.adjustmentRow}>
+                    <Text style={styles.currencyLabel}>£</Text>
+                    <TextInput
+                      value={driverTip}
+                      onChangeText={text => {
+                        if (text === "" || /^\d*\.?\d{0,2}$/.test(text)) {
+                          setDriverTip(text);
+                        }
+                      }}
+                      keyboardType="decimal-pad"
+                      placeholder="0.00"
+                      placeholderTextColor={colors.gray400 || "#9CA3AF"}
+                      style={styles.adjustmentInput}
+                    />
+                  </View>
+                </View>
+              )}
+
+              <View style={styles.adjustmentSection}>
+                <Text style={styles.adjustmentLabel}>Voucher</Text>
+                <View style={styles.voucherRow}>
+                  <TextInput
+                    value={selectedVoucherCode}
+                    onChangeText={text => {
+                      if (!appliedVoucher.current) {
+                        setSelectedVoucherCode(text.toUpperCase());
+                      }
+                    }}
+                    editable={!isVoucherApplied}
+                    placeholder="Enter voucher code"
+                    autoCapitalize="characters"
+                    placeholderTextColor={colors.gray400 || "#9CA3AF"}
+                    style={styles.voucherInput}
+                  />
+                  <TouchableOpacity
+                    disabled={
+                      !isVoucherApplied &&
+                      !vouchers.some(
+                        item =>
+                          item?.voucher?.toLowerCase() ===
+                          selectedVoucherCode.trim().toLowerCase() &&
+                          isVoucherAvailable(item)
+                      )
+                    }
+                    onPress={() => {
+                      if (isVoucherApplied) {
+                        handleVoucherRemove();
+                        return;
+                      }
+                      const voucher = vouchers.find(
+                        item =>
+                          item?.voucher?.toLowerCase() ===
+                          selectedVoucherCode.trim().toLowerCase()
+                      );
+                      handleVoucherSelect(voucher);
+                    }}
+                    style={[
+                      styles.voucherButton,
+                      !isVoucherApplied &&
+                      !vouchers.some(
+                        item =>
+                          item?.voucher?.toLowerCase() ===
+                          selectedVoucherCode.trim().toLowerCase() &&
+                          isVoucherAvailable(item)
+                      ) &&
+                      styles.voucherButtonDisabled,
+                    ]}
+                  >
+                    <Text style={styles.voucherButtonText}>
+                      {isVoucherApplied ? "Remove" : "Apply"}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
               </View>
-            )}
-          </View>
+            </View>
 
-          <View style={styles?.buttonContainer}>
-            <TouchableOpacity activeOpacity={0.7} style={styles?.button} onPress={handleSubmit}>
-              <Text style={styles?.activeTabText}>{mode === "edit" ? "Update Booking" : "Create Booking"}</Text>
-            </TouchableOpacity>
-          </View>
+            <View style={styles?.buttonContainer}>
+              <TouchableOpacity
+                activeOpacity={0.8}
+                style={styles.submitButton}
+                onPress={handleSubmit}
+              >
+                <Text style={styles.activeTabText}>
+                  {mode === "edit" ? "Update Booking" : "Submit Booking"}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </KeyboardAwareScrollView>
 
           <ReturnJourneyModal
             visible={showReturnJourneyModal}
             onClose={handleCloseReturnModal}
+            selectedCompanyId={companyId}
             returnJourneyData={returnJourneyData}
             setReturnJourneyData={setReturnJourneyData}
             colors={colors}
             symbol={symbol}
             returnFare={returnFare}
-            selectedCompanyId={companyId}
             primaryJourneyData={journeyData}
           />
 

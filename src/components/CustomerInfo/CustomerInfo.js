@@ -78,10 +78,7 @@ const CustomerInfo = ({ passengerDetails, setPassengerDetails, colors, role, vat
     }, [passengerDetails?.phone, isPhoneInitialized]);
 
     return (
-        <KeyboardAwareScrollView
-            enableOnAndroid
-            keyboardShouldPersistTaps="handled"
-            extraScrollHeight={110}
+        <View
             contentContainerStyle={{ flexGrow: 1 }}
         >
             <View style={styles.card}>
@@ -127,12 +124,16 @@ const CustomerInfo = ({ passengerDetails, setPassengerDetails, colors, role, vat
                             </Text>
                         </View>
 
-                        <View style={styles.inputRow}>
+                        <View
+                            style={styles.inputRow}
+                        >
                             <Icons.Mail size={18} color="#666" />
 
                             <TextInput
                                 ref={emailInputRef}
-                                style={styles.input}
+                                style={[
+                                    styles.input,
+                                ]}
                                 value={
                                     passengerDetails.email ||
                                     (isCorporate ? "" : "")
@@ -204,7 +205,7 @@ const CustomerInfo = ({ passengerDetails, setPassengerDetails, colors, role, vat
                     )}
                 </View>
             </View>
-        </KeyboardAwareScrollView>
+        </View>
     );
 };
 

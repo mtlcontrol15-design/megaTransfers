@@ -11,19 +11,46 @@ const LocationSearchModal = ({ visible, onClose, searchText, setSearchText, onSe
     const [loading, setLoading] = useState(false);
     const timer = useRef(null);
 
-    // console.log('Selected Company ID in LocationSearchModal:', selectedCompanyId);
-
     const oldAddressItems = (oldAddresses || [])
+        .map((address, idx) => {
+            const description =
+                typeof address === "string"
+                    ? address
+                    : address?.label ||
+                    address?.value ||
+                    address?.formatted_address ||
+                    address?.description ||
+                    address?.name ||
+                    address?.address ||
+                    address?.suggestion ||
+                    address?.text ||
+                    address?.pickup ||
+                    address?.dropoff ||
+                    "";
+
+            return {
+                id: `old-${idx}-${description}`,
+                description,
+                coordinates:
+                    address?.location ||
+                    address?.coordinates ||
+                    address?.pickupCoordinates ||
+                    address?.dropoffCoordinates ||
+                    null,
+                isAirport:
+                    address?.source?.toLowerCase?.().includes("airport") ||
+                    description.toLowerCase().includes("airport"),
+                city: address?.city || "",
+                state: address?.state || "",
+                postcode: address?.postcode || "",
+            };
+        })
         .filter((addr) => {
             if (!searchText || !searchText.trim()) return true;
-            return addr.toLowerCase().includes(searchText.toLowerCase());
-        })
-        .map((addr, idx) => ({
-            id: `old-${idx}-${addr}`,
-            description: addr,
-            coordinates: null,
-            isAirport: addr.toLowerCase().includes("airport"),
-        }));
+            return addr.description
+                .toLowerCase()
+                .includes(searchText.toLowerCase());
+        });
 
     const debounce = (func, delay) => {
         let timerId;
@@ -48,19 +75,44 @@ const LocationSearchModal = ({ visible, onClose, searchText, setSearchText, onSe
             setLoading(true);
 
             const url = `${API_CONFIG.BASE_URL}${EndPoints.suggetionsAPI}input=${encodeURIComponent(query)}&&companyId=${selectedCompanyId}`;
-            // console.log('Fetching suggestions from URL:', url);
+
+            // console.log("FETCHING PLACES URL:", url);
 
             const res = await fetch(url);
 
             const data = await res.json();
 
-            // console.log('=======data is here', data);
+            // console.log(
+            //     "AUTOCOMPLETE RESPONSE:",
+            //     JSON.stringify(data, null, 2)
+            // );
 
 
-            const formatted = (data?.predictions || []).map(item => ({
-                id: item.place_id || item.name,
-                description: item.formatted_address || item.name,
+            const responseItems = [
+                data?.suggestions,
+                data?.predictions,
+                data?.data?.suggestions,
+                data?.data?.predictions,
+                data,
+            ].find(Array.isArray) || [];
+
+            const formatted = responseItems.map(item => ({
+                id:
+                    item.place_id ||
+                    item.id ||
+                    item.label ||
+                    item.value,
+                placeId: item.place_id || item.id,
+                description:
+                    item.label ||
+                    item.value ||
+                    item.formatted_address ||
+                    item.description ||
+                    item.name,
                 coordinates: item.location || null,
+                city: item.city || "",
+                state: item.state || "",
+                postcode: item.postcode || "",
                 isAirport: item.source?.includes("airport"),
             }));
 
@@ -81,18 +133,30 @@ const LocationSearchModal = ({ visible, onClose, searchText, setSearchText, onSe
 
     useEffect(() => {
         debouncedSearch(searchText);
-    }, [searchText]);
+    }, [debouncedSearch, searchText]);
+
+    const handleClose = () => {
+        setSearchText("");
+        setSuggestions([]);
+        setLoading(false);
+        onClose?.();
+    };
 
     const handleSelect = (item) => {
         onSelect({
             description: item.description,
             coordinates: item.coordinates,
-            isAirport: item.isAirport
+            isAirport: item.isAirport,
+            city: item.city || "",
+            state: item.state || "",
+            postcode: item.postcode || "",
         });
+        setSearchText("");
+        setSuggestions([]);
     };
 
     return (
-        <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
+        <Modal visible={visible} animationType="slide" transparent onRequestClose={handleClose}>
             <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "flex-end" }}>
 
                 <View style={{
@@ -115,7 +179,7 @@ const LocationSearchModal = ({ visible, onClose, searchText, setSearchText, onSe
                             {field?.field === "pickup" ? "Pickup Location" : field?.field === "dropoff" ? "Dropoff Location" : "Search Address"}
                         </Text>
 
-                        <TouchableOpacity onPress={onClose}>
+                        <TouchableOpacity onPress={handleClose}>
                             <Icons.X size={24} color={'white'} />
                         </TouchableOpacity>
                     </View>
@@ -132,15 +196,37 @@ const LocationSearchModal = ({ visible, onClose, searchText, setSearchText, onSe
 
                             <TextInput
                                 value={searchText}
-                                onChangeText={setSearchText}
+                                onChangeText={text => {
+                                    setSearchText(text);
+                                    if (!text.trim()) {
+                                        setSuggestions([]);
+                                    }
+                                }}
                                 placeholder="Search address"
                                 placeholderTextColor={colors.gray300}
                                 style={{ flex: 1, marginLeft: 8, color: colors.text }}
                             />
 
-                            {loading && (
-                                <ActivityIndicator size="small" />
-                            )}
+                            {loading ? (
+                                <ActivityIndicator
+                                    size="small"
+                                    color={colors?.primary}
+                                />
+                            ) : searchText?.trim() ? (
+                                <TouchableOpacity
+                                    activeOpacity={0.7}
+                                    onPress={() => {
+                                        setSearchText("");
+                                        setSuggestions([]);
+                                        setLoading(false);
+                                    }}
+                                >
+                                    <Icons.X
+                                        size={18}
+                                        color={colors?.placeholder}
+                                    />
+                                </TouchableOpacity>
+                            ) : null}
                         </View>
                     </View>
                     <ScrollView style={{ paddingHorizontal: 16 }}>

@@ -66,14 +66,13 @@ const getStyles = (colors) =>
 
     activeTabText: {
       color: "#fff",
-      fontWeight: '500',
-      fontSize: moderateScale(14),
+      fontWeight: '500'
     },
     buttonContainer: {
       padding: moderateScale(16)
     },
     button: {
-      backgroundColor: colors?.bttonColor,
+      backgroundColor: colors?.primary,
       justifyContent: 'center',
       alignItems: 'center',
       borderRadius: moderateScale(8),
@@ -133,9 +132,100 @@ const getStyles = (colors) =>
     paymentHeader: {
       flexDirection: 'row',
       justifyContent: 'space-between',
-      alignItems: 'center',
-      marginVertical: verticalScale(8),
-    }
+      alignItems: 'flex-start',
+    },
+
+    paymentHeaderContent: {
+      flex: 1,
+    },
+
+    selectedPaymentMethod: {
+      marginTop: verticalScale(4),
+      fontSize: moderateScale(14),
+      fontWeight: "500",
+      color: colors.gray600 || colors.gray,
+    },
+
+    returnPaymentText: {
+      marginTop: verticalScale(6),
+      fontSize: moderateScale(12),
+      lineHeight: moderateScale(17),
+      color: colors.gray600 || colors.gray,
+    },
+
+    adjustmentSection: {
+      marginTop: verticalScale(10),
+    },
+
+    adjustmentLabel: {
+      fontSize: moderateScale(14),
+      fontWeight: "600",
+      color: colors.black,
+      marginBottom: verticalScale(6),
+    },
+
+    adjustmentRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      borderWidth: 1,
+      borderColor: colors.gray200,
+      borderRadius: moderateScale(8),
+      backgroundColor: colors.white,
+    },
+
+    currencyLabel: {
+      paddingLeft: moderateScale(12),
+      color: colors.gray600 || colors.gray,
+    },
+
+    adjustmentInput: {
+      flex: 1,
+      paddingHorizontal: moderateScale(8),
+      paddingVertical: verticalScale(9),
+      color: colors.black,
+    },
+
+    voucherRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: moderateScale(8),
+    },
+
+    voucherInput: {
+      flex: 1,
+      borderWidth: 1,
+      borderColor: colors.gray200,
+      borderRadius: moderateScale(8),
+      backgroundColor: colors.white,
+      paddingHorizontal: moderateScale(12),
+      paddingVertical: verticalScale(9),
+      color: colors.black,
+    },
+
+    voucherButton: {
+      backgroundColor: colors.primary,
+      borderRadius: moderateScale(8),
+      paddingHorizontal: moderateScale(14),
+      paddingVertical: verticalScale(10),
+    },
+
+    voucherButtonDisabled: {
+      opacity: 0.45,
+    },
+
+    voucherButtonText: {
+      color: colors.white,
+      fontWeight: "600",
+    },
+
+    submitButton: {
+      margin: verticalScale(10),
+      paddingVertical: verticalScale(14),
+      backgroundColor: colors?.primary || "#2563EB",
+      borderRadius: moderateScale(8),
+      alignItems: "center",
+      justifyContent: "center",
+    },
   });
 
 export default getStyles;

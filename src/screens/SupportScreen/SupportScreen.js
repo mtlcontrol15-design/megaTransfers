@@ -7,6 +7,7 @@ import { useSelector } from "react-redux";
 import { EndPoints } from "../../services/EndPoints";
 import { formatPhoneWithPlus } from "../../utils/phoneUtils";
 import queryHandler from "../../services/queries/queryHandler";
+import { formatInternationalPhone } from "../../utils/internationalPhone";
 
 
 const SupportScreen = ({ navigation }) => {
@@ -159,7 +160,7 @@ const SupportScreen = ({ navigation }) => {
                   <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
                     <Icons.Phone size={18} color={colors.gray600} />
                     <Text style={{ color: colors.text }}>
-                      {formatPhoneWithPlus(companyInfo.contact)}
+                      {formatInternationalPhone(companyInfo.contact) || "No Phone"}
                     </Text>
                   </View>
                 )}

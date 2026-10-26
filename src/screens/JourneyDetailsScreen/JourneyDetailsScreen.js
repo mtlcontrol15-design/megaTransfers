@@ -10,6 +10,7 @@ import Icons from "../../assets/icons";
 import { getSocket } from "../../services/socket";
 import { EndPoints } from "../../services/EndPoints";
 import queryHandler from "../../services/queries/queryHandler";
+import { formatInternationalPhone } from "../../utils/internationalPhone";
 import { formatPhoneWithPlus, getDialableNumber } from "../../utils/phoneUtils";
 
 const JourneyDetailsScreen = ({ route, navigation }) => {
@@ -44,6 +45,43 @@ const JourneyDetailsScreen = ({ route, navigation }) => {
     : finalData?.primaryJourney || {};
 
   // console.log('=====journey  data is here', journey);
+
+  const currencySymbol = finalData?.currency?.symbol || "£";
+
+  const baseFare = Number(
+    journey?.fare ??
+    (finalData?.returnJourneyToggle
+      ? finalData?.returnJourneyFare
+      : finalData?.journeyFare) ??
+    0
+  );
+
+  const driverTip = Number(finalData?.driverTip || 0);
+
+  const driverFare = Number(
+    finalData?.returnJourneyToggle
+      ? finalData?.returnDriverFare ?? finalData?.driverFare ?? 0
+      : finalData?.driverFare ?? 0
+  );
+
+  const totalFare = baseFare + driverTip;
+
+  const DetailRow = ({ label, value }) => {
+    if (
+      value === undefined ||
+      value === null ||
+      String(value).trim() === ""
+    ) {
+      return null;
+    }
+
+    return (
+      <View style={styles.detailRow}>
+        <Text style={styles.detailLabel}>{label}</Text>
+        <Text style={styles.detailValue}>{String(value)}</Text>
+      </View>
+    );
+  };
 
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
@@ -328,31 +366,29 @@ const JourneyDetailsScreen = ({ route, navigation }) => {
                 {journey?.pickup || "Not specified"}
               </Text>
 
-              {journey?.pickupDoorNumber && (
+              <DetailRow
+                label="Pickup Door No."
+                value={journey?.pickupDoorNumber}
+              />
+
+              <DetailRow
+                label="Arriving From"
+                value={journey?.arrivefrom}
+              />
+
+              <DetailRow
+                label="Pickup Terminal"
+                value={journey?.terminal}
+              />
+
+              <DetailRow
+                label="Pick Me After"
+                value={journey?.pickmeAfter}
+              />
+              {journey?.flightNumber && (
                 <Text style={styles.locationSub}>
-                  Door No: {journey.pickupDoorNumber}
+                  <Text style={[styles.locationSub, { color: colors.primary, fontWeight: '600' }]}>Flight : </Text>{journey.flightNumber}
                 </Text>
-              )}
-
-              {isAirport(journey?.pickup) && (
-                <>
-                  {journey?.flightNumber && (
-                    <Text style={styles.locationSub}>
-                      <Text style={[styles.locationSub, { color: colors.primary, fontWeight: '600' }]}>Flight : </Text>{journey.flightNumber}
-                    </Text>
-                  )}
-
-                  {journey?.arrivefrom && (
-                    <Text style={styles.locationSub}>
-                      <Text style={[styles.locationSub, { color: colors.primary, fontWeight: '600' }]}>Arriving from : </Text>{journey.arrivefrom}
-                    </Text>
-                  )}
-                  {journey?.pickmeAfter && (
-                    <Text style={styles.locationSub}>
-                      <Text style={[styles.locationSub, { color: colors.primary, fontWeight: '600' }]}>Pick me after : </Text>{journey.pickmeAfter}
-                    </Text>
-                  )}
-                </>
               )}
             </View>
             <View style={[styles.locationRow, { marginTop: 20 }]}>
@@ -368,17 +404,18 @@ const JourneyDetailsScreen = ({ route, navigation }) => {
                 {journey?.dropoff || "Not specified"}
               </Text>
 
-              {journey?.dropoffDoorNumber && (
-                <Text style={styles.locationSub}>
-                  Door No: {journey.dropoffDoorNumber}
-                </Text>
-              )}
+              <DetailRow
+                label="Door No."
+                value={
+                  journey?.dropoffDoorNumber0 ??
+                  journey?.dropoffDoorNumber
+                }
+              />
 
-              {isAirport(journey?.dropoff) && journey?.terminal && (
-                <Text style={styles.locationSub}>
-                  Terminal: {journey.terminal}
-                </Text>
-              )}
+              <DetailRow
+                label="Terminal"
+                value={journey?.dropoff_terminal_0}
+              />
             </View>
 
             {[journey?.additionalDropoff1, journey?.additionalDropoff2, journey?.additionalDropoff3, journey?.additionalDropoff4].map(
@@ -399,6 +436,31 @@ const JourneyDetailsScreen = ({ route, navigation }) => {
                       <Text style={styles.locationText}>
                         {additionalDropoff}
                       </Text>
+
+                      <DetailRow
+                        label="Door No."
+                        value={journey?.[`dropoffDoorNumber${index + 1}`]}
+                      />
+
+                      <DetailRow
+                        label="Terminal"
+                        value={journey?.[`dropoff_terminal_${index + 1}`]}
+                      />
+                    </View>
+                    <View style={styles.journeyMetricsContainer}>
+                      <Text style={styles.journeyMetricsTitle}>
+                        Journey Information
+                      </Text>
+
+                      <DetailRow
+                        label="Total Distance"
+                        value={journey?.distanceText}
+                      />
+
+                      <DetailRow
+                        label="Journey Duration"
+                        value={journey?.durationText}
+                      />
                     </View>
                   </View>
                 ) : null
@@ -515,9 +577,7 @@ const JourneyDetailsScreen = ({ route, navigation }) => {
                     />
 
                     <Text style={styles.linkText}>
-                      {formatPhoneWithPlus(
-                        assignedDriver?.contact
-                      )}
+                      {formatInternationalPhone(assignedDriver?.contact) || "No Phone"}
                     </Text>
 
                   </TouchableOpacity>
@@ -603,7 +663,7 @@ const JourneyDetailsScreen = ({ route, navigation }) => {
             >
               <Icons.Phone size={20} color={colors.text} />
               <Text style={styles.linkText}>
-                {formatPhoneWithPlus(finalData?.passenger?.phone) || "No Phone"}
+                {formatInternationalPhone(finalData?.passenger?.phone) || "No Phone"}
               </Text>
             </TouchableOpacity>
           </View>
@@ -700,21 +760,36 @@ const JourneyDetailsScreen = ({ route, navigation }) => {
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Fare Summary</Text>
 
-            <View style={styles.rowBetween}>
+            {/* Base Fare */}
+            <View style={styles.fareRow}>
               <Text style={styles.fareLabel}>Base Fare</Text>
-
               <Text style={styles.fareValue}>
-                {finalData?.currency?.symbol || "£"}
-                {Number(finalData?.primaryJourney?.fare || finalData?.returnJourney?.fare || 0).toFixed(2)}
+                {currencySymbol}{baseFare.toFixed(2)}
               </Text>
             </View>
 
+            {/* Driver Tip */}
+            <View style={styles.fareRow}>
+              <Text style={styles.fareLabel}>Driver Tip</Text>
+              <Text style={styles.fareValue}>
+                {currencySymbol}{driverTip.toFixed(2)}
+              </Text>
+            </View>
+
+            {/* Driver Fare - Display Only */}
+            {/* <View style={styles.fareRow}>
+              <Text style={styles.fareLabel}>Driver Fare</Text>
+              <Text style={styles.fareValue}>
+                {currencySymbol}{driverFare.toFixed(2)}
+              </Text>
+            </View> */}
+
+            {/* Total = Base Fare + Driver Tip */}
             <View style={styles.totalRow}>
               <Text style={styles.totalLabel}>Total</Text>
 
-              <Text style={styles.fareValue}>
-                {finalData?.currency?.symbol || "£"}
-                {Number(finalData?.primaryJourney?.fare || finalData?.returnJourney?.fare || 0).toFixed(2)}
+              <Text style={styles.totalValue}>
+                {currencySymbol}{totalFare.toFixed(2)}
               </Text>
             </View>
 

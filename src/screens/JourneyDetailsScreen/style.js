@@ -289,6 +289,54 @@ const getStyles = (colors) =>
       borderRadius: moderateScale(4),
       backgroundColor: colors?.primary + "20",
     },
+    detailRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "flex-start",
+      marginTop: verticalScale(8),
+      paddingVertical: verticalScale(4),
+      gap: moderateScale(12),
+    },
+
+    detailLabel: {
+      fontSize: moderateScale(12),
+      fontWeight: "500",
+      color: colors.gray600,
+      flex: 1,
+    },
+
+    detailValue: {
+      fontSize: moderateScale(12),
+      fontWeight: "600",
+      color: colors.text,
+      flex: 1.4,
+      textAlign: "right",
+      lineHeight: moderateScale(18),
+    },
+
+    journeyMetricsContainer: {
+      marginTop: verticalScale(18),
+      padding: moderateScale(12),
+      backgroundColor: colors.bg,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: moderateScale(10),
+    },
+
+    journeyMetricsTitle: {
+      fontSize: moderateScale(14),
+      fontWeight: "700",
+      color: colors.text,
+      marginBottom: verticalScale(8),
+    },
+    fareRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      paddingVertical: verticalScale(8),
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
   });
 
 export default getStyles;

@@ -213,7 +213,7 @@ const JourneyCard = ({
         }));
     };
 
-    const isAirportSelected = journeyData.pickupIsAirport || journeyData.dropoffIsAirport;
+    const isAirportSelected = journeyData.pickupIsAirport;
     const lastDropoffFilled = journeyData.dropoffs[journeyData.dropoffs.length - 1]?.trim() !== "";
     const canAddDropoff = lastDropoffFilled && journeyData.dropoffs.length < MAX_DROPOFFS;
     const pickupSelected = values.pickup && values.pickup.trim() !== "";
@@ -396,9 +396,9 @@ const JourneyCard = ({
                         </Text>
 
                         {showPackages ? (
-                            <Icons.ChevronUp size={18} color={colors.primary} />
+                            <Icons.ChevronUp size={18} color={colors.black} />
                         ) : (
-                            <Icons.ChevronDown size={18} color={colors.primary} />
+                            <Icons.ChevronDown size={18} color={colors.black} />
                         )}
                     </TouchableOpacity>
 
@@ -418,7 +418,7 @@ const JourneyCard = ({
                                     borderColor: isSelected ? colors.primary : colors?.gray200,
                                     borderRadius: moderateScale(8),
                                     marginBottom: 8,
-                                    backgroundColor: isSelected ? colors?.primary : "#fff"
+                                    backgroundColor: isSelected ? colors?.black : "#fff"
                                 }}
                             >
                                 <Text style={{ fontWeight: "bold", color: isSelected ? colors?.white : colors?.black }}>
@@ -549,8 +549,8 @@ const JourneyCard = ({
                                         placeholder="Enter Minutes"
                                         placeholderTextColor={colors.gray300}
                                         style={[styles.input, { textAlign: "center" }]}
-                                        keyboardType="number-pad"
-                                        maxLength={3}
+                                        // keyboardType="number-pad"
+                                        maxLength={100}
                                     />
                                 </View>
                             </View>
@@ -564,7 +564,8 @@ const JourneyCard = ({
                                 placeholder="Door / House No."
                                 placeholderTextColor={colors.gray300}
                                 style={styles.input}
-                                maxLength={10}
+                                maxLength={200}
+
                             />
                         </View>
                     )
@@ -691,7 +692,7 @@ const JourneyCard = ({
                                             placeholder="Door / House Number"
                                             placeholderTextColor={colors.gray300}
                                             style={styles.input}
-                                            maxLength={10}
+                                            maxLength={200}
                                         />
                                     </View>
                                 )}

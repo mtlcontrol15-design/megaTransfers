@@ -16,6 +16,7 @@ import { EndPoints } from "../../services/EndPoints";
 import queryHandler from "../../services/queries/queryHandler";
 import ExtrasModal from "../../components/ExtrasModal/ExtrasModal";
 import { dispatchOnlineStatus } from "../../redux/slices/userSlice";
+import { formatInternationalPhone } from "../../utils/internationalPhone";
 import { mutationHandler } from "../../services/mutations/mutationHandler";
 import JobsStatusModal from "../../components/JobsStatusModal/JobsStatusModal";
 import LocationDisclosureModal from "../../components/LocationDisclosureModal/LocationDisclosureModal";
@@ -841,7 +842,7 @@ const JobDetailsScreen = () => {
                         >
                             <View style={[styles.row, { marginTop: 0, gap: moderateScale(10) }]}>
                                 <Icons.Phone size={moderateScale(20)} color={colors?.gray200} />
-                                <Text style={styles.phoneText}>{formattedPhone || "—"}</Text>
+                                <Text style={styles.phoneText}>{formatInternationalPhone(booking?.passenger?.phone) || "—"}</Text>
                             </View>
 
                             {showPhoneOptions ? (

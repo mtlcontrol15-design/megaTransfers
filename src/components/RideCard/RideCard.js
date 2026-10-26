@@ -11,6 +11,7 @@ import ReviewModal from '../../components/ReviewModal/ReviewModal'
 import { Theme } from "../../libs";
 import { useDispatch, useSelector } from "react-redux";
 import { dispatchReviewedBooking } from "../../redux/slices/userSlice";
+import { formatInternationalPhone } from "../../utils/internationalPhone";
 import { isBookingReviewed, isReviewWindowOpen } from "../../utils/reviewUtils";
 
 
@@ -232,7 +233,7 @@ const RideCard = ({
             <View style={styles.phoneBox}>
               <Icons.Phone size={12} color={colors?.gray600} />
               <Text style={styles.phoneText}>
-                {formatPhone(ride?.passenger?.phone)}
+                {formatInternationalPhone(ride?.passenger?.phone) || "No Phone"}
               </Text>
             </View>
           </View>

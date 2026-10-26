@@ -302,7 +302,7 @@ const HomeScreen = () => {
   };
 
   const allNotifications =
-    notificationsData?.pages?.flatMap(page => page) ?? [];
+    notificationsData?.pages?.flatMap(page => page?.data ?? []) ?? [];
 
   const unreadCount = allNotifications.filter(n => !n.isRead).length;
 
