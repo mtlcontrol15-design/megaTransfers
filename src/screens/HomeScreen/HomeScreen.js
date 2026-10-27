@@ -1087,13 +1087,15 @@ const HomeScreen = () => {
       s.off("job:assigned", handleJobUpdated);
       s.off("job:updated", handleJobUpdated);
       s.off("booking:updated", handleBookingUpdated);
-      s.off("bid:updated", handleBidUpdated);
+      s.off("jobspool:new", handleBidUpdated);
+      s.off("jobspool:changed", handleBidUpdated);
       s.off("connect", handleSocketConnected);
 
       s.on("job:updated", handleJobUpdated);
       s.on("booking:updated", handleBookingUpdated);
       s.on("job:assigned", handleJobUpdated);
       s.on("jobspool:new", handleBidUpdated);
+      s.on("jobspool:changed", handleBidUpdated);
       s.on("connect", handleSocketConnected);
     };
 
@@ -1129,6 +1131,7 @@ const HomeScreen = () => {
         socket.off("job:updated", handleJobUpdated);
         socket.off("booking:updated", handleBookingUpdated);
         socket.off("jobspool:new", handleBidUpdated);
+        socket.off("jobspool:changed", handleBidUpdated);
         socket.off("connect", handleSocketConnected);
 
       }
