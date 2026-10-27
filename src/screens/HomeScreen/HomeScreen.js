@@ -73,7 +73,7 @@ const HomeScreen = () => {
   // console.log('=======user token is here',token);
   // console.log('========selected job is here', selectedJob);
   // console.log('home colors are here',colors);
-  // console.log('=======user refreshToken is here', refreshToken);
+  // console.log('========refresh token is here', refreshToken);
 
 
   const dispatch = useDispatch();
@@ -1058,6 +1058,7 @@ const HomeScreen = () => {
       if (isDriver) {
         scheduledJobsRefetch();
       }
+      bidDataRefetch();
     };
 
     const handleBookingUpdated = () => {
@@ -1066,17 +1067,34 @@ const HomeScreen = () => {
       } else {
         bookingsRefetch();
       }
+      bidDataRefetch();
     };
+
+    const handleBidUpdated = () => {
+      bidDataRefetch();
+    };
+
+
+    const handleSocketConnected = () => {
+      console.log("Socket connected - refreshing bid data");
+      bidDataRefetch();
+    };
+
+
 
     const attachSocketListeners = (s) => {
 
       s.off("job:assigned", handleJobUpdated);
       s.off("job:updated", handleJobUpdated);
       s.off("booking:updated", handleBookingUpdated);
+      s.off("bid:updated", handleBidUpdated);
+      s.off("connect", handleSocketConnected);
 
       s.on("job:updated", handleJobUpdated);
       s.on("booking:updated", handleBookingUpdated);
       s.on("job:assigned", handleJobUpdated);
+      s.on("jobspool:new", handleBidUpdated);
+      s.on("connect", handleSocketConnected);
     };
 
     if (socket) {
@@ -1107,25 +1125,19 @@ const HomeScreen = () => {
 
       if (socket) {
 
-        socket.off(
-          "job:assigned",
-          handleJobUpdated
-        );
-        socket.off(
-          "job:updated",
-          handleJobUpdated
-        );
+        socket.off("job:assigned", handleJobUpdated);
+        socket.off("job:updated", handleJobUpdated);
+        socket.off("booking:updated", handleBookingUpdated);
+        socket.off("jobspool:new", handleBidUpdated);
+        socket.off("connect", handleSocketConnected);
 
-        socket.off(
-          "booking:updated",
-          handleBookingUpdated
-        );
       }
     };
 
   }, [isDriver,
     scheduledJobsRefetch,
     bookingsRefetch,
+    bidDataRefetch,
   ]);
 
 
