@@ -10,7 +10,6 @@ import { moderateScale, scale, verticalScale } from "react-native-size-matters";
 import getStyles from "./style";
 import Icons from "../../assets/icons";
 import toastUtils from "../../utils/Toast/toast";
-import LoaderModal from "../../utils/loaderModal";
 import { getSocket } from "../../services/socket";
 import { EndPoints } from "../../services/EndPoints";
 import queryHandler from "../../services/queries/queryHandler";
@@ -161,7 +160,6 @@ const JobDetailsScreen = () => {
 
             if (socket) {
                 // Remove ONLY this screen listeners
-                socket.off("job:updated", handleJobUpdated);
                 socket.off("job:assigned", handleJobUpdated);
                 socket.off("booking:updated", handleBookingUpdated);
             }
@@ -595,6 +593,37 @@ const JobDetailsScreen = () => {
                 ? rawPhone
                 : `+${rawPhone}`
             : null;
+
+    const DetailRow = ({ label, value }) => {
+        if (!hasValue(value)) {
+            return null;
+        }
+
+        const formattedValue = String(value);
+        const isLongValue = formattedValue.length > 25;
+
+        return (
+            <View
+                style={[
+                    styles.detailRow,
+                    isLongValue && styles.detailRowColumn,
+                ]}
+            >
+                <Text style={styles.detailLabel}>
+                    {label}
+                </Text>
+
+                <Text
+                    style={[
+                        styles.detailValue,
+                        isLongValue && styles.detailValueFull,
+                    ]}
+                >
+                    {formattedValue}
+                </Text>
+            </View>
+        );
+    };
     return (
         <View style={styles.container}>
             <View style={styles.header}>
@@ -892,7 +921,7 @@ const JobDetailsScreen = () => {
                                 <TouchableOpacity
                                     activeOpacity={0.7}
                                     style={[
-                                        styles.row,
+                                        styles.phoneBtn,
                                         {
                                             marginTop: moderateScale(12),
                                             justifyContent: "center",
@@ -918,7 +947,7 @@ const JobDetailsScreen = () => {
                                 </TouchableOpacity>
                                 <TouchableOpacity
                                     style={[
-                                        styles.row,
+                                        styles.phoneBtn,
                                         {
                                             // marginTop: moderateScale(12),
                                             justifyContent: "center",
@@ -990,17 +1019,18 @@ const JobDetailsScreen = () => {
                                 </View>
 
                                 {hasValue(journey?.pickupDoorNumber) && (
-                                    <View style={{ marginTop: verticalScale(8) }}>
-                                        <Text style={styles.label}>Door Number</Text>
-                                        <Text style={styles.value}>{journey?.pickupDoorNumber}</Text>
-                                    </View>
+                                    <DetailRow
+                                        label="Door Number"
+                                        value={journey?.pickupDoorNumber}
+                                    />
                                 )}
 
                                 {hasValue(journey?.terminal) && (
-                                    <View style={{ marginTop: verticalScale(8) }}>
-                                        <Text style={styles.label}>Terminal</Text>
-                                        <Text style={styles.value}>{journey?.terminal}</Text>
-                                    </View>
+                                    <DetailRow
+                                        label="Terminal"
+                                        value={journey?.terminal}
+                                    />
+
                                 )}
                             </View>
                         </View>
@@ -1051,17 +1081,18 @@ const JobDetailsScreen = () => {
                                     </View>
 
                                     {hasValue(stop.doorNumber) && (
-                                        <View style={{ marginTop: verticalScale(8) }}>
-                                            <Text style={styles.label}>Door Number</Text>
-                                            <Text style={styles.value}>{stop.doorNumber}</Text>
-                                        </View>
+                                        <DetailRow
+                                            label="Door Number"
+                                            value={stop.doorNumber}
+                                        />
+
                                     )}
 
                                     {hasValue(stop.terminal) && (
-                                        <View style={{ marginTop: verticalScale(8) }}>
-                                            <Text style={styles.label}>Terminal</Text>
-                                            <Text style={styles.value}>{stop.terminal}</Text>
-                                        </View>
+                                        <DetailRow
+                                            label="Terminal"
+                                            value={stop.terminal}
+                                        />
                                     )}
                                 </View>
                             </View>
@@ -1393,7 +1424,7 @@ const JobDetailsScreen = () => {
                                                 style={{
                                                     fontSize: moderateScale(16),
                                                     fontWeight: "bold",
-                                                    color: colors?.white,
+                                                    color: colors?.lightBlue,
                                                     textDecorationLine: "underline",
                                                 }}
                                             >
@@ -1402,7 +1433,7 @@ const JobDetailsScreen = () => {
 
                                             <Icons.Search
                                                 size={moderateScale(16)}
-                                                color={colors?.white}
+                                                color={colors?.lightBlue}
                                                 style={{ marginLeft: scale(6) }}
                                             />
                                         </TouchableOpacity>
@@ -1432,8 +1463,10 @@ const JobDetailsScreen = () => {
                                         paddingLeft: scale(12),
                                     }}
                                 >
-                                    <Text style={styles.label}>Airport</Text>
-                                    <Text style={styles.value}>{journey?.dropoff_terminal_0 || journey?.terminal || "N/A"}</Text>
+                                    <DetailRow
+                                        label="Terminal"
+                                        value={journey?.terminal}
+                                    />
                                 </View>)}
                             </View>
 
@@ -1481,32 +1514,20 @@ const JobDetailsScreen = () => {
                                 </View>
                             </View>
 
-                            <View style={{ flexDirection: "row", marginTop: verticalScale(12) }}>
-                                {hasValue(journey?.arrivefrom) && (
-                                    <View style={{ flex: 1 }}>
-                                        <Text style={styles.label}>Arrive From</Text>
-                                        <Text style={styles.value}>{journey?.arrivefrom}</Text>
-                                    </View>
-                                )}
+                            {hasValue(journey?.arrivefrom) && (
+                                <DetailRow
+                                    label="Arrive From"
+                                    value={journey?.arrivefrom}
+                                />
 
-                                {hasValue(journey?.pickmeAfter) && (
-                                    <View
-                                        style={{
-                                            flex: 1,
-                                            marginLeft: hasValue(journey?.arrivefrom) ? scale(16) : 0,
-                                            borderLeftWidth: hasValue(journey?.arrivefrom) ? 1 : 0,
-                                            borderLeftColor: colors?.gray200,
-                                            paddingLeft: hasValue(journey?.arrivefrom) ? scale(12) : 0,
-                                        }}
-                                    >
-                                        <Text style={{ fontSize: moderateScale(11), color: colors?.gray500 }}>
-                                            Pick Me After
-                                        </Text>
+                            )}
 
-                                        <Text style={styles.value}>{journey?.pickmeAfter}</Text>
-                                    </View>
-                                )}
-                            </View>
+                            {hasValue(journey?.pickmeAfter) && (
+                                <DetailRow
+                                    label="Pick Me After"
+                                    value={journey?.pickmeAfter}
+                                />
+                            )}
                         </View>
                     )}
 
@@ -1514,21 +1535,6 @@ const JobDetailsScreen = () => {
                         <Text style={[styles.sectionTitle, { marginBottom: verticalScale(5) }]}>
                             Vehicle & Passenger Info
                         </Text>
-
-                        {/* <View style={styles.row}>
-                            <Icons.Car size={moderateScale(20)} color={colors?.lightText} />
-
-                            <Text
-                                style={[
-                                    styles.value,
-                                    { marginLeft: scale(10), fontWeight: "600" },
-                                ]}
-                            >
-                                {booking?.vehicle?.passenger > 1
-                                    ? "Multiple Passengers"
-                                    : "Single Passenger"}
-                            </Text>
-                        </View> */}
 
                         {hasValue(booking?.vehicle?.vehicleName) && (
                             <View style={[styles.row, { marginTop: verticalScale(12) }]}>
@@ -1569,14 +1575,6 @@ const JobDetailsScreen = () => {
                                 <Text style={[styles.label, { color: colors?.white, fontSize: moderateScale(10) }]}>HAND</Text>
                                 <Text style={styles.value1}>{booking?.vehicle?.handLuggage || 0}</Text>
                             </View>
-
-                            {/* {booking?.vehicle?.childSeat > 0 && (
-                                <View style={{ flex: 1, alignItems: "center" }}>
-                                    <Icons.Car size={moderateScale(16)} color={colors?.lightText} />
-                                    <Text style={styles.label}>CHILD</Text>
-                                    <Text style={styles.value}>{booking?.vehicle?.childSeat}</Text>
-                                </View>
-                            )} */}
 
                             {booking?.vehicle?.babySeat > 0 && (
                                 <View style={{ flex: 0, alignItems: "center" }}>

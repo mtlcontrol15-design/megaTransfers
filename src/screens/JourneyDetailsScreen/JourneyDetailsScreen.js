@@ -75,10 +75,29 @@ const JourneyDetailsScreen = ({ route, navigation }) => {
       return null;
     }
 
+    const formattedValue = String(value);
+
+    const isLongValue = formattedValue.length > 25;
+
     return (
-      <View style={styles.detailRow}>
-        <Text style={styles.detailLabel}>{label}</Text>
-        <Text style={styles.detailValue}>{String(value)}</Text>
+      <View
+        style={[
+          styles.detailRow,
+          isLongValue && styles.detailRowColumn,
+        ]}
+      >
+        <Text style={styles.detailLabel}>
+          {label}
+        </Text>
+
+        <Text
+          style={[
+            styles.detailValue,
+            isLongValue && styles.detailValueFull,
+          ]}
+        >
+          {formattedValue}
+        </Text>
       </View>
     );
   };
@@ -687,9 +706,9 @@ const JourneyDetailsScreen = ({ route, navigation }) => {
                     justifyContent: "space-around",
                     alignItems: "center",
                     paddingVertical: verticalScale(12),
-                    borderRadius: scale(8),
+                    borderRadius: scale(10),
                     paddingHorizontal: moderateScale(6),
-                    backgroundColor: colors?.bttonColor,
+                    backgroundColor: colors?.primary,
                   },
                 ]}
               >

@@ -112,7 +112,7 @@ const getStyles = (colors) => StyleSheet.create({
   },
   phoneBtn: {
     marginTop: verticalScale(10),
-    backgroundColor: colors?.bttonColor,
+    backgroundColor: colors?.primary,
     paddingHorizontal: scale(10),
     paddingVertical: verticalScale(6),
     borderRadius: scale(8),
@@ -149,7 +149,7 @@ const getStyles = (colors) => StyleSheet.create({
     alignItems: "center",
     marginTop: verticalScale(8),
     gap: moderateScale(12),
-    flex:1,
+    flex: 1,
   },
 
   phoneBox: {
@@ -231,11 +231,48 @@ const getStyles = (colors) => StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     marginTop: verticalScale(4),
-    backgroundColor: colors?.bttonColor,
-    opacity: 0.7,
+    backgroundColor: colors?.primary,
     padding: scale(10),
     borderRadius: scale(8),
-  }
+  },
+  detailRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginTop: verticalScale(8),
+    paddingVertical: verticalScale(4),
+    gap: moderateScale(12),
+  },
+
+  detailRowColumn: {
+    flexDirection: "column",
+    alignItems: "stretch",
+    gap: verticalScale(6),
+  },
+
+  detailLabel: {
+    fontSize: moderateScale(14),
+    fontWeight: "600",
+    color: colors?.black,
+    flexShrink: 1,
+  },
+
+  detailValue: {
+    fontSize: moderateScale(12),
+    fontWeight: "600",
+    color: colors?.black,
+    textAlign: "right",
+    backgroundColor: colors?.gray100,
+    padding: moderateScale(4),
+    borderRadius: moderateScale(4),
+    flexShrink: 1,
+  },
+
+  detailValueFull: {
+    alignSelf: "stretch",
+    textAlign: "left",
+    lineHeight: moderateScale(18),
+  },
 });
 
 export default getStyles;

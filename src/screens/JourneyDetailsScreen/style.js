@@ -221,7 +221,7 @@ const getStyles = (colors) =>
     },
 
     closeButton: {
-      backgroundColor: colors.bttonColor,
+      backgroundColor: colors.primary,
       paddingVertical: verticalScale(12),
       borderRadius: moderateScale(10),
       alignItems: "center",
@@ -298,19 +298,33 @@ const getStyles = (colors) =>
       gap: moderateScale(12),
     },
 
+    detailRowColumn: {
+      flexDirection: "column",
+      alignItems: "stretch",
+      gap: verticalScale(6),
+    },
+
     detailLabel: {
-      fontSize: moderateScale(12),
-      fontWeight: "500",
-      color: colors.gray600,
-      flex: 1,
+      fontSize: moderateScale(14),
+      fontWeight: "600",
+      color: colors.text,
+      flexShrink: 1,
     },
 
     detailValue: {
       fontSize: moderateScale(12),
       fontWeight: "600",
       color: colors.text,
-      flex: 1.4,
       textAlign: "right",
+      backgroundColor: colors.gray100,
+      padding: moderateScale(4),
+      borderRadius: moderateScale(4),
+      flexShrink: 1,
+    },
+
+    detailValueFull: {
+      alignSelf: "stretch",
+      textAlign: "left",
       lineHeight: moderateScale(18),
     },
 
