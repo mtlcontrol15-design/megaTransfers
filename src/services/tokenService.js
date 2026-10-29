@@ -1,6 +1,14 @@
 import axios from 'axios';
+
 import { API_CONFIG } from '../config/config';
 import { EndPoints } from './EndPoints';
+
+import { store } from '../redux/store';
+
+import {
+  dispatchToken,
+  dispatchRefreshToken,
+} from '../redux/slices/userSlice';
 
 let refreshTokenPromise = null;
 
@@ -32,24 +40,25 @@ const findTokenValue = (value, names) => {
   return null;
 };
 
-export const refreshAccessToken = async refreshToken => {
-  // Prevent multiple location/API requests from
-  // refreshing the token at the same time.
+export const refreshAccessToken = async () => {
   if (refreshTokenPromise) {
     return refreshTokenPromise;
   }
 
   refreshTokenPromise = (async () => {
     try {
-      console.log(
-        '🔄 Access token expired. Refreshing token...',
-      );
+      const { refreshToken } =
+        store.getState().userReducer;
 
       if (!refreshToken) {
         throw new Error(
           'Refresh token is missing',
         );
       }
+
+      console.log(
+        '🔄 Refreshing access token...',
+      );
 
       const response = await axios.request({
         method: 'post',
@@ -68,12 +77,14 @@ export const refreshAccessToken = async refreshToken => {
         },
       });
 
-      const newAccessToken =
-        findTokenValue(response?.data, [
+      const newAccessToken = findTokenValue(
+        response?.data,
+        [
           'access_token',
           'accessToken',
           'token',
-        ]);
+        ],
+      );
 
       if (!newAccessToken) {
         throw new Error(
@@ -87,8 +98,27 @@ export const refreshAccessToken = async refreshToken => {
           'refreshToken',
         ]) || refreshToken;
 
+      // Do not restore a session that was logged out
+      // while the refresh request was in progress.
+      const currentRefreshToken =
+        store.getState().userReducer.refreshToken;
+
+      if (currentRefreshToken !== refreshToken) {
+        throw new Error(
+          'Session changed during token refresh',
+        );
+      }
+
+      store.dispatch(
+        dispatchToken(newAccessToken),
+      );
+
+      store.dispatch(
+        dispatchRefreshToken(newRefreshToken),
+      );
+
       console.log(
-        '✅ Token refresh successful',
+        '✅ Access token refreshed successfully',
       );
 
       return {
@@ -100,16 +130,17 @@ export const refreshAccessToken = async refreshToken => {
       console.log(
         '❌ Token refresh failed:',
         error?.response?.data ||
-          error?.message ||
-          error,
+        error?.message,
       );
 
       throw error;
 
-    } finally {
-      refreshTokenPromise = null;
     }
   })();
 
-  return refreshTokenPromise;
+  try {
+    return await refreshTokenPromise;
+  } finally {
+    refreshTokenPromise = null;
+  }
 };
