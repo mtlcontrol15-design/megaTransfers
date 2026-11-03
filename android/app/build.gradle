@@ -86,9 +86,9 @@ android {
         applicationId "megatransfers.com"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        resValue "string", "build_config_package", "com.mtldispatch"
-        versionCode 22
-        versionName "1.0.22"
+        resValue "string", "build_config_package", "com.megatransfers"
+        versionCode 23
+        versionName "1.0.23"
     }
     signingConfigs {
         debug {
@@ -114,7 +114,7 @@ android {
             // Caution! In production, you need to generate your own keystore file.
             // see https://reactnative.dev/docs/signed-apk-android.
             minifyEnabled true
-            shrinkResources false
+            shrinkResources true
             signingConfig signingConfigs.release
             // minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
@@ -134,4 +134,3 @@ dependencies {
 }
 apply from: project(':react-native-config').projectDir.getPath() + "/dotenv.gradle";
 apply plugin: 'com.google.gms.google-services';
-

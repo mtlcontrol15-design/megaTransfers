@@ -9,4 +9,4 @@
 
 # Add any project specific keep options here:
 -dontwarn com.stripe.android.pushProvisioning.**
--keep class com.mtldispatch.BuildConfig { *; }
+-keep class com.megatransfers.BuildConfig { *; }
