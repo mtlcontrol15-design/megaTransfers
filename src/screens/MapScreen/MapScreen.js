@@ -1,7 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Linking, Platform, Text, TouchableOpacity, View, AppState } from 'react-native';
 
-import MapView, { Marker } from 'react-native-maps';
+import Mapbox, {
+  MapView,
+  Camera,
+  MarkerView,
+  ShapeSource,
+  LineLayer,
+} from '@rnmapbox/maps';
+import Config from 'react-native-config';
 import { useDispatch, useSelector } from 'react-redux';
 import { moderateScale } from 'react-native-size-matters';
 import Geolocation from '@react-native-community/geolocation';
@@ -20,6 +27,8 @@ import useQueryHandler from '../../services/queries/useQueryHandler';
 import { mutationHandler } from '../../services/mutations/mutationHandler';
 import LocationDisclosureModal from '../../components/LocationDisclosureModal/LocationDisclosureModal';
 import { requestLocationPermission, checkLocationPermissionOnly, requestSinglePermission } from '../../utils/permissionsHelper';
+
+Mapbox.setAccessToken(Config.MAPBOX_ACCESS_TOKEN);
 
 
 
@@ -462,6 +471,80 @@ const MapScreen = ({ navigation }) => {
 
   // console.log('======markerCoordinate are here', markerCoordinate);
 
+  const mapboxCoordinate = useMemo(() => {
+    if (!region) return null;
+
+    const latitude = Number(region.latitude);
+    const longitude = Number(region.longitude);
+
+    if (
+      !Number.isFinite(latitude) ||
+      !Number.isFinite(longitude)
+    ) {
+      return null;
+    }
+
+    return [longitude, latitude];
+  }, [region]);
+
+  const markerPosition = useMemo(() => {
+    if (!markerCoordinate) return null;
+
+    const latitude = Number(
+      markerCoordinate.latitude ?? markerCoordinate.lat
+    );
+
+    const longitude = Number(
+      markerCoordinate.longitude ?? markerCoordinate.lng
+    );
+
+    if (
+      !Number.isFinite(latitude) ||
+      !Number.isFinite(longitude)
+    ) {
+      return null;
+    }
+
+    return [longitude, latitude];
+  }, [markerCoordinate]);
+
+  const routeCoordinates = useMemo(() => {
+    const routePath = liveLocationData?.data?.booking?.routePath;
+    if (!Array.isArray(routePath)) return [];
+
+    const route = routePath
+      .map(point => [
+        Number(Array.isArray(point) ? point[0] : point.longitude ?? point.lng),
+        Number(Array.isArray(point) ? point[1] : point.latitude ?? point.lat),
+      ])
+      .filter(([longitude, latitude]) =>
+        Number.isFinite(longitude) && Number.isFinite(latitude)
+      );
+
+    if (!isDriver || !region || route.length < 2) return route;
+
+    const current = [
+      Number(region.longitude),
+      Number(region.latitude),
+    ];
+
+    let nearestIndex = 0;
+    let nearestDistance = Infinity;
+
+    route.forEach(([longitude, latitude], index) => {
+      const distance =
+        (longitude - current[0]) ** 2 + (latitude - current[1]) ** 2;
+
+      if (distance < nearestDistance) {
+        nearestDistance = distance;
+        nearestIndex = index;
+      }
+    });
+
+    return route.slice(nearestIndex);
+  }, [isDriver, liveLocationData, region]);
+  const destinationPosition = routeCoordinates[routeCoordinates.length - 1];
+
   const trackingInfo = trackingData?.data;
 
   const trackingDriver = trackingInfo?.driver;
@@ -507,31 +590,85 @@ const MapScreen = ({ navigation }) => {
           <Icons.RefreshCcw size={24} color={colors.white} />
         </TouchableOpacity>
       </View>
+
       <MapView
         style={styles?.mapview}
-        region={region || undefined}
+        styleURL={Mapbox.StyleURL.Street}
+        logoEnabled={false}
+        attributionEnabled={true}
       >
-        {markerCoordinate && shouldShowMarker && (
-          <Marker
-            coordinate={{
-              latitude: Number(markerCoordinate.latitude ?? markerCoordinate.lat),
-              longitude: Number(markerCoordinate.longitude ?? markerCoordinate.lng),
-            }}
-            onPress={() => {
-              if (!isDriver) {
-                setShowDriverInfo(true);
-                refetchTracking?.();
-              }
+        {routeCoordinates.length > 1 && (
+          <ShapeSource
+            id="booking-route"
+            shape={{
+              type: 'Feature',
+              properties: {},
+              geometry: {
+                type: 'LineString',
+                coordinates: routeCoordinates,
+              },
             }}
           >
-            <View style={styles.markerOuter}>
-              <View style={styles.markerInner}>
-                <Icons.Car size={16} color={colors.lightGreen} />
-              </View>
+            <LineLayer
+              id="booking-route-line"
+              style={{ lineColor: '#2563EB', lineWidth: 5 }}
+            />
+          </ShapeSource>
+        )}
+
+        {destinationPosition && (
+          <MarkerView
+            coordinate={destinationPosition}
+            anchor={{ x: 0.5, y: 1 }}
+            allowOverlap={true}
+          >
+            <View style={{
+              backgroundColor: colors.white,
+              borderRadius: 20,
+              padding: moderateScale(6),
+            }}>
+              <Icons.User size={22} color={colors.primary} />
             </View>
-          </Marker>
+          </MarkerView>
+        )}
+
+        {mapboxCoordinate && (
+          <Camera
+            centerCoordinate={mapboxCoordinate}
+            zoomLevel={15}
+            animationMode="easeTo"
+            animationDuration={500}
+          />
+        )}
+
+        {markerPosition && shouldShowMarker && (
+          <MarkerView
+            coordinate={markerPosition}
+            anchor={{ x: 0.5, y: 0.5 }}
+            allowOverlap={true}
+          >
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => {
+                if (!isDriver) {
+                  setShowDriverInfo(true);
+                  refetchTracking?.();
+                }
+              }}
+            >
+              <View style={styles.markerOuter}>
+                <View style={styles.markerInner}>
+                  <Icons.Car
+                    size={16}
+                    color={colors.lightGreen}
+                  />
+                </View>
+              </View>
+            </TouchableOpacity>
+          </MarkerView>
         )}
       </MapView>
+
       {!isDriver && showDriverInfo && trackingInfo && (
         <View style={styles.driverInfoCard}>
           <TouchableOpacity

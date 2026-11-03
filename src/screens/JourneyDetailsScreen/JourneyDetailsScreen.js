@@ -484,6 +484,38 @@ const JourneyDetailsScreen = ({ route, navigation }) => {
                   </View>
                 ) : null
             )}
+
+            {/* Customer Notes - Below All Drop-offs */}
+            {!!journey?.notes?.trim() && (
+              <View style={{ marginTop: verticalScale(16) }}>
+                <Text
+                  style={[
+                    styles.locationTitle,
+                    {
+                      color: colors.primary,
+                      fontWeight: "600",
+                      marginBottom: verticalScale(8),
+                    },
+                  ]}
+                >
+                  Customer Notes
+                </Text>
+
+                <View style={styles.locationContent}>
+                  <Text
+                    style={[
+                      styles.locationText,
+                      {
+                        lineHeight: moderateScale(20),
+                      },
+                    ]}
+                  >
+                    {journey.notes}
+                  </Text>
+                </View>
+              </View>
+            )}
+
           </View>
           {!hideDriverCard && (
             <View style={styles.card}>

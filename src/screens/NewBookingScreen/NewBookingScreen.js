@@ -255,9 +255,9 @@ const NewBookingScreen = ({ route }) => {
   const { data: hourlyResponse, error: hourlyError, status: hourlyStatus, isFetching: hourlyIsFetching, refetch: hourlyRefetch } = queryHandler(`${EndPoints.priceHourly}?companyId=${companyId}`);
   // console.log('======== hourly price data is here', hourlyData);
   const { data: generalResponse, error: generalError, status: generalStatus, isFetching: generalIsFetching, refetch: generalRefetch } = queryHandler(`${EndPoints.priceGeneral}?companyId=${companyId}`);
-  // console.log('======== general price data is here', generalData);
+  // console.log('======== general price data is here', generalResponse);
   const { data: fixedResponse, error: fixedError, status: fixedStatus, isFetching: fixedIsFetching, refetch: fixedRefetch } = queryHandler(`${EndPoints.fixedPrice}?companyId=${companyId}`);
-  // console.log('========fixed price data is here', fixedData);
+  // console.log('========fixed price data is here', fixedResponse);
   const { data: paymentMethodsData, error: paymentMethodsError, status: paymentMethodsStatus, isFetching: paymentMethodsIsFetching, refetch: paymentMethodsRefetch } = queryHandler(`${EndPoints.getPaymentMthods}/${companyId}`);
   const { data: vouchersResponse, refetch: vouchersRefetch } = queryHandler(
     EndPoints.getVouchers
@@ -878,6 +878,21 @@ const NewBookingScreen = ({ route }) => {
     return Number(totalFare.toFixed(2));
   };
 
+
+  const applyVehiclePercentage = (baseFare) => {
+    const price = Number(baseFare || 0);
+
+    if (selectedVehicle?.priceType !== "Percentage") {
+      return price;
+    }
+
+    const percentage = Number(
+      selectedVehicle?.percentageIncrease || 0
+    );
+
+    return price + (price * percentage) / 100;
+  };
+
   const calculateFare = () => {
     let fareCalculated = false;
 
@@ -951,11 +966,22 @@ const NewBookingScreen = ({ route }) => {
       );
 
       if (matchedRoute) {
-        const finalFare = applyGeneralCharges(matchedRoute.price);
+        const basePrice = Number(matchedRoute.price || 0);
+
+        const vehiclePrice = applyVehiclePercentage(basePrice);
+
+        const finalFare = applyGeneralCharges(vehiclePrice);
+
+        console.log("POSTCODE FARE CALCULATION:", {
+          vehicle: selectedVehicle?.vehicleName,
+          basePrice,
+          percentageIncrease: selectedVehicle?.percentageIncrease,
+          vehiclePrice,
+          finalFare,
+        });
+
         setFare(finalFare);
         fareCalculated = true;
-
-        // console.log("POSTCODE FARE:", finalFare);
       }
     }
 
@@ -1057,15 +1083,25 @@ const NewBookingScreen = ({ route }) => {
       });
 
       if (matchedRoute) {
+        const basePrice = Number(matchedRoute.price || 0);
+
+        const vehiclePrice = applyVehiclePercentage(basePrice);
+
         const finalFare = applyGeneralCharges(
-          matchedRoute.price,
+          vehiclePrice,
           returnJourneyData
         );
 
+        console.log("RETURN POSTCODE FARE:", {
+          vehicle: selectedVehicle?.vehicleName,
+          basePrice,
+          percentageIncrease: selectedVehicle?.percentageIncrease,
+          vehiclePrice,
+          finalFare,
+        });
+
         setReturnFare(finalFare);
         fareCalculated = true;
-
-        // console.log("RETURN POSTCODE FARE:", finalFare);
       }
     }
 

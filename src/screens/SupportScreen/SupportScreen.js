@@ -27,6 +27,8 @@ const SupportScreen = ({ navigation }) => {
     ? companyData?.data || {}
     : data?.data || data || {};
 
+    // console.log('========companyInfo', companyInfo);
+
   const handleCall = () => {
     if (companyInfo?.contact) {
       const phone = formatPhoneWithPlus(companyInfo.contact);

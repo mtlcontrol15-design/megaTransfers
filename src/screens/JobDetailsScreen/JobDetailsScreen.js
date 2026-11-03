@@ -175,77 +175,107 @@ const JobDetailsScreen = () => {
         return <Text>No Job Found</Text>;
     }
 
+
+    const getLocationValue = (address, coordinates) => {
+        const latitude = Number(coordinates?.latitude);
+        const longitude = Number(coordinates?.longitude);
+
+        const hasValidCoordinates =
+            coordinates?.latitude != null &&
+            coordinates?.longitude != null &&
+            Number.isFinite(latitude) &&
+            Number.isFinite(longitude) &&
+            latitude >= -90 &&
+            latitude <= 90 &&
+            longitude >= -180 &&
+            longitude <= 180;
+
+        if (hasValidCoordinates) {
+            return `${latitude},${longitude}`;
+        }
+
+        return String(address || "").trim();
+    };
+
     const openMaps = async (address, coordinates) => {
-        if (!coordinates?.latitude || !coordinates?.longitude) return;
+        const location = getLocationValue(address, coordinates);
 
-        const { latitude, longitude } = coordinates;
+        if (!location) {
+            Alert.alert("Location Unavailable", "No location available.");
+            return;
+        }
 
+        const encodedLocation = encodeURIComponent(location);
         const apps = [];
 
         // Google Maps
         const googleMapsUrl =
             Platform.OS === "ios"
-                ? `comgooglemaps://?daddr=${latitude},${longitude}&directionsmode=driving`
-                : `google.navigation:q=${latitude},${longitude}`;
+                ? `comgooglemaps://?daddr=${encodedLocation}&directionsmode=driving`
+                : `google.navigation:q=${encodedLocation}`;
 
-        const googleMapsWeb = `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`;
+        const googleMapsWeb =
+            `https://www.google.com/maps/dir/?api=1&destination=${encodedLocation}`;
 
-        const canOpenGoogle = await Linking.canOpenURL(googleMapsUrl);
-
-        if (canOpenGoogle) {
-            apps.push({
-                name: "Google Maps",
-                url: googleMapsUrl,
-            });
-        }
-
-        // Apple Maps (iOS only)
-        if (Platform.OS === "ios") {
-            const appleMapsUrl = `http://maps.apple.com/?daddr=${latitude},${longitude}`;
-
-            const canOpenApple = await Linking.canOpenURL(appleMapsUrl);
-
-            if (canOpenApple) {
+        try {
+            if (await Linking.canOpenURL(googleMapsUrl)) {
                 apps.push({
-                    name: "Apple Maps",
-                    url: appleMapsUrl,
+                    name: "Google Maps",
+                    url: googleMapsUrl,
                 });
             }
-        }
 
-        // Waze
-        const wazeUrl = `waze://?ll=${latitude},${longitude}&navigate=yes`;
+            // Apple Maps (iOS only)
+            if (Platform.OS === "ios") {
+                const appleMapsUrl =
+                    `http://maps.apple.com/?daddr=${encodedLocation}`;
 
-        const canOpenWaze = await Linking.canOpenURL(wazeUrl);
+                if (await Linking.canOpenURL(appleMapsUrl)) {
+                    apps.push({
+                        name: "Apple Maps",
+                        url: appleMapsUrl,
+                    });
+                }
+            }
 
-        if (canOpenWaze) {
+            // Waze
+            const wazeUrl =
+                `waze://?q=${encodedLocation}&navigate=yes`;
+
+            if (await Linking.canOpenURL(wazeUrl)) {
+                apps.push({
+                    name: "Waze",
+                    url: wazeUrl,
+                });
+            }
+
+            // Browser fallback
             apps.push({
-                name: "Waze",
-                url: wazeUrl,
+                name: "Browser",
+                url: googleMapsWeb,
+            });
+
+            Alert.alert(
+                "Open Location",
+                "Choose app to open location",
+                [
+                    ...apps.map(app => ({
+                        text: app.name,
+                        onPress: () => Linking.openURL(app.url),
+                    })),
+                    {
+                        text: "Cancel",
+                        style: "cancel",
+                    },
+                ]
+            );
+        } catch (error) {
+            Linking.openURL(googleMapsWeb).catch(() => {
+                Alert.alert("Error", "Unable to open maps.");
             });
         }
-
-        // Fallback browser option
-        apps.push({
-            name: "Browser",
-            url: googleMapsWeb,
-        });
-
-        Alert.alert(
-            "Open Location",
-            "Choose app to open location",
-            [
-                ...apps.map((app) => ({
-                    text: app.name,
-                    onPress: () => Linking.openURL(app.url),
-                })),
-                {
-                    text: "Cancel",
-                    style: "cancel",
-                },
-            ]
-        );
     };
+
 
     const callCustomer = (phone) => {
         if (!phone) return;
@@ -258,27 +288,31 @@ const JobDetailsScreen = () => {
         Alert.alert("Copied", `${text} copied to clipboard`);
     };
 
-    const copyCoordinates = (coordinates) => {
-        if (!coordinates?.latitude || !coordinates?.longitude) return;
 
-        const text = `${coordinates.latitude},${coordinates.longitude}`;
+    const copyCoordinates = (coordinates, address) => {
+        const text = getLocationValue(address, coordinates);
+
+        if (!text) {
+            Alert.alert("Copy Failed", "No location available.");
+            return;
+        }
 
         Clipboard.setString(text);
         Alert.alert("Copied", text);
     };
 
     const copyFullLocation = (address, coordinates) => {
-        if (!address && !coordinates) return;
+        const text = getLocationValue(address, coordinates);
 
-        const coordText = coordinates
-            ? `${coordinates.latitude},${coordinates.longitude}`
-            : "";
-
-        const text = `${address}\n${coordText}`;
+        if (!text) {
+            Alert.alert("Copy Failed", "No location available.");
+            return;
+        }
 
         Clipboard.setString(text);
         Alert.alert("Copied", text);
     };
+
 
     const hasValue = (value) => {
         return value !== null && value !== undefined && String(value).trim() !== "";
@@ -1070,7 +1104,9 @@ const JobDetailsScreen = () => {
                                         </TouchableOpacity>
 
                                         <TouchableOpacity
-                                            onPress={() => copyCoordinates(stop.coordinates)}
+                                            onPress={() =>
+                                                copyCoordinates(stop.coordinates, stop.address)
+                                            }
                                             style={{ marginLeft: scale(8) }}
                                         >
                                             <Icons.Copy
@@ -1324,12 +1360,12 @@ const JobDetailsScreen = () => {
                                         </View>
                                     )}
 
-                                    {hasValue(journey?.internalNotes) && (
+                                    {/* {hasValue(journey?.internalNotes) && (
                                         <View style={{ marginTop: verticalScale(10) }}>
                                             <Text style={styles.label}>Internal Notes</Text>
                                             <Text style={styles.value}>{journey?.internalNotes}</Text>
                                         </View>
-                                    )}
+                                    )} */}
                                     {hasValue(jobData?.driverNotes) && (
                                         <View style={{ marginTop: verticalScale(5) }}>
                                             <Text style={styles.label}>Driver Notes</Text>

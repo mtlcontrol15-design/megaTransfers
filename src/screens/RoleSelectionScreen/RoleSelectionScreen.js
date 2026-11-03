@@ -53,13 +53,20 @@ const RoleSelectionScreen = ({ navigation, route }) => {
 
     // console.log('Suggested companies data:', data);
 
+
     useEffect(() => {
-        const companies = data?.allCompanies || [];
+        const companies = Array.isArray(data?.data)
+            ? data.data
+            : Array.isArray(data?.allCompanies)
+                ? data.allCompanies
+                : [];
 
         const megaTransfersCompany = companies.find(
             item =>
-                item.companyName?.toLowerCase() === CURRENT_COMPANY_NAME.toLowerCase() ||
-                item.tradingName?.toLowerCase() === CURRENT_COMPANY_NAME.toLowerCase()
+                item.companyName?.trim().toLowerCase() ===
+                CURRENT_COMPANY_NAME.toLowerCase() ||
+                item.tradingName?.trim().toLowerCase() ===
+                CURRENT_COMPANY_NAME.toLowerCase()
         );
 
         if (megaTransfersCompany) {
@@ -70,6 +77,7 @@ const RoleSelectionScreen = ({ navigation, route }) => {
             setShowCompanyDropdown(false);
         }
     }, [data]);
+
 
     const handleContinue = () => {
         if (selectedRole === 'corporate' && !selectedCompany) {

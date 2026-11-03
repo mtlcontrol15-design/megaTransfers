@@ -72,4 +72,5 @@ export const EndPoints = {
   getPoolJobs: '/api/pool-jobs/get-all-pool-jobs',
   postBid: '/api/pool-jobs/add-bid',
   newBid: '/api/pool-jobs/get-driver-pool-jobs-counts',
+  getCompaniesForRoleSelection:'/api/companies/public',
 };

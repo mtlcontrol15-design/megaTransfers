@@ -1,6 +1,10 @@
 apply plugin: "com.android.application"
 apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
+project.ext.envConfigFiles = [
+    debug: ".env",
+    release: ".env",
+]
 
 /**
  * This is the configuration block to customize your React Native Android app.
@@ -82,6 +86,7 @@ android {
         applicationId "megatransfers.com"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
+        resValue "string", "build_config_package", "com.mtldispatch"
         versionCode 22
         versionName "1.0.22"
     }
