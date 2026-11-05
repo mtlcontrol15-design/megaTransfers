@@ -6,13 +6,26 @@ export const formatInternationalPhone = (phone, defaultCountry = "GB") => {
     const phoneString = String(phone).trim();
 
     try {
-        const parsedPhone = parsePhoneNumberFromString(
+        // First try as an international number
+        const internationalPhone = phoneString.startsWith("+")
+            ? phoneString
+            : `+${phoneString}`;
+
+        const parsedInternational =
+            parsePhoneNumberFromString(internationalPhone);
+
+        if (parsedInternational?.isValid()) {
+            return parsedInternational.formatInternational();
+        }
+
+        // Fallback to default country for local numbers
+        const parsedLocal = parsePhoneNumberFromString(
             phoneString,
             defaultCountry
         );
 
-        if (parsedPhone) {
-            return parsedPhone.formatInternational();
+        if (parsedLocal?.isValid()) {
+            return parsedLocal.formatInternational();
         }
 
         return phoneString;
