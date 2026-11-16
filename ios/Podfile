@@ -1,17 +1,17 @@
 # Resolve react_native_pods.rb with node to allow for hoisting
 def node_require(script)
-  # Resolve script with node to allow for hoisting
   require Pod::Executable.execute_command('node', ['-p',
     "require.resolve(
       '#{script}',
-      {paths: [process.argv[1]]}, 
+      {paths: [process.argv[1]]},
     )", __dir__]).strip
 end
 
- node_require('react-native/scripts/react_native_pods.rb')
- node_require('react-native-permissions/scripts/setup.rb')
+node_require('react-native/scripts/react_native_pods.rb')
+node_require('react-native-permissions/scripts/setup.rb')
 
- platform :ios, min_ios_version_supported
+platform :ios, min_ios_version_supported
+
 use_modular_headers!
 prepare_react_native_project!
 
@@ -23,8 +23,17 @@ setup_permissions([
   'Notifications',
 ])
 
-Pod::UI.puts "Configuring Pod with dynamically linked Frameworks".green
-use_frameworks! :linkage => :dynamic
+linkage = ENV['USE_FRAMEWORKS']
+
+if linkage != nil
+  Pod::UI.puts "Configuring Pod with #{linkage}ally linked Frameworks".green
+  use_frameworks! :linkage => linkage.to_sym
+end
+
+# RNMapbox pre-install hook
+pre_install do |installer|
+  $RNMapboxMaps.pre_install(installer)
+end
 
 target 'MegaTransfers' do
   config = use_native_modules!
@@ -38,10 +47,16 @@ target 'MegaTransfers' do
   pod 'GoogleUtilities', :modular_headers => true
 
   post_install do |installer|
+
+    # React Native post-install
     react_native_post_install(
       installer,
       config[:reactNativePath],
       :mac_catalyst_enabled => false,
     )
+
+    # RNMapbox post-install
+    $RNMapboxMaps.post_install(installer)
+
   end
 end

@@ -200,7 +200,7 @@ PODS:
     - ReactNativeDependencies
     - Yoga
   - lottie-ios (4.6.0)
-  - lottie-react-native (7.5.0):
+  - lottie-react-native (7.5.1):
     - hermes-engine
     - lottie-ios (= 4.6.0)
     - RCTRequired
@@ -1787,7 +1787,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - react-native-pager-view (10.0.0):
+  - react-native-pager-view (10.0.2):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -3378,7 +3378,7 @@ SPEC CHECKSUMS:
   hermes-engine: 79484fc4e58f328d01b9339ef899ca633d3702ee
   LoaderKit: 3a9ddbe6b8453bc2425601f40d3bc0e4c69b884a
   lottie-ios: 8f959969761e9c45d70353667d00af0e5b9cadb3
-  lottie-react-native: e7f8565b0128379bcbd023886551f926fc595b13
+  lottie-react-native: f75dc9defda85aa0e4d615a4ea7a09041599a457
   MapboxCommon: b74a90adf98eb35eeb627123808a9e849c86af48
   MapboxCoreMaps: fc964f2200ecdee75168e248ff64c2eb6b840564
   MapboxMaps: 486dd7fd3a997243eebd11eb49321bec7ba2ef37
@@ -3434,7 +3434,7 @@ SPEC CHECKSUMS:
   react-native-image-picker: 56de6c74b8bb4d3a2572ae4952420d188bdf0beb
   react-native-keyboard-controller: d80dd5bddc7e57844ae76bbee856e1185a329786
   react-native-netinfo: 687391ecedb199c6d67fbc46c87cbae3277de967
-  react-native-pager-view: d3a0a516dabfe6f5c8de931f181e6c821b6a06df
+  react-native-pager-view: 0e20e42dc88fd981df7595dcb5e24852eeb6f009
   react-native-pdf: 4367fe3940668c9549ac90b44998312b99e53f7d
   react-native-safe-area-context: 56700b839169ce88ffcec68c40447916fe512462
   react-native-webview: 3a3d1fd130d39e4dcabeebe89e6b245478ee177e
@@ -3508,6 +3508,6 @@ SPEC CHECKSUMS:
   Turf: c9eb11a65d96af58cac523460fd40fec5061b081
   Yoga: d1c536142c5ff8ec8cd856ab2a7c227a1d875c8e
 
-PODFILE CHECKSUM: 55f7d716db688cf3758e8d0193d1fa944d9ef277
+PODFILE CHECKSUM: 3168268861d94dc356a93f115dda050eb16990f6
 
 COCOAPODS: 1.16.2

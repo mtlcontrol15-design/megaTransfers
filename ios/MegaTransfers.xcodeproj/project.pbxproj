@@ -8,11 +8,13 @@
 
 /* Begin PBXBuildFile section */
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
+		18ED96C730AB11100037054D /* UniformTypeIdentifiers.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 18ED96C630AB11100037054D /* UniformTypeIdentifiers.framework */; };
+		18ED96C930AB112F0037054D /* MobileCoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 18ED96C830AB112F0037054D /* MobileCoreServices.framework */; };
+		47644C7983946E5638208DEC /* libPods-MegaTransfers.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 52C09D7777697C551D21AA9F /* libPods-MegaTransfers.a */; };
 		5D4C0E3A2F8B4C7A9B6D1E20 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 5D4C0E392F8B4C7A9B6D1E20 /* GoogleService-Info.plist */; };
 		761780ED2CA45674006654EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EC2CA45674006654EE /* AppDelegate.swift */; };
 		761780EF2CA45674006654EF /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EE2CA45674006654EF /* SceneDelegate.swift */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
-		E8D942FF68D1174317CDD3A7 /* libPods-MegaTransfers.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4971B2BB577A94505BFC065A /* libPods-MegaTransfers.a */; };
 		F9E4A129868E48DFDE56AF18 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */; };
 /* End PBXBuildFile section */
 
@@ -22,7 +24,9 @@
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = MegaTransfers/Info.plist; sourceTree = "<group>"; };
 		13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = PrivacyInfo.xcprivacy; path = MegaTransfers/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		188DE0D330A7041900BA21FF /* MegaTransfers.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = MegaTransfers.entitlements; path = MegaTransfers/MegaTransfers.entitlements; sourceTree = "<group>"; };
-		4971B2BB577A94505BFC065A /* libPods-MegaTransfers.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-MegaTransfers.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		18ED96C630AB11100037054D /* UniformTypeIdentifiers.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UniformTypeIdentifiers.framework; path = System/Library/Frameworks/UniformTypeIdentifiers.framework; sourceTree = SDKROOT; };
+		18ED96C830AB112F0037054D /* MobileCoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MobileCoreServices.framework; path = System/Library/Frameworks/MobileCoreServices.framework; sourceTree = SDKROOT; };
+		52C09D7777697C551D21AA9F /* libPods-MegaTransfers.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-MegaTransfers.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		5D4C0E392F8B4C7A9B6D1E20 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		761780EC2CA45674006654EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = MegaTransfers/AppDelegate.swift; sourceTree = "<group>"; };
 		761780EE2CA45674006654EF /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SceneDelegate.swift; path = MegaTransfers/SceneDelegate.swift; sourceTree = "<group>"; };
@@ -37,7 +41,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E8D942FF68D1174317CDD3A7 /* libPods-MegaTransfers.a in Frameworks */,
+				18ED96C930AB112F0037054D /* MobileCoreServices.framework in Frameworks */,
+				18ED96C730AB11100037054D /* UniformTypeIdentifiers.framework in Frameworks */,
+				47644C7983946E5638208DEC /* libPods-MegaTransfers.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -62,8 +68,10 @@
 		2D16E6871FA4F8E400B85C8A /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				18ED96C830AB112F0037054D /* MobileCoreServices.framework */,
+				18ED96C630AB11100037054D /* UniformTypeIdentifiers.framework */,
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				4971B2BB577A94505BFC065A /* libPods-MegaTransfers.a */,
+				52C09D7777697C551D21AA9F /* libPods-MegaTransfers.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -304,7 +312,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = MegaTransfers/MegaTransfers.entitlements;
-				CURRENT_PROJECT_VERSION = 11;
+				CURRENT_PROJECT_VERSION = 12;
 				DEVELOPMENT_TEAM = 6PY6A743A6;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = MegaTransfers/Info.plist;
@@ -313,7 +321,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.11;
+				MARKETING_VERSION = 1.0.12;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -336,7 +344,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = MegaTransfers/MegaTransfers.entitlements;
-				CURRENT_PROJECT_VERSION = 11;
+				CURRENT_PROJECT_VERSION = 12;
 				DEVELOPMENT_TEAM = 6PY6A743A6;
 				INFOPLIST_FILE = MegaTransfers/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
@@ -344,7 +352,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.11;
+				MARKETING_VERSION = 1.0.12;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
