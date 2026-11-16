@@ -8,5 +8,3 @@
 #   http://developer.android.com/guide/developing/tools/proguard.html
 
 # Add any project specific keep options here:
--dontwarn com.stripe.android.pushProvisioning.**
--keep class com.megatransfers.BuildConfig { *; }

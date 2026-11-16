@@ -1,11 +1,11 @@
 import Toast from 'react-native-toast-message';
 import React, { useEffect, useState } from 'react';
-import { Provider, useDispatch, useSelector } from 'react-redux';
 import NetInfo from '@react-native-community/netinfo';
-import { AppState, StatusBar, StyleSheet } from 'react-native';
+import { Provider, useDispatch, useSelector } from 'react-redux';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { PersistGate } from 'reduxjs-toolkit-persist/integration/react';
-import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { AppState, StatusBar, StyleSheet, Platform, View } from 'react-native';
+import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { QueryClient, QueryClientProvider, useQueryClient, onlineManager } from '@tanstack/react-query';
 
 import AppNavigation from './src/navigation';
@@ -24,6 +24,22 @@ import SessionExpiredModal from './src/components/SessionExpiredModal/SessionExp
 import { initTracking, setupAppStateListener, stopBackgroundTracking } from './src/utils/locationService';
 import { registerBackgroundHandler, registerForegroundHandler } from './src/utils/notificationHandler/notificationHandler';
 
+const IOSStatusBarBackground = () => {
+  const insets = useSafeAreaInsets();
+
+  if (Platform.OS !== 'ios') {
+    return null;
+  }
+
+  return (
+    <View
+      style={{
+        height: insets.top,
+        backgroundColor: '#000000',
+      }}
+    />
+  );
+};
 const AppContent = () => {
   const [ready, setReady] = useState(false);
   const dispatch = useDispatch();
@@ -221,7 +237,6 @@ const AppContent = () => {
 
   return (
     <>
-      <StatusBar backgroundColor="#000000" barStyle="light-content" />
       <AppNavigation />
       <InternetConnectionHandler />
       <Toast config={toastConfig} />
@@ -274,9 +289,21 @@ export default function App() {
         <PersistGate loading={null} persistor={persistedStore}>
           <SafeAreaProvider>
             <GestureHandlerRootView style={styles.gestureHandler}>
-              <SafeAreaView style={{ flex: 1 }} edges={['bottom']}>
+
+              <StatusBar
+                barStyle="light-content"
+                backgroundColor="#000000"
+              />
+
+              <IOSStatusBarBackground />
+
+              <SafeAreaView
+                style={{ flex: 1 }}
+                edges={['bottom']}
+              >
                 <AppContent />
               </SafeAreaView>
+
             </GestureHandlerRootView>
           </SafeAreaProvider>
         </PersistGate>
