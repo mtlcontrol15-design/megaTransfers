@@ -27,6 +27,7 @@ import { mutationHandler } from "../../services/mutations/mutationHandler";
 import NavigationTabs from "../../components/NavigationTabs/NavigationTabs";
 import JobsStatusModal from "../../components/JobsStatusModal/JobsStatusModal";
 import { isBookingReviewed, isReviewWindowOpen } from "../../utils/reviewUtils";
+import { getBookingDateTime } from "../../utils/bookingDateTime";
 import { requestUserPermission } from '../../utils/SaveFCM/NotificationServices';
 import LocationDisclosureModal from "../../components/LocationDisclosureModal/LocationDisclosureModal";
 import { requestLocationPermission, checkLocationPermissionOnly } from "../../utils/permissionsHelper";
@@ -341,25 +342,19 @@ const HomeScreen = () => {
         return;
       }
 
-      // Journey DateTime
-      const bookingDateTime = new Date(journey.date);
-
-      bookingDateTime.setHours(
-        Number(journey?.hour || 0)
+      const bookingDateTime = getBookingDateTime(
+        journey,
+        settingData?.setting?.timezone
       );
 
-      bookingDateTime.setMinutes(
-        Number(journey?.minute || 0)
-      );
-
-      bookingDateTime.setSeconds(0);
-
-      // Current Time
-      const now = new Date();
+      if (!bookingDateTime) {
+        onCancelBooking?.(ride);
+        return;
+      }
 
       // Difference in milliseconds
       const diffMs =
-        bookingDateTime.getTime() - now.getTime();
+        bookingDateTime.valueOf() - Date.now();
 
       // Convert to hours/minutes
       let allowedMs = 0;

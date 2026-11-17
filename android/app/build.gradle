@@ -8,6 +8,8 @@ project.ext.envConfigFiles = [
 ]
 apply from: project(':react-native-config').projectDir.getPath() + "/dotenv.gradle"
 
+def mapboxAccessToken = project.env['MAPBOX_ACCESS_TOKEN']
+
 /**
  * This is the configuration block to customize your React Native Android app.
  * By default you don't need to apply any configuration, just uncomment the lines you need.
@@ -88,8 +90,12 @@ android {
         applicationId "megatransfers.com"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 25
-        versionName "1.0.25"
+        versionCode 27
+        versionName "1.0.27"
+        if (!mapboxAccessToken?.trim()) {
+            throw new GradleException("MAPBOX_ACCESS_TOKEN must be set in the release environment file")
+        }
+        resValue "string", "mapbox_access_token", mapboxAccessToken
     }
     signingConfigs {
         debug {

@@ -1,8 +1,11 @@
 
 import { useEffect, useState, useRef } from "react";
-import { View, Text, TextInput, TouchableOpacity, ScrollView, RefreshControl, Modal } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, ScrollView, RefreshControl, Modal,Alert } from "react-native";
 
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
 import { useSelector } from "react-redux";
+import timezone from "dayjs/plugin/timezone";
 import { WebView } from "react-native-webview";
 import { useStripe } from "@stripe/stripe-react-native";
 import { useTheme, useNavigation } from "@react-navigation/native";
@@ -28,6 +31,98 @@ const formatCoordinates = coordinates => {
   const lng = coordinates?.longitude ?? coordinates?.lng;
   return lat != null && lng != null ? `${lat},${lng}` : "";
 };
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
+
+
+const validateAdvanceBooking = (
+  journey,
+  settings,
+  journeyLabel = "Pickup"
+) => {
+  const advanceBooking = settings?.advanceBookingMin;
+  const timeZone = settings?.timezone || "Europe/London";
+
+  if (!advanceBooking) {
+    return "Booking settings are not available. Please try again.";
+  }
+
+  const value = Number(advanceBooking.value);
+  const unit = String(advanceBooking.unit || "").toLowerCase();
+
+  const unitMilliseconds = {
+    minutes: 60 * 1000,
+    minute: 60 * 1000,
+    hours: 60 * 60 * 1000,
+    hour: 60 * 60 * 1000,
+    days: 24 * 60 * 60 * 1000,
+    day: 24 * 60 * 60 * 1000,
+    weeks: 7 * 24 * 60 * 60 * 1000,
+    week: 7 * 24 * 60 * 60 * 1000,
+  };
+
+  if (
+    !Number.isFinite(value) ||
+    value < 0 ||
+    !unitMilliseconds[unit]
+  ) {
+    return "Invalid advance booking settings.";
+  }
+
+  const date = String(journey?.date || "").slice(0, 10);
+  const hour = String(journey?.hour ?? "").padStart(2, "0");
+  const minute = String(journey?.minute ?? "").padStart(2, "0");
+
+  if (
+    !/^\d{4}-\d{2}-\d{2}$/.test(date) ||
+    !/^\d{2}$/.test(hour) ||
+    !/^\d{2}$/.test(minute) ||
+    Number(hour) > 23 ||
+    Number(minute) > 59
+  ) {
+    return `Please select a valid ${journeyLabel.toLowerCase()} date and time.`;
+  }
+
+  try {
+    const selectedString = `${date} ${hour}:${minute}`;
+
+    const pickupTime = dayjs.tz(
+      selectedString,
+      "YYYY-MM-DD HH:mm",
+      timeZone
+    );
+
+    // Reject invalid or normalized local dates/times.
+    if (
+      !pickupTime.isValid() ||
+      pickupTime.format("YYYY-MM-DD HH:mm") !== selectedString
+    ) {
+      return `Please select a valid ${journeyLabel.toLowerCase()} date and time.`;
+    }
+
+    const minimumTime =
+      Date.now() + value * unitMilliseconds[unit];
+
+    if (pickupTime.valueOf() <= minimumTime) {
+      const readableUnit =
+        value === 1 ? unit.replace(/s$/, "") : unit;
+
+      return (
+        `${journeyLabel} must be more than ` +
+        `${value} ${readableUnit} from now. ` +
+        "Please select a later date or time."
+      );
+    }
+
+    return null;
+  } catch (error) {
+    console.log("Advance booking validation error:", error);
+    return "Unable to validate the pickup time. Please try again.";
+  }
+};
+
 
 
 const NewBookingScreen = ({ route }) => {
@@ -100,6 +195,8 @@ const NewBookingScreen = ({ route }) => {
   // console.log('route distance is here', tripDistance);
 
   // console.log('selected payment method is here', selectedPaymentMethod);
+
+  // console.log('booking is here', booking);
 
 
 
@@ -274,6 +371,11 @@ const NewBookingScreen = ({ route }) => {
   );
 
   // console.log('========suggestions data is here', suggestionsData);
+
+  const { data: settingData, error: settingDataError, status: settingDataStatus, isFetching: settingDataIsFetching, refetch: settingDataRefetch } = queryHandler(`${EndPoints.systemDetailsAPI}/${companyId}`);
+
+  // console.log('========system settings data is here', settingData);
+
 
   const savedAddressSuggestions = [
     suggestionsData,
@@ -1549,6 +1651,41 @@ const NewBookingScreen = ({ route }) => {
       validationSchema={validationNewBookingSchema}
 
       onSubmit={async () => {
+
+        const settings = settingData?.setting;
+
+        const isEditingReturnJourney =
+          mode === "edit" &&
+          booking?.returnJourneyToggle === true;
+
+        const activeJourney = isEditingReturnJourney
+          ? returnJourneyData
+          : journeyData;
+
+        const bookingTimeError = validateAdvanceBooking(
+          activeJourney,
+          settings,
+          isEditingReturnJourney ? "Return pickup" : "Pickup"
+        );
+
+        if (bookingTimeError) {
+          Alert.alert("Invalid Booking Time", bookingTimeError);
+          return;
+        }
+
+        // Validate return booking when applicable.
+        if (isReturnJourney && !isEditingReturnJourney) {
+          const returnTimeError = validateAdvanceBooking(
+            returnJourneyData,
+            settings,
+            "Return pickup"
+          );
+
+          if (returnTimeError) {
+            Alert.alert("Invalid Return Time", returnTimeError);
+            return;
+          }
+        }
 
         const currentVehicleExtras =
           vehicleExtras[selectedVehicle?._id] || {};

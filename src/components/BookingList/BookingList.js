@@ -1,6 +1,7 @@
 import React from "react";
 import RideCard from "../RideCard/RideCard";
 import { Alert } from "react-native";
+import { getBookingDateTime } from "../../utils/bookingDateTime";
 
 const BookingList = ({ item, navigation, onCancelBooking, reviewLink, showActionMenu, setShowActionMenu, settingData
 }) => {
@@ -24,14 +25,16 @@ const BookingList = ({ item, navigation, onCancelBooking, reviewLink, showAction
       return true;
     }
 
-    const bookingDateTime = new Date(journey.date);
+    const bookingDateTime = getBookingDateTime(
+      journey,
+      settingData?.setting?.timezone
+    );
 
-    bookingDateTime.setHours(Number(journey?.hour || 0));
-    bookingDateTime.setMinutes(Number(journey?.minute || 0));
-    bookingDateTime.setSeconds(0);
+    if (!bookingDateTime) {
+      return true;
+    }
 
-    const now = new Date();
-    const diffMs = bookingDateTime.getTime() - now.getTime();
+    const diffMs = bookingDateTime.valueOf() - Date.now();
 
     let allowedMs = 0;
 
